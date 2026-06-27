@@ -4,183 +4,69 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Sistema Inteligente | Secretaria de Esportes de Capão da Canoa</title>
-  <link rel="stylesheet" href="assets/styles.css">
+  <style>
+    :root{--blue:#0f4c81;--blue2:#103a66;--light:#f3f8fc;--green:#17a673;--text:#17212b;--muted:#64748b;--line:#dbe5ef;--card:#fff;--danger:#c2410c;--yellow:#f6cb2f}*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#eef5fb;color:var(--text);display:flex;min-height:100vh}.sidebar{width:280px;background:linear-gradient(180deg,var(--blue2),var(--blue));color:#fff;padding:22px;position:sticky;top:0;height:100vh}.brand{display:flex;gap:12px;align-items:center;margin-bottom:28px}.brand-logo{width:50px;height:50px;border-radius:16px;background:#fff;color:var(--blue);display:grid;place-items:center;font-size:26px}.brand strong{display:block;font-size:18px}.brand span{font-size:13px;opacity:.8}.nav{width:100%;border:0;background:transparent;color:#dbeafe;text-align:left;padding:13px 14px;border-radius:14px;font-size:15px;cursor:pointer;margin:3px 0}.nav.active,.nav:hover{background:rgba(255,255,255,.13);color:#fff}.side-note{margin-top:24px;padding:14px;border:1px solid rgba(255,255,255,.18);border-radius:16px;background:rgba(255,255,255,.09);font-size:13px}.app{flex:1;padding:28px;max-width:1320px;margin:0 auto}.topbar{display:flex;justify-content:space-between;gap:20px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:24px;padding:24px;margin-bottom:22px;box-shadow:0 12px 30px rgba(16,58,102,.07)}.topbar small{color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.topbar h1{margin:4px 0 0;font-size:34px}.topbar p{margin:4px 0 0;color:var(--muted)}.capao-badge{display:flex;gap:10px;align-items:center;background:var(--light);border:1px solid var(--line);border-radius:18px;padding:14px 16px}.view{display:none}.view.show{display:block}.hero{display:grid;grid-template-columns:1.4fr .6fr;gap:22px;background:linear-gradient(135deg,#fff,#e8f5ff);border:1px solid var(--line);border-radius:28px;padding:30px;margin-bottom:22px}.eyebrow{display:inline-block;background:#d9eefc;color:var(--blue);padding:7px 11px;border-radius:999px;font-weight:700;font-size:13px}.hero h2{font-size:38px;line-height:1.05;margin:16px 0 10px}.hero p{color:var(--muted);font-size:17px;line-height:1.55}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}.hero-card{background:var(--blue);color:white;border-radius:24px;padding:26px;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}.ball{font-size:60px;margin-bottom:8px}.primary,.secondary,.danger{border:0;border-radius:13px;padding:12px 16px;font-weight:800;cursor:pointer}.primary{background:var(--blue);color:white}.secondary{background:#e6eef7;color:var(--blue)}.danger{background:#fee2e2;color:#991b1b}.small{padding:9px 11px;font-size:13px}.back{border:0;background:transparent;color:var(--blue);font-weight:800;cursor:pointer;margin-bottom:12px}.section-title{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:20px 0 14px}.section-title h2,.section-title h3{margin:0;font-size:25px}.section-title p,.muted{color:var(--muted)}.championship-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.champ-card,.panel,.empty,.championship-header,.cta,.stat-card{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 10px 24px rgba(16,58,102,.06)}.champ-card{padding:18px;display:flex;flex-direction:column;gap:12px}.card-icon{font-size:30px}.status{display:inline-block;background:#dcfce7;color:#166534;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:800}.status.closed{background:#f1f5f9;color:#475569}.champ-card h3{margin:9px 0 4px}.champ-card p{color:var(--muted);margin:0}.championship-header{padding:22px;margin-bottom:14px}.championship-header h2{margin:0 0 6px;font-size:30px}.championship-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{background:#eef6ff;border:1px solid var(--line);border-radius:999px;padding:7px 10px;color:var(--blue);font-size:13px;font-weight:700}.tabs{display:flex;gap:8px;overflow:auto;margin-bottom:14px}.tab{border:1px solid var(--line);background:#fff;border-radius:999px;padding:11px 14px;cursor:pointer;font-weight:800;color:var(--blue)}.tab.active{background:var(--blue);color:#fff}.panel{padding:20px;margin-bottom:16px}.wide{width:100%}.admin-grid{display:grid;grid-template-columns:minmax(280px,.85fr) 1.15fr;gap:16px}.two{display:grid;grid-template-columns:1fr 1fr;gap:12px}.inline-form{display:grid;grid-template-columns:1.2fr 1fr .7fr 1fr .7fr 1.5fr auto;gap:10px}label{display:block;font-weight:700;margin-bottom:12px}input,select,textarea{width:100%;margin-top:6px;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;background:#fff}textarea{min-height:100px}.admin-list{display:flex;flex-direction:column;gap:10px}.admin-item{display:flex;justify-content:space-between;gap:10px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:12px}.empty{padding:22px;color:var(--muted);text-align:center}.table{width:100%;border-collapse:separate;border-spacing:0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden}.table th,.table td{padding:12px;border-bottom:1px solid var(--line);text-align:left}.table th{background:#f8fbfe;color:var(--blue)}.table tr:last-child td{border-bottom:0}.cta{padding:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px}.cards-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}.stat-card{padding:18px}.stat-card strong{display:block;font-size:28px;color:var(--blue)}.stat-card span{color:var(--muted)}.login-box{max-width:460px}.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:16px;padding:14px;margin-bottom:14px}.ok{background:#dcfce7;border:1px solid #86efac;color:#166534;border-radius:16px;padding:12px;margin-bottom:14px}.loading{opacity:.65;pointer-events:none}@media(max-width:900px){body{display:block}.sidebar{width:auto;height:auto;position:relative}.app{padding:16px}.hero,.admin-grid,.two,.inline-form{grid-template-columns:1fr}.cards-row{grid-template-columns:1fr 1fr}.topbar{display:block}.capao-badge{margin-top:14px}}@media print{.sidebar,.topbar,.tabs,.hero-actions,.back,button{display:none!important}.app{padding:0}.view{display:block}.panel,.table{box-shadow:none}}
+  </style>
 </head>
 <body>
   <aside class="sidebar">
-    <div class="brand">
-      <div class="brand-logo">⚽</div>
-      <div>
-        <strong>Capão Esportes</strong>
-        <span>Sistema Inteligente</span>
-      </div>
-    </div>
+    <div class="brand"><div class="brand-logo">⚽</div><div><strong>Capão Esportes</strong><span>Sistema Inteligente</span></div></div>
     <nav>
       <button class="nav active" data-view="home">Início</button>
       <button class="nav" data-view="publico">Campeonatos</button>
       <button class="nav" data-view="admin">Painel restrito</button>
       <button class="nav" data-view="ajuda">Ajuda</button>
     </nav>
-    <div class="side-note">
-      <strong>Ambiente gratuito</strong>
-      <p>Protótipo pronto para GitHub Pages + Supabase Free.</p>
-    </div>
+    <div class="side-note"><strong>Online na nuvem</strong><p>Conectado ao Supabase para salvar dados em qualquer computador.</p></div>
   </aside>
-
   <main class="app">
-    <header class="topbar">
-      <div>
-        <small>Prefeitura Municipal de Capão da Canoa</small>
-        <h1>Sistema Inteligente</h1>
-        <p>Secretaria de Esportes de Capão da Canoa</p>
-      </div>
-      <div class="capao-badge">
-        <span>🌊</span>
-        <strong>Esporte municipal</strong>
-      </div>
-    </header>
-
-    <section id="home" class="view show">
-      <div class="hero">
-        <div>
-          <span class="eyebrow">Gestão online de campeonatos</span>
-          <h2>Organização simples, segura e separada por campeonato.</h2>
-          <p>Crie campeonatos, abra inscrições, receba denúncias, registre punições e acompanhe classificação, resultados e artilharia em um único lugar.</p>
-          <div class="hero-actions">
-            <button class="primary" data-view-target="publico">Ver campeonatos municipais</button>
-            <button class="secondary" data-view-target="admin">Entrar no painel restrito</button>
-          </div>
-        </div>
-        <div class="hero-card">
-          <div class="ball">⚽</div>
-          <strong>Capão da Canoa</strong>
-          <span>Futebol • Futsal • Taças • Torneios</span>
-        </div>
-      </div>
-
-      <div class="section-title">
-        <div>
-          <h3>Campeonatos municipais</h3>
-          <p>Os campeonatos aparecem aqui conforme forem criados pelo responsável do sistema.</p>
-        </div>
-      </div>
-      <div id="homeChampionships" class="championship-grid"></div>
-    </section>
-
-    <section id="publico" class="view">
-      <div class="section-title">
-        <div>
-          <h2>Escolha um campeonato</h2>
-          <p>As informações são organizadas separadamente. Primeiro selecione o campeonato; depois acesse inscrições, denúncias, tabela, artilharia e punições.</p>
-        </div>
-      </div>
-      <div id="publicChampionships" class="championship-grid"></div>
-    </section>
-
-    <section id="championship" class="view">
-      <button class="back" data-view-target="publico">← Voltar aos campeonatos</button>
-      <div id="championshipHeader" class="championship-header"></div>
-      <div class="tabs" id="championshipTabs">
-        <button class="tab active" data-tab="visao">Visão geral</button>
-        <button class="tab" data-tab="inscricao">Inscrição</button>
-        <button class="tab" data-tab="denuncias">Denúncias</button>
-        <button class="tab" data-tab="resultados">Resultados</button>
-        <button class="tab" data-tab="classificacao">Classificação</button>
-        <button class="tab" data-tab="artilheiros">Artilheiros</button>
-        <button class="tab" data-tab="punicoes">Punições</button>
-      </div>
-      <div id="championshipContent"></div>
-    </section>
-
-    <section id="admin" class="view">
-      <div class="section-title">
-        <div>
-          <h2>Painel restrito</h2>
-          <p>Área para o responsável criar campeonatos, definir inscrições abertas e lançar dados oficiais.</p>
-        </div>
-      </div>
-      <div class="admin-grid">
-        <form id="championshipForm" class="panel">
-          <h3>Criar novo campeonato</h3>
-          <label>Nome do campeonato
-            <input name="nome" required placeholder="Ex: Campeonato Municipal de Futsal 2026">
-          </label>
-          <label>Modalidade
-            <select name="modalidade">
-              <option>Futsal</option>
-              <option>Futebol de campo</option>
-              <option>Futebol society</option>
-              <option>Vôlei</option>
-              <option>Outro</option>
-            </select>
-          </label>
-          <div class="two">
-            <label>Data de início
-              <input type="date" name="inicio" required>
-            </label>
-            <label>Data final prevista
-              <input type="date" name="fim" required>
-            </label>
-          </div>
-          <label>Status da inscrição
-            <select name="inscricoesAbertas">
-              <option value="true">Inscrições abertas</option>
-              <option value="false">Inscrições fechadas</option>
-            </select>
-          </label>
-          <label>Fases do campeonato
-            <input name="fases" placeholder="Grupos, Quartas, Semifinal, Final">
-          </label>
-          <button class="primary" type="submit">Criar campeonato</button>
-        </form>
-
-        <div class="panel">
-          <h3>Campeonatos cadastrados</h3>
-          <p class="muted">Use esta lista para conferir o que aparecerá na página inicial.</p>
-          <div id="adminChampionships" class="admin-list"></div>
-        </div>
-      </div>
-
-      <div class="panel wide">
-        <h3>Lançamento rápido de resultado</h3>
-        <form id="resultForm" class="inline-form">
-          <select name="campeonatoId" required></select>
-          <input name="timeA" required placeholder="Time A">
-          <input name="golsA" required type="number" min="0" placeholder="Gols A">
-          <input name="timeB" required placeholder="Time B">
-          <input name="golsB" required type="number" min="0" placeholder="Gols B">
-          <input name="goleadores" placeholder="Artilheiros: João=2; Pedro=1">
-          <button class="primary" type="submit">Salvar resultado</button>
-        </form>
-      </div>
-    </section>
-
-    <section id="ajuda" class="view">
-      <div class="panel wide">
-        <h2>Como usar</h2>
-        <ol class="help-list">
-          <li>O responsável entra no <strong>Painel restrito</strong> e cria um campeonato.</li>
-          <li>O campeonato aparece automaticamente na página inicial.</li>
-          <li>A pessoa clica no campeonato desejado.</li>
-          <li>Dentro daquele campeonato aparecem as abas próprias: inscrição, denúncias, resultados, classificação, artilheiros e punições.</li>
-          <li>Dados oficiais só são editados pelo responsável. Equipes apenas se inscrevem e enviam denúncias.</li>
-        </ol>
-      </div>
-    </section>
+    <header class="topbar"><div><small>Prefeitura Municipal de Capão da Canoa</small><h1>Sistema Inteligente</h1><p>Secretaria de Esportes de Capão da Canoa</p></div><div class="capao-badge"><span>🌊</span><strong>Esporte municipal</strong></div></header>
+    <section id="home" class="view show"><div class="hero"><div><span class="eyebrow">Gestão online de campeonatos</span><h2>Organização simples, segura e separada por campeonato.</h2><p>Crie campeonatos, abra inscrições, receba denúncias, registre punições e acompanhe classificação, resultados e artilharia em um único lugar.</p><div class="hero-actions"><button class="primary" data-view-target="publico">Ver campeonatos municipais</button><button class="secondary" data-view-target="admin">Entrar no painel restrito</button></div></div><div class="hero-card"><div class="ball">⚽</div><strong>Capão da Canoa</strong><span>Futebol • Futsal • Taças • Torneios</span></div></div><div class="section-title"><div><h3>Campeonatos municipais</h3><p>Os campeonatos aparecem aqui conforme forem criados pelo responsável do sistema.</p></div></div><div id="homeChampionships" class="championship-grid"></div></section>
+    <section id="publico" class="view"><div class="section-title"><div><h2>Escolha um campeonato</h2><p>Primeiro selecione o campeonato. Depois acesse inscrições, denúncias, tabela, artilharia e punições.</p></div></div><div id="publicChampionships" class="championship-grid"></div></section>
+    <section id="championship" class="view"><button class="back" data-view-target="publico">← Voltar aos campeonatos</button><div id="championshipHeader" class="championship-header"></div><div class="tabs" id="championshipTabs"><button class="tab active" data-tab="visao">Visão geral</button><button class="tab" data-tab="inscricao">Inscrição</button><button class="tab" data-tab="denuncias">Denúncias</button><button class="tab" data-tab="resultados">Resultados</button><button class="tab" data-tab="classificacao">Classificação</button><button class="tab" data-tab="artilheiros">Artilheiros</button><button class="tab" data-tab="punicoes">Punições</button></div><div id="championshipContent"></div></section>
+    <section id="admin" class="view"><div id="adminLogin"></div><div id="adminArea" style="display:none"><div class="section-title"><div><h2>Painel restrito</h2><p>Área para o responsável criar campeonatos, lançar resultados e cadastrar punições.</p></div><button class="secondary" id="logoutBtn">Sair do painel</button></div><div class="notice">Nesta fase, o login é uma proteção simples de tela. A segurança completa por usuário será configurada na próxima etapa com Authentication e RLS.</div><div class="admin-grid"><form id="championshipForm" class="panel"><h3>Criar novo campeonato</h3><label>Nome do campeonato<input name="nome" required placeholder="Ex: Campeonato Municipal de Futsal 2026"></label><label>Modalidade<select name="modalidade"><option>Futsal</option><option>Futebol de campo</option><option>Futebol society</option><option>Vôlei</option><option>Outro</option></select></label><div class="two"><label>Data de início<input type="date" name="inicio" required></label><label>Data final prevista<input type="date" name="fim" required></label></div><label>Status da inscrição<select name="inscricoesAbertas"><option value="true">Inscrições abertas</option><option value="false">Inscrições fechadas</option></select></label><label>Fases do campeonato<input name="fases" placeholder="Grupos, Quartas, Semifinal, Final"></label><button class="primary" type="submit">Criar campeonato</button></form><div class="panel"><h3>Campeonatos cadastrados</h3><p class="muted">Use esta lista para conferir o que aparecerá na página inicial.</p><div id="adminChampionships" class="admin-list"></div></div></div><div class="panel wide"><h3>Lançamento rápido de resultado</h3><form id="resultForm" class="inline-form"><select name="campeonatoId" required></select><input name="timeA" required placeholder="Time A"><input name="golsA" required type="number" min="0" placeholder="Gols A"><input name="timeB" required placeholder="Time B"><input name="golsB" required type="number" min="0" placeholder="Gols B"><input name="goleadores" placeholder="Artilheiros: João=2; Pedro=1"><button class="primary" type="submit">Salvar resultado</button></form></div></div></section>
+    <section id="ajuda" class="view"><div class="panel wide"><h2>Como usar</h2><ol><li>O responsável entra no <strong>Painel restrito</strong> e cria um campeonato.</li><li>O campeonato aparece automaticamente na página inicial.</li><li>A pessoa clica no campeonato desejado.</li><li>Dentro daquele campeonato aparecem as abas próprias.</li><li>Dados oficiais ficam no painel. Equipes usam inscrição e denúncia.</li></ol></div></section>
   </main>
-
-  <template id="championshipCardTemplate">
-    <article class="champ-card">
-      <div class="card-icon">🏆</div>
-      <div>
-        <span class="status"></span>
-        <h3></h3>
-        <p></p>
-      </div>
-      <button class="primary small">Acessar campeonato</button>
-    </article>
-  </template>
-
-  <script src="assets/app.js"></script>
+  <template id="championshipCardTemplate"><article class="champ-card"><div class="card-icon">🏆</div><div><span class="status"></span><h3></h3><p></p></div><button class="primary small">Acessar campeonato</button></article></template>
+  <script>
+const SUPABASE_URL = 'https://ugqoqecxbeqnyekezlec.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_f-apeDU5xqGuxSimTVn2gQ_AUdV5uBb';
+const ADMIN_PASSWORD = 'capao2026';
+const REST = SUPABASE_URL + '/rest/v1/';
+const headers = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', Prefer: 'return=representation' };
+let state = { campeonatos: [], inscricoes: [], denuncias: [], punicoes: [], resultados: [], gols: [] };
+let selectedChampionshipId = null;
+let activeTab = 'visao';
+function $(sel){ return document.querySelector(sel); }
+function $all(sel){ return [...document.querySelectorAll(sel)]; }
+function formatDate(date){ if(!date) return '-'; return new Date(date + 'T00:00:00').toLocaleDateString('pt-BR'); }
+function today(){ return new Date().toISOString().slice(0,10); }
+async function api(path, options={}){ const res = await fetch(REST + path, { ...options, headers:{...headers, ...(options.headers||{})} }); if(!res.ok){ const text = await res.text(); throw new Error(text || res.statusText); } if(res.status === 204) return null; return res.json(); }
+async function loadCloud(){ document.body.classList.add('loading'); try{ const [campeonatos, denuncias, punicoes, jogos, gols] = await Promise.all([ api('campeonatos?select=*&order=created_at.desc'), api('denuncias?select=*&order=created_at.desc'), api('punicoes?select=*&order=created_at.desc'), api('jogos?select=*&order=created_at.desc'), api('gols?select=*&order=created_at.desc') ]); state.campeonatos = campeonatos.map(c=>({id:c.id,nome:c.nome,modalidade:c.modalidade,inicio:c.inicio,fim:c.fim,inscricoesAbertas:c.inscricoes_abertas,fases:c.fases||[]})); state.denuncias = denuncias.map(d=>({id:d.id,campeonatoId:d.campeonato_id,protocolo:d.protocolo,equipe:d.equipe_reclamante,responsavel:d.responsavel,denunciado:d.equipe_denunciada,atleta:d.atleta_citado,motivo:d.motivo,descricao:d.descricao,status:d.status})); state.punicoes = punicoes.map(p=>({id:p.id,campeonatoId:p.campeonato_id,atleta:p.descricao?.split(' | ')[0] || 'Atleta cadastrado',equipe:p.equipe||'-',motivo:p.motivo,descricao:p.descricao,data_inicio:p.data_inicio,fim:p.data_fim})); state.resultados = jogos.filter(j=>j.gols_a !== null && j.gols_b !== null).map(j=>({id:j.id,campeonatoId:j.campeonato_id,timeA:j.time_a,timeB:j.time_b,golsA:j.gols_a,golsB:j.gols_b,goleadores:''})); state.gols = gols.map(g=>({id:g.id,campeonatoId:g.campeonato_id,jogoId:g.jogo_id,atleta_nome:g.atleta_nome,equipe:g.equipe,quantidade:g.quantidade})); if(!selectedChampionshipId) selectedChampionshipId = state.campeonatos[0]?.id || null; renderChampionshipLists(); renderAdmin(); if($('#championship').classList.contains('show')) renderChampionship(); } catch(err){ alert('Erro ao carregar dados do Supabase: ' + err.message); } finally{ document.body.classList.remove('loading'); } }
+function setView(id){ $all('.view').forEach(v => v.classList.toggle('show', v.id === id)); $all('.nav').forEach(n => n.classList.toggle('active', n.dataset.view === id)); if(id === 'home' || id === 'publico') renderChampionshipLists(); if(id === 'admin') renderAdmin(); }
+function championshipCard(c){ const tpl = $('#championshipCardTemplate').content.cloneNode(true); const status = tpl.querySelector('.status'); status.textContent = c.inscricoesAbertas ? 'Inscrições abertas' : 'Inscrições fechadas'; status.classList.toggle('closed', !c.inscricoesAbertas); tpl.querySelector('h3').textContent = c.nome; tpl.querySelector('p').textContent = `${c.modalidade} • ${formatDate(c.inicio)} até ${formatDate(c.fim)}`; tpl.querySelector('button').addEventListener('click', () => openChampionship(c.id)); return tpl; }
+function renderChampionshipLists(){ ['homeChampionships','publicChampionships'].forEach(id=>{ const box=$('#'+id); box.innerHTML=''; if(!state.campeonatos.length){ box.innerHTML='<div class="empty">Nenhum campeonato criado ainda.</div>'; return; } state.campeonatos.forEach(c=>box.appendChild(championshipCard(c))); }); }
+function openChampionship(id){ selectedChampionshipId=id; activeTab='visao'; setView('championship'); renderChampionship(); }
+function selectedChampionship(){ return state.campeonatos.find(c=>c.id===selectedChampionshipId); }
+function champData(key){ return state[key].filter(x=>x.campeonatoId===selectedChampionshipId); }
+function renderChampionship(){ const c=selectedChampionship(); if(!c) return setView('publico'); $('#championshipHeader').innerHTML=`<h2>${c.nome}</h2><p class="muted">Todas as informações abaixo pertencem somente a este campeonato.</p><div class="championship-meta"><span class="pill">${c.modalidade}</span><span class="pill">${formatDate(c.inicio)} até ${formatDate(c.fim)}</span><span class="pill">${c.inscricoesAbertas?'Inscrições abertas':'Inscrições fechadas'}</span><span class="pill">Fases: ${c.fases.join(', ')||'Não informadas'}</span></div>`; $all('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===activeTab)); const content=$('#championshipContent'); if(activeTab==='visao') content.innerHTML=renderOverview(c); if(activeTab==='inscricao') content.innerHTML=renderInscription(c); if(activeTab==='denuncias') content.innerHTML=renderComplaintForm(c); if(activeTab==='resultados') content.innerHTML=renderResults(); if(activeTab==='classificacao') content.innerHTML=renderStandings(); if(activeTab==='artilheiros') content.innerHTML=renderScorers(); if(activeTab==='punicoes') content.innerHTML=renderPunishments(c); bindDynamicForms(); }
+function renderOverview(c){ const results=champData('resultados').length, complaints=champData('denuncias').length, punishments=champData('punicoes').length; return `${c.inscricoesAbertas?`<div class="cta"><div><strong>Período de inscrição aberto</strong><p class="muted">Responsáveis das equipes podem cadastrar atletas neste campeonato.</p></div><button class="primary" data-tab-target="inscricao">Inscrever equipe</button></div>`:''}<div class="cards-row"><div class="stat-card"><strong>${complaints}</strong><span>Denúncias</span></div><div class="stat-card"><strong>${results}</strong><span>Resultados</span></div><div class="stat-card"><strong>${punishments}</strong><span>Punições</span></div><div class="stat-card"><strong>${state.campeonatos.length}</strong><span>Campeonatos no sistema</span></div></div><div class="panel wide"><h3>Orientação</h3><p>Use as abas acima para consultar somente as informações deste campeonato. Nada fica misturado com outros torneios.</p></div>`; }
+function renderInscription(c){ if(!c.inscricoesAbertas) return '<div class="empty">As inscrições deste campeonato estão fechadas pelo responsável do sistema.</div>'; return `<form id="inscriptionForm" class="panel"><h3>Inscrever equipe neste campeonato</h3><div class="two"><label>Nome da equipe<input name="equipe" required></label><label>Responsável<input name="responsavel" required></label></div><div class="two"><label>WhatsApp do responsável<input name="whatsapp" required placeholder="(51) 99999-9999"></label><label>Nome do atleta<input name="atleta" required></label></div><div class="two"><label>CPF/documento do atleta<input name="documento" required></label><label>Data de nascimento<input type="date" name="nascimento"></label></div><button class="primary" type="submit">Salvar inscrição</button><button class="secondary" type="button" onclick="window.print()">Gerar PDF</button></form>`; }
+function renderComplaintForm(){ return `<form id="complaintForm" class="panel"><h3>Registrar denúncia</h3><p class="muted">A denúncia ficará salva na nuvem dentro deste campeonato.</p><div class="two"><label>Equipe reclamante<input name="equipe" required></label><label>Responsável<input name="responsavel" required></label></div><div class="two"><label>Equipe denunciada<input name="denunciado"></label><label>Atleta citado<input name="atleta"></label></div><label>Motivo<select name="motivo"><option>Atleta irregular</option><option>Briga em campo</option><option>Questão extracampo</option><option>Escalação irregular</option><option>Outro</option></select></label><label>Descrição da denúncia<textarea name="descricao" required></textarea></label><button class="primary" type="submit">Enviar denúncia</button></form>${renderComplaintList()}`; }
+function renderComplaintList(){ const list=champData('denuncias'); if(!list.length) return '<div class="empty wide">Nenhuma denúncia registrada neste campeonato.</div>'; return `<div class="panel wide"><h3>Denúncias deste campeonato</h3><table class="table"><thead><tr><th>Protocolo</th><th>Equipe</th><th>Motivo</th><th>Status</th></tr></thead><tbody>${list.map(d=>`<tr><td>${d.protocolo}</td><td>${d.equipe}</td><td>${d.motivo}</td><td>${d.status}</td></tr>`).join('')}</tbody></table></div>`; }
+function renderResults(){ const list=champData('resultados'); if(!list.length) return '<div class="empty">Nenhum resultado lançado neste campeonato.</div>'; return `<table class="table"><thead><tr><th>Jogo</th><th>Placar</th></tr></thead><tbody>${list.map(r=>`<tr><td>${r.timeA} x ${r.timeB}</td><td>${r.golsA} x ${r.golsB}</td></tr>`).join('')}</tbody></table>`; }
+function calculateStandings(){ const map={}; const ensure=t=>map[t] ||= {time:t,pontos:0,jogos:0,vitorias:0,empates:0,derrotas:0,gp:0,gc:0,sg:0}; champData('resultados').forEach(r=>{ const a=ensure(r.timeA),b=ensure(r.timeB); const ga=+r.golsA,gb=+r.golsB; a.jogos++;b.jogos++;a.gp+=ga;a.gc+=gb;b.gp+=gb;b.gc+=ga; if(ga>gb){a.vitorias++;b.derrotas++;a.pontos+=3}else if(ga<gb){b.vitorias++;a.derrotas++;b.pontos+=3}else{a.empates++;b.empates++;a.pontos++;b.pontos++}}); Object.values(map).forEach(t=>t.sg=t.gp-t.gc); return Object.values(map).sort((a,b)=>b.pontos-a.pontos||b.vitorias-a.vitorias||b.sg-a.sg||b.gp-a.gp); }
+function renderStandings(){ const table=calculateStandings(); if(!table.length) return '<div class="empty">A classificação aparecerá automaticamente após o lançamento dos resultados.</div>'; return `<table class="table"><thead><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr></thead><tbody>${table.map(t=>`<tr><td>${t.time}</td><td>${t.pontos}</td><td>${t.jogos}</td><td>${t.vitorias}</td><td>${t.empates}</td><td>${t.derrotas}</td><td>${t.gp}</td><td>${t.gc}</td><td>${t.sg}</td></tr>`).join('')}</tbody></table>`; }
+function renderScorers(){ const list=state.gols.filter(g=>g.campeonatoId===selectedChampionshipId).reduce((acc,g)=>{acc[g.atleta_nome]=(acc[g.atleta_nome]||0)+Number(g.quantidade||1);return acc},{}); const rows=Object.entries(list).sort((a,b)=>b[1]-a[1]); if(!rows.length) return '<div class="empty">A artilharia aparecerá automaticamente quando os goleadores forem lançados.</div>'; return `<table class="table"><thead><tr><th>Atleta</th><th>Gols</th></tr></thead><tbody>${rows.map(([nome,gols])=>`<tr><td>${nome}</td><td>${gols}</td></tr>`).join('')}</tbody></table>`; }
+function renderPunishments(){ const list=champData('punicoes'); const form=isAdmin()?`<form id="punishmentForm" class="panel"><h3>Cadastrar punição neste campeonato</h3><div class="two"><label>Atleta<input name="atleta" required></label><label>Equipe<input name="equipe" required></label></div><div class="two"><label>Motivo<input name="motivo" required placeholder="Agressão, briga, irregularidade..."></label><label>Suspenso até<input name="fim" type="date" required></label></div><label>Resumo da decisão<textarea name="descricao"></textarea></label><button class="primary" type="submit">Salvar punição</button><button class="secondary" type="button" onclick="window.print()">Gerar PDF</button></form>`:''; if(!list.length) return form+'<div class="empty wide">Nenhuma punição registrada neste campeonato.</div>'; return form+`<div class="panel wide"><h3>Punições deste campeonato</h3><table class="table"><thead><tr><th>Atleta</th><th>Equipe</th><th>Motivo</th><th>Suspenso até</th></tr></thead><tbody>${list.map(p=>`<tr><td>${p.atleta}</td><td>${p.equipe}</td><td>${p.motivo}</td><td>${formatDate(p.fim)}</td></tr>`).join('')}</tbody></table></div>`; }
+function parseScorers(text=''){ return text.split(';').map(x=>x.trim()).filter(Boolean).map(item=>{ const [nome,gols]=item.split('=').map(v=>v.trim()); return {nome,gols:Number(gols||1)}; }).filter(s=>s.nome); }
+function isAdmin(){ return localStorage.getItem('capao_admin')==='true'; }
+function renderAdmin(){ $('#adminLogin').innerHTML = isAdmin() ? '' : `<div class="panel login-box"><h2>Entrar no painel restrito</h2><p class="muted">Digite a senha temporária do administrador.</p><label>Senha<input id="adminPass" type="password" placeholder="Digite a senha"></label><button class="primary" id="loginBtn">Entrar</button><p class="muted">Senha temporária: capao2026</p></div>`; $('#adminArea').style.display = isAdmin() ? 'block' : 'none'; $('#loginBtn')?.addEventListener('click',()=>{ if($('#adminPass').value===ADMIN_PASSWORD){ localStorage.setItem('capao_admin','true'); renderAdmin(); } else alert('Senha incorreta.'); }); $('#logoutBtn')?.addEventListener('click',()=>{ localStorage.removeItem('capao_admin'); renderAdmin(); }); const select=$('#resultForm select[name="campeonatoId"]'); if(select) select.innerHTML=state.campeonatos.map(c=>`<option value="${c.id}">${c.nome}</option>`).join(''); const box=$('#adminChampionships'); if(box){ box.innerHTML=state.campeonatos.map(c=>`<div class="admin-item"><div><strong>${c.nome}</strong><br><span class="muted">${c.modalidade} • ${c.inscricoesAbertas?'inscrições abertas':'inscrições fechadas'}</span></div><button class="small secondary" data-open="${c.id}">Abrir</button></div>`).join('') || '<div class="empty">Nenhum campeonato.</div>'; document.querySelectorAll('[data-open]').forEach(b=>b.onclick=()=>openChampionship(b.dataset.open)); } }
+function bindDynamicForms(){ document.querySelectorAll('[data-tab-target]').forEach(btn=>btn.onclick=()=>{activeTab=btn.dataset.tabTarget;renderChampionship();}); $('#inscriptionForm')?.addEventListener('submit', async e=>{ e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); try{ const equipe=await api('equipes',{method:'POST',body:JSON.stringify({campeonato_id:selectedChampionshipId,nome:d.equipe,responsavel:d.responsavel,whatsapp:d.whatsapp})}); let atleta; try{ atleta=(await api('atletas',{method:'POST',body:JSON.stringify({nome:d.atleta,documento:d.documento,nascimento:d.nascimento||null})}))[0]; }catch{ const achados=await api(`atletas?documento=eq.${encodeURIComponent(d.documento)}&select=*`); atleta=achados[0]; } await api('inscricoes',{method:'POST',body:JSON.stringify({campeonato_id:selectedChampionshipId,equipe_id:equipe[0].id,atleta_id:atleta.id,situacao:'liberado',observacao:null})}); alert('Inscrição salva na nuvem.'); e.target.reset(); await loadCloud(); }catch(err){ alert('Erro ao salvar inscrição: '+err.message); } }); $('#complaintForm')?.addEventListener('submit', async e=>{ e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); const protocolo=`DEN-${new Date().getFullYear()}-${String(Date.now()).slice(-5)}`; try{ await api('denuncias',{method:'POST',body:JSON.stringify({campeonato_id:selectedChampionshipId,protocolo,equipe_reclamante:d.equipe,responsavel:d.responsavel,equipe_denunciada:d.denunciado||null,atleta_citado:d.atleta||null,motivo:d.motivo,descricao:d.descricao,status:'Recebida'})}); alert('Denúncia enviada e salva na nuvem. Protocolo: '+protocolo); e.target.reset(); await loadCloud(); }catch(err){ alert('Erro ao enviar denúncia: '+err.message); } }); $('#punishmentForm')?.addEventListener('submit', async e=>{ e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); try{ await api('punicoes',{method:'POST',body:JSON.stringify({campeonato_id:selectedChampionshipId,equipe:d.equipe,motivo:d.motivo,descricao:`${d.atleta} | ${d.descricao||''}`,data_inicio:today(),data_fim:d.fim,visivel_publico:true})}); alert('Punição salva na nuvem.'); e.target.reset(); await loadCloud(); }catch(err){ alert('Erro ao salvar punição: '+err.message); } }); }
+$('#championshipForm').addEventListener('submit', async e=>{ e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); try{ await api('campeonatos',{method:'POST',body:JSON.stringify({nome:d.nome,modalidade:d.modalidade,inicio:d.inicio,fim:d.fim,inscricoes_abertas:d.inscricoesAbertas==='true',fases:(d.fases||'').split(',').map(f=>f.trim()).filter(Boolean)})}); alert('Campeonato criado na nuvem.'); e.target.reset(); await loadCloud(); }catch(err){ alert('Erro ao criar campeonato: '+err.message); } });
+$('#resultForm').addEventListener('submit', async e=>{ e.preventDefault(); const d=Object.fromEntries(new FormData(e.target)); try{ const jogo=(await api('jogos',{method:'POST',body:JSON.stringify({campeonato_id:d.campeonatoId,time_a:d.timeA,time_b:d.timeB,gols_a:Number(d.golsA),gols_b:Number(d.golsB),status:'Finalizado'})}))[0]; for(const s of parseScorers(d.goleadores)){ await api('gols',{method:'POST',body:JSON.stringify({campeonato_id:d.campeonatoId,jogo_id:jogo.id,atleta_nome:s.nome,equipe:'Não informado',quantidade:s.gols})}); } alert('Resultado salvo na nuvem.'); e.target.reset(); await loadCloud(); }catch(err){ alert('Erro ao salvar resultado: '+err.message); } });
+$all('.nav').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.view))); $all('[data-view-target]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.viewTarget))); $('#championshipTabs').addEventListener('click',e=>{ if(e.target.matches('.tab')){ activeTab=e.target.dataset.tab; renderChampionship(); }});
+loadCloud();
+  </script>
 </body>
 </html>
