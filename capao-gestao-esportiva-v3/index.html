@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Sistema Inteligente | Secretaria de Esportes de Capao da Canoa</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 :root{--blue:#0a4ea3;--blue2:#073b7d;--green:#11a36a;--yellow:#f5c542;--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#6b7280;--line:#dbe3ef;--danger:#c62828;--warn:#b7791f;--radius:18px;--shadow:0 18px 50px rgba(10,78,163,.12)}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#eef5ff 0%,#f9fbff 45%,#edf7f3 100%);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh}.top{padding:26px 18px}.hero{max-width:1180px;margin:0 auto;background:linear-gradient(135deg,var(--blue),var(--blue2));border-radius:30px;padding:30px;color:#fff;display:grid;grid-template-columns:1fr auto;gap:24px;box-shadow:var(--shadow);overflow:hidden;position:relative}.hero:after{content:"⚽";font-size:160px;opacity:.12;position:absolute;right:70px;top:-30px}.brand{display:flex;gap:16px;align-items:center}.logo{width:64px;height:64px;border-radius:22px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:34px;border:1px solid rgba(255,255,255,.22)}h1{margin:0;font-size:34px;line-height:1.05}.sub{margin:8px 0 0;color:#dbeafe;font-size:17px}.hero-actions{display:flex;align-items:center;gap:10px;z-index:1}.btn{border:0;border-radius:14px;padding:12px 16px;background:var(--blue);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(10,78,163,.18)}.btn.secondary{background:#fff;color:var(--blue)}.btn.ghost{background:#edf4ff;color:var(--blue);box-shadow:none}.btn.green{background:var(--green)}.btn.red{background:var(--danger)}.btn.gray{background:#e5e7eb;color:#6b7280;box-shadow:none;cursor:not-allowed}.btn.small{padding:8px 10px;border-radius:10px;font-size:13px}.wrap{max-width:1180px;margin:0 auto;padding:0 18px 60px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:0 10px 28px rgba(15,23,42,.06)}.card h3{margin:0 0 8px}.muted{color:var(--muted)}.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eef5ff;color:var(--blue);font-weight:700;font-size:12px}.tag.green{background:#eafaf2;color:#08764b}.tag.red{background:#feecec;color:#b91c1c}.tag.warn{background:#fff7e6;color:#9a5b00}.tabs{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}.tab{border:1px solid var(--line);background:#fff;color:#334155;border-radius:14px;padding:10px 14px;font-weight:800}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}.section{display:none}.section.active{display:block}.form{display:grid;gap:12px}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}label{font-weight:800;font-size:13px;color:#334155}input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}textarea{min-height:110px}.table{width:100%;border-collapse:separate;border-spacing:0 8px}.table th{text-align:left;font-size:12px;text-transform:uppercase;color:#64748b;padding:0 10px}.table td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 10px}.table td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}.table td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0}.admin-layout{display:grid;grid-template-columns:260px 1fr;gap:18px}.side{background:#082f63;color:#fff;border-radius:24px;padding:16px;position:sticky;top:12px;height:max-content}.side h2{font-size:18px;margin:6px 8px 16px}.side button{display:block;width:100%;text-align:left;margin:6px 0;background:transparent;border:0;color:#dbeafe;padding:12px;border-radius:13px;font-weight:800}.side button.active,.side button:hover{background:rgba(255,255,255,.12);color:#fff}.admin-panel{display:none}.admin-panel.active{display:block}.player{border:1px solid var(--line);border-radius:16px;padding:14px;background:#f8fbff;margin:10px 0}.player-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.preview{width:72px;height:72px;border-radius:16px;background:#eef2f7;border:1px dashed #b6c3d6;object-fit:contain;padding:4px}.msg{padding:12px 14px;border-radius:14px;background:#eef5ff;border:1px solid #c7ddff;color:#154b89;margin:12px 0}.msg.err{background:#fff1f1;border-color:#ffc9c9;color:#a51515}.msg.ok{background:#ecfdf5;border-color:#b7f4d3;color:#096b44}.hidden{display:none!important}.two-actions{display:flex;gap:8px;flex-wrap:wrap}.champ-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin:20px 0}.empty{padding:28px;border:1px dashed #b9c5d6;border-radius:18px;text-align:center;color:#64748b;background:#fff}.bracket{display:grid;gap:12px}.game{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}.game strong{display:block;margin-bottom:6px}.kbd{background:#eef2ff;color:#273a9b;padding:2px 7px;border-radius:8px;font-size:12px;font-weight:800}@media(max-width:900px){.hero{grid-template-columns:1fr}.grid,.row,.row3,.admin-layout{grid-template-columns:1fr}.side{position:static}.hero-actions{flex-direction:column;align-items:stretch}.btn{width:100%}}
@@ -34,7 +35,7 @@
     <section id="artilheiros" class="section"><div class="card"><h2>Artilheiros</h2><div class="row"><div><label>Escolha o campeonato</label><select id="scorerChamp" onchange="renderScorers()"></select></div></div><div id="scorersBox"></div></div></section>
     <section id="confrontos" class="section"><div class="card"><h2>Confrontos e rodadas</h2><div class="row"><div><label>Escolha o campeonato</label><select id="gamesChamp" onchange="renderGamesPublic()"></select></div></div><div id="gamesPublicBox" class="bracket"></div></div></section>
     <section id="punicoesPublicas" class="section"><div class="card"><h2>Punições vigentes</h2><p class="muted">Consulta pública de atletas com pendências esportivas vigentes.</p><div id="punPublicBox"></div></div></section>
-    <section id="denuncia" class="section"><div class="card"><h2>Quero fazer uma denúncia</h2><p class="muted">A denúncia será salva, aparecerá no painel administrativo, poderá gerar PDF e abrir mensagem no WhatsApp do responsável.</p><form id="complaintForm" class="form"><div class="row"><div><label>Seu nome</label><input id="denNome" required></div><div><label>WhatsApp</label><input id="denWhats"></div></div><div class="row"><div><label>Campeonato</label><select id="denCampeonato" required></select></div><div><label>Equipe reclamante</label><input id="denReclamante"></div></div><div class="row"><div><label>Equipe denunciada</label><input id="denDenunciada"></div><div><label>Partida ou rodada</label><input id="denPartida"></div></div><label>Descrição da denúncia</label><textarea id="denDesc" required placeholder="Escreva aqui o que aconteceu..."></textarea><div class="two-actions"><button class="btn green" type="submit">Enviar denúncia</button><button class="btn ghost" type="button" onclick="generateComplaintPdf(lastComplaint||null)">Gerar PDF da última denúncia</button></div></form><div id="denMsg"></div></div></section>
+    <section id="denuncia" class="section"><div class="card"><h2>Quero fazer uma denúncia</h2><p class="muted">A denúncia será salva no painel administrativo. O sistema gera PDF, salva na nuvem e abre o WhatsApp com uma mensagem pronta e link para a denúncia.</p><form id="complaintForm" class="form"><div class="row"><div><label>Seu nome</label><input id="denNome" required></div><div><label>WhatsApp</label><input id="denWhats"></div></div><div class="row"><div><label>Campeonato</label><select id="denCampeonato" required></select></div><div><label>Equipe reclamante</label><input id="denReclamante"></div></div><div class="row"><div><label>Equipe denunciada</label><input id="denDenunciada"></div><div><label>Partida ou rodada</label><input id="denPartida"></div></div><label>Descrição da denúncia</label><textarea id="denDesc" required placeholder="Escreva aqui o que aconteceu..."></textarea><label>Imagens da denúncia</label><input id="denImgs" type="file" accept="image/*" multiple onchange="previewComplaintImages()"><small class="muted">Você pode anexar até 3 imagens. Use fotos leves, de preferência até 3 MB cada.</small><div id="denImgPreview" class="two-actions"></div><div class="two-actions"><button class="btn green" type="submit">Enviar denúncia</button><button class="btn ghost" type="button" onclick="generateComplaintPdf(lastComplaint||null)">Gerar PDF da última denúncia</button></div></form><div id="denMsg"></div></div></section>
 
     <section id="admin" class="section"><div id="loginBox" class="card"><h2>Acesso administrativo</h2><p class="muted">Senha temporária: <span class="kbd">capao2026</span>. Depois pode ser trocada por login real com Supabase Authentication.</p><div class="row"><input id="adminPass" type="password" placeholder="Digite a senha"><button class="btn" onclick="adminLogin()">Entrar</button></div><div id="loginMsg"></div></div><div id="adminArea" class="hidden admin-layout"><aside class="side no-print"><h2>Painel de controle</h2><button class="active" data-admin="inicio" onclick="goAdmin('inicio')">Início</button><button data-admin="campeonatosAdmin" onclick="goAdmin('campeonatosAdmin')">Campeonatos</button><button data-admin="inscricoesAdmin" onclick="goAdmin('inscricoesAdmin')">Inscrições pendentes</button><button data-admin="clubesAdmin" onclick="goAdmin('clubesAdmin')">Clubes e atletas</button><button data-admin="confrontosAdmin" onclick="goAdmin('confrontosAdmin')">Confrontos e rodadas</button><button data-admin="resultadosAdmin" onclick="goAdmin('resultadosAdmin')">Resultados</button><button data-admin="artilhariaAdmin" onclick="goAdmin('artilhariaAdmin')">Artilheiros</button><button data-admin="denunciasAdmin" onclick="goAdmin('denunciasAdmin')">Denúncias</button><button data-admin="punicoesAdmin" onclick="goAdmin('punicoesAdmin')">Pendências e punições</button><button data-admin="configAdmin" onclick="goAdmin('configAdmin')">Configurações</button><button onclick="adminLogout()">Sair</button></aside><div>
       <div id="inicio" class="admin-panel active card"><h2>Bem-vindo ao painel administrativo</h2><p class="muted">Gerencie campeonatos, inscrições, clubes, confrontos, resultados, artilharia, denúncias e punições sem misturar as informações da parte pública.</p><div id="adminStats" class="grid"></div></div>
@@ -55,7 +56,7 @@ const SUPABASE_URL='https://ugqoqecxbeqnyekezlec.supabase.co';
 const SUPABASE_KEY='sb_publishable_f-apeDU5xqGuxSimTVn2gQ_AUdV5uBb';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const WHATSAPP_RESPONSAVEL_PADRAO='5551989750241';
-let championships=[],teams=[],requests=[],complaints=[],punishments=[],games=[],goals=[],config={},lastComplaint=null,lastPunishmentDraft=null;
+let championships=[],teams=[],requests=[],complaints=[],punishments=[],games=[],goals=[],config={},lastComplaint=null,lastPunishmentDraft=null,pendingDenunciaParam=null;
 const $=id=>document.getElementById(id);
 function fmtDate(v){if(!v)return '-';return new Date(v).toLocaleString('pt-BR')}
 function onlyDate(v){if(!v)return '-';return new Date(v+'T00:00:00').toLocaleDateString('pt-BR')}
@@ -86,7 +87,7 @@ async function collectManualPlayers(){let arr=[];for(const p of document.querySe
 function resetManualTeamForm(){ $('manualTeamForm').reset(); $('manualLogoPrev').src=''; $('manualPlayersBox').innerHTML=''; manualPlayerCount=0; addManualPlayerRow(); }
 function checkPunishment(nome,doc,champId){let c=championships.find(x=>x.id===champId);let p=punishments.find(x=>(x.documento&&doc&&x.documento.replace(/\D/g,'')===doc.replace(/\D/g,''))||x.atleta_nome.toLowerCase().trim()===nome.toLowerCase().trim());if(!p||!c)return{block:false,msg:''};let fimPun=new Date(p.data_fim+'T23:59:59'),fimChamp=new Date(c.fim+'T23:59:59'),iniChamp=new Date(c.inicio+'T00:00:00');if(fimPun>fimChamp)return{block:true,msg:`punição vigente até ${onlyDate(p.data_fim)}, após o fim previsto do campeonato.`};if(fimPun>=iniChamp)return{block:false,msg:`Atleta com restrição: liberado somente após ${onlyDate(p.data_fim)}.`};return{block:false,msg:''}}
 $('teamRequestForm').addEventListener('submit',async e=>{e.preventDefault();try{let c=championships.find(x=>x.id===$('reqCampeonato').value),st=registrationStatus(c);if(!st.can)throw new Error(st.msg);let logo=await fileToData($('reqLogo').files[0]);let atletas=await collectPlayers();let payload={campeonato_id:c.id,nome_time:$('reqTime').value,responsavel_nome:$('reqResp').value,responsavel_cpf:$('reqCpf').value,responsavel_whatsapp:$('reqWhats').value,responsavel_email:$('reqEmail').value,endereco:$('reqEnd').value,cep:$('reqCep').value,logo_data:logo,atletas,status:'pendente'};let {error}=await db.from('inscricoes_clubes').insert(payload);if(error)throw error;alert('Inscrição enviada para análise do administrador.');resetTeamForm();await loadAll()}catch(err){alert(err.message)}})
-function adminLogin(){if($('adminPass').value==='capao2026'){$('loginBox').classList.add('hidden');$('adminArea').classList.remove('hidden');renderAll()}else $('loginMsg').innerHTML='<div class="msg err">Senha incorreta.</div>'}
+function adminLogin(){if($('adminPass').value==='capao2026'){$('loginBox').classList.add('hidden');$('adminArea').classList.remove('hidden');renderAll();if(pendingDenunciaParam){goAdmin('denunciasAdmin');setTimeout(()=>highlightComplaint(pendingDenunciaParam),200)}}else $('loginMsg').innerHTML='<div class="msg err">Senha incorreta.</div>'}
 function adminLogout(){$('adminArea').classList.add('hidden');$('loginBox').classList.remove('hidden')}
 function goAdmin(id){document.querySelectorAll('.admin-panel').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.side button[data-admin]').forEach(b=>b.classList.toggle('active',b.dataset.admin===id));renderAll()}
 $('champForm').addEventListener('submit',async e=>{e.preventDefault();let payload={nome:$('cNome').value,modalidade:$('cModalidade').value,tipo:$('cTipo').value,status:$('cStatus').value,inicio:$('cInicio').value,fim:$('cFim').value,inscricao_inicio:$('cInsInicio').value||null,inscricao_fim:$('cInsFim').value||null,inscricoes_abertas:$('cStatus').value==='inscricoes_abertas',descricao:$('cDesc').value};let {error}=await db.from('campeonatos').insert(payload);if(error)return alert(error.message);e.target.reset();await loadAll();alert('Campeonato criado.')})
@@ -120,18 +121,139 @@ function renderAdminScorers(){let champ=$('goalChamp')?.value;let arr=aggregateG
 function scorerInputId(nome,equipe){return 'sg_'+btoa(unescape(encodeURIComponent(nome+'|'+equipe))).replace(/=/g,'')}
 async function deleteScorer(nome,equipe){let champ=$('goalChamp').value;if(!confirm(`Excluir ${nome} da artilharia deste campeonato?`))return;await db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);await loadAll()}
 async function setScorerGoals(nome,equipe){let champ=$('goalChamp').value;let qtd=Number($(scorerInputId(nome,equipe)).value||0);await db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(qtd>0)await db.from('gols').insert({campeonato_id:champ,atleta_nome:nome,equipe:equipe,quantidade:qtd});await loadAll()}
-$('complaintForm').addEventListener('submit',async e=>{e.preventDefault();let protocolo='DEN-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6);let payload={campeonato_id:$('denCampeonato').value,protocolo,equipe_reclamante:$('denReclamante').value||$('denNome').value,responsavel:$('denNome').value,equipe_denunciada:$('denDenunciada').value,atleta_citado:$('denPartida').value,motivo:'Denúncia esportiva',descricao:$('denDesc').value,status:'Recebida'};let {error}=await db.from('denuncias').insert(payload);if(error)return alert(error.message);lastComplaint=payload;$('denMsg').innerHTML=`<div class="msg ok">Denúncia enviada. Protocolo: <b>${protocolo}</b></div>`;generateComplaintPdf(payload);openWhatsappComplaint(payload);e.target.reset();await loadAll()})
-function generateComplaintPdf(d){if(!d)return alert('Nenhuma denúncia gerada ainda.');let c=championships.find(x=>x.id===d.campeonato_id);let w=window.open('','_blank');w.document.write(`<title>Denúncia ${d.protocolo}</title><body style="font-family:Arial;padding:28px"><h1>Denúncia - ${d.protocolo}</h1><p><b>Campeonato:</b> ${esc(c?.nome||'')}</p><p><b>Responsável:</b> ${esc(d.responsavel)}</p><p><b>Equipe reclamante:</b> ${esc(d.equipe_reclamante)}</p><p><b>Equipe denunciada:</b> ${esc(d.equipe_denunciada)}</p><p><b>Partida/Rodada:</b> ${esc(d.atleta_citado)}</p><h3>Relato</h3><p>${esc(d.descricao)}</p><p><small>Emitido em ${new Date().toLocaleString('pt-BR')}</small></p><script>print()<\/script></body>`);w.document.close()}
-function openWhatsappComplaint(d){let num=(config.whatsapp_responsavel||'').replace(/\D/g,'');if(!num){alert('Denúncia salva e PDF gerado. Configure o WhatsApp do responsável no painel para abrir envio automático.');return}let msg=`Nova denúncia registrada%0AProtocolo: ${encodeURIComponent(d.protocolo)}%0AResponsável: ${encodeURIComponent(d.responsavel)}%0AEquipe reclamante: ${encodeURIComponent(d.equipe_reclamante||'')}%0AEquipe denunciada: ${encodeURIComponent(d.equipe_denunciada||'')}%0ARelato: ${encodeURIComponent(d.descricao||'')}`;window.open(`https://wa.me/${num}?text=${msg}`,'_blank')}
-function renderComplaintsAdmin(){$('complaintsAdminBox').innerHTML=complaints.length?complaints.map(d=>`<div class="game"><strong>${esc(d.protocolo)}</strong><p class="muted">${esc(d.responsavel)} • ${fmtDate(d.created_at)}</p><p>${esc(d.equipe_reclamante)} denunciou ${esc(d.equipe_denunciada||'-')}</p><div class="two-actions"><button class="btn small" onclick="alert('${esc((d.descricao||'').replace(/'/g,'\\\''))}')">Abrir completa</button><button class="btn small ghost" onclick='generateComplaintPdf(${JSON.stringify(d)})'>PDF</button></div></div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>'}
-$('punForm').addEventListener('submit',async e=>{e.preventDefault();await savePunishment(false)})
+function publicComplaintLink(protocolo){return `${location.origin}${location.pathname}?denuncia=${encodeURIComponent(protocolo)}`}
+function previewComplaintImages(){
+  const files=[...($('denImgs')?.files||[])];
+  const box=$('denImgPreview');
+  if(!box)return;
+  box.innerHTML='';
+  files.slice(0,3).forEach(f=>{
+    const img=document.createElement('img');
+    img.className='preview';
+    img.title=f.name;
+    img.src=URL.createObjectURL(f);
+    box.appendChild(img);
+  });
+  if(files.length>3)box.insertAdjacentHTML('beforeend','<div class="msg err">Serão aceitas no máximo 3 imagens.</div>');
+}
+function storagePublicUrl(path){return db.storage.from('denuncias').getPublicUrl(path).data.publicUrl}
+async function uploadToDenuncias(path,blob,contentType){
+  const {error}=await db.storage.from('denuncias').upload(path,blob,{contentType,upsert:true});
+  if(error)throw new Error('Erro ao enviar arquivo para a nuvem: '+error.message);
+  return storagePublicUrl(path);
+}
+async function buildComplaintPdfBlob(d,imageFiles=[]){
+  if(!window.jspdf?.jsPDF)throw new Error('Biblioteca de PDF não carregou. Atualize a página e tente novamente.');
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'pt',format:'a4'});
+  const c=championships.find(x=>x.id===d.campeonato_id);
+  const left=44;
+  let y=48;
+  doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Denúncia - Sistema Inteligente',left,y);y+=22;
+  doc.setFontSize(12);doc.text('Secretaria de Esportes de Capão da Canoa',left,y);y+=28;
+  doc.setFont('helvetica','normal');doc.setFontSize(11);
+  const rows=[['Protocolo',d.protocolo],['Campeonato',c?.nome||''],['Responsável',d.responsavel||''],['WhatsApp',d.whatsapp||''],['Equipe reclamante',d.equipe_reclamante||''],['Equipe denunciada',d.equipe_denunciada||''],['Partida/Rodada',d.atleta_citado||''],['Data',new Date().toLocaleString('pt-BR')]];
+  rows.forEach(([k,v])=>{doc.setFont('helvetica','bold');doc.text(k+':',left,y);doc.setFont('helvetica','normal');doc.text(String(v||'-'),left+120,y);y+=18;});
+  y+=10;doc.setFont('helvetica','bold');doc.text('Relato:',left,y);y+=18;doc.setFont('helvetica','normal');
+  const lines=doc.splitTextToSize(d.descricao||'',500);doc.text(lines,left,y);y+=lines.length*14+20;
+  if(imageFiles.length){doc.setFont('helvetica','bold');doc.text('Imagens anexadas:',left,y);y+=18;}
+  for(let i=0;i<imageFiles.length;i++){
+    const file=imageFiles[i];
+    const dataUrl=await fileToData(file);
+    const props=doc.getImageProperties(dataUrl);
+    let maxW=500,maxH=300;
+    let w=maxW,h=props.height*w/props.width;
+    if(h>maxH){h=maxH;w=props.width*h/props.height;}
+    if(y+h>760){doc.addPage();y=48;}
+    doc.setFont('helvetica','normal');doc.text(`Imagem ${i+1}: ${file.name}`,left,y);y+=12;
+    doc.addImage(dataUrl,file.type.includes('png')?'PNG':'JPEG',left,y,w,h);
+    y+=h+24;
+  }
+  return doc.output('blob');
+}
+async function generateComplaintPdf(d){
+  if(!d)return alert('Nenhuma denúncia gerada ainda.');
+  try{
+    if(d.pdf_url){window.open(d.pdf_url,'_blank');return;}
+    const blob=await buildComplaintPdfBlob(d,[]);
+    const url=URL.createObjectURL(blob);
+    window.open(url,'_blank');
+  }catch(err){alert(err.message)}
+}
+$('complaintForm').addEventListener('submit',async e=>{
+  e.preventDefault();
+  try{
+    const files=[...($('denImgs')?.files||[])];
+    if(files.length>3)return alert('Envie no máximo 3 imagens.');
+    for(const f of files){if(f.size>3*1024*1024)return alert(`A imagem ${f.name} está muito pesada. Use até 3 MB por imagem.`)}
+    const protocolo='DEN-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6);
+    const base={campeonato_id:$('denCampeonato').value,protocolo,equipe_reclamante:$('denReclamante').value||$('denNome').value,responsavel:$('denNome').value,whatsapp:$('denWhats').value,equipe_denunciada:$('denDenunciada').value,atleta_citado:$('denPartida').value,motivo:'Denúncia esportiva',descricao:$('denDesc').value,status:'Recebida',link_denuncia:publicComplaintLink(protocolo)};
+    $('denMsg').innerHTML='<div class="msg">Enviando denúncia, imagens e PDF para a nuvem. Aguarde...</div>';
+    const imageUrls=[],imagePaths=[];
+    for(let i=0;i<files.length;i++){
+      const f=files[i];
+      const ext=(f.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const path=`${protocolo}/imagem-${i+1}.${ext}`;
+      const url=await uploadToDenuncias(path,f,f.type||'image/jpeg');
+      imageUrls.push(url);imagePaths.push(path);
+    }
+    const pdfBlob=await buildComplaintPdfBlob(base,files);
+    const pdfPath=`${protocolo}/denuncia-${protocolo}.pdf`;
+    const pdfUrl=await uploadToDenuncias(pdfPath,pdfBlob,'application/pdf');
+    const payload={...base,pdf_url:pdfUrl,pdf_path:pdfPath,imagens_urls:imageUrls,imagens_paths:imagePaths};
+    const {error}=await db.from('denuncias').insert(payload);
+    if(error)throw error;
+    lastComplaint=payload;
+    $('denMsg').innerHTML=`<div class="msg ok">Denúncia enviada. Protocolo: <b>${protocolo}</b><br><a href="${esc(pdfUrl)}" target="_blank">Abrir PDF salvo na nuvem</a><br><button class="btn small green" onclick='openWhatsappComplaint(${JSON.stringify(payload)})'>Abrir WhatsApp com mensagem pronta</button></div>`;
+    openWhatsappComplaint(payload);
+    e.target.reset();$('denImgPreview').innerHTML='';
+    await loadAll();
+  }catch(err){$('denMsg').innerHTML=`<div class="msg err">${esc(err.message||err)}</div>`;}
+})
+function openWhatsappComplaint(d){
+  let num=(config.whatsapp_responsavel||'').replace(/\D/g,'');
+  if(!num){alert('Denúncia salva. Configure o WhatsApp do responsável no painel.');return}
+  let msg=`Nova denúncia registrada no Sistema Inteligente da Secretaria de Esportes de Capão da Canoa%0A%0AProtocolo: ${encodeURIComponent(d.protocolo)}%0AResponsável: ${encodeURIComponent(d.responsavel||'')}%0AEquipe reclamante: ${encodeURIComponent(d.equipe_reclamante||'')}%0AEquipe denunciada: ${encodeURIComponent(d.equipe_denunciada||'')}%0A%0AAcesse a denúncia completa no painel:%0A${encodeURIComponent(d.link_denuncia||publicComplaintLink(d.protocolo))}%0A%0APDF salvo:%0A${encodeURIComponent(d.pdf_url||'')}`;
+  window.open(`https://wa.me/${num}?text=${msg}`,'_blank')
+}
+function renderComplaintsAdmin(){
+  $('complaintsAdminBox').innerHTML=complaints.length?complaints.map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo)}">
+      <strong>${esc(d.protocolo)}</strong>
+      <p class="muted">${esc(d.responsavel)} • ${fmtDate(d.created_at)}</p>
+      <p>${esc(d.equipe_reclamante)} denunciou ${esc(d.equipe_denunciada||'-')}</p>
+      <details><summary><b>Abrir denúncia completa</b></summary><p>${esc(d.descricao||'')}</p>${(d.imagens_urls||[]).map(u=>`<img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px">`).join('')}</details>
+      <div class="two-actions">
+        ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${JSON.stringify(d)})'>PDF</button>`}
+        <button class="btn small" onclick='openWhatsappComplaint(${JSON.stringify(d)})'>WhatsApp</button>
+        <button class="btn small red" onclick="deleteComplaint('${d.id}','${esc(d.protocolo||'')}')">Excluir denúncia</button>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>'
+}
+function highlightComplaint(protocolo){
+  if(!protocolo)return;
+  const el=$('complaint_'+protocolo);
+  if(el){el.style.outline='3px solid var(--yellow)';el.scrollIntoView({behavior:'smooth',block:'center'});}
+}
+async function deleteComplaint(id,protocolo){
+  if(!confirm(`Você tem certeza que deseja excluir esta denúncia?\n\nProtocolo: ${protocolo}\n\nEssa ação vai apagar a denúncia do sistema e tentará remover os arquivos anexados da nuvem.`))return;
+  const d=complaints.find(x=>x.id===id);
+  const paths=[];
+  if(d?.pdf_path)paths.push(d.pdf_path);
+  if(Array.isArray(d?.imagens_paths))paths.push(...d.imagens_paths);
+  if(paths.length)await db.storage.from('denuncias').remove(paths);
+  let {error}=await db.from('denuncias').delete().eq('id',id);
+  if(error)return alert(error.message);
+  await loadAll();
+  alert('Denúncia excluída com sucesso.');
+}
 async function savePunishment(showPdf){let payload={atleta_nome:$('punAtleta').value,documento:$('punDoc').value,equipe:$('punEquipe').value,tipo_punicao:$('punTipo').value,data_inicio:$('punInicio').value,data_fim:$('punFim').value,descricao:$('punDesc').value,visivel_publico:true};lastPunishmentDraft=payload;let {error}=await db.from('pendencias_atletas').insert(payload);if(error)return alert(error.message);if(showPdf)generatePunishmentPdf(payload);$('punForm').reset();await loadAll();alert('Punição salva.')}
 async function savePunAndPdf(){await savePunishment(true)}
 function generatePunishmentPdf(p){p=p||lastPunishmentDraft||{atleta_nome:$('punAtleta')?.value,documento:$('punDoc')?.value,equipe:$('punEquipe')?.value,tipo_punicao:$('punTipo')?.value,data_inicio:$('punInicio')?.value,data_fim:$('punFim')?.value,descricao:$('punDesc')?.value};if(!p.atleta_nome)return alert('Preencha os dados da punição primeiro.');let w=window.open('','_blank');w.document.write(`<title>Punição ${esc(p.atleta_nome)}</title><body style="font-family:Arial;padding:30px"><h1>Comunicado de Punição</h1><h2>Secretaria de Esportes de Capão da Canoa</h2><p><b>Atleta:</b> ${esc(p.atleta_nome)}</p><p><b>Documento:</b> ${esc(p.documento)}</p><p><b>Equipe:</b> ${esc(p.equipe)}</p><p><b>Tipo de punição:</b> ${esc(p.tipo_punicao)}</p><p><b>Período:</b> ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><h3>Descrição</h3><p>${esc(p.descricao)}</p><br><p>____________________________________</p><p>Comissão/Responsável</p><script>print()<\/script></body>`);w.document.close()}
 function renderPunishments(){let arr=punishments;$('punBox').innerHTML=arr.length?arr.map(p=>`<div class="game"><strong>${esc(p.atleta_nome)}</strong><p>${esc(p.equipe||'')} • ${esc(p.tipo_punicao)}<br>Suspenso de ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><button class="btn small ghost" onclick='generatePunishmentPdf(${JSON.stringify(p)})'>Gerar PDF</button></div>`).join(''):'<div class="empty">Nenhuma punição cadastrada.</div>'}
 function renderPunPublic(){let now=new Date();let arr=punishments.filter(p=>p.visivel_publico!==false && new Date(p.data_fim+'T23:59:59')>=now);$('punPublicBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Motivo</th><th>Suspenso até</th></tr>'+arr.map(p=>`<tr><td>${esc(p.atleta_nome)}</td><td>${esc(p.equipe||'-')}</td><td>${esc(p.tipo_punicao)}</td><td>${onlyDate(p.data_fim)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma punição vigente cadastrada.</div>'}
 async function saveConfig(){await db.from('configuracoes').upsert({chave:'whatsapp_responsavel',valor:$('cfgWhats').value,updated_at:new Date().toISOString()});$('cfgMsg').innerHTML='<div class="msg ok">Configuração salva.</div>';await loadConfig()}
-window.addEventListener('load',()=>{addPlayerRow();addManualPlayerRow();loadAll()});
+window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();loadAll()});
 </script>
 </body>
 </html>
