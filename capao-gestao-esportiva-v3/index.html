@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sistema Inteligente | Secretaria de Esportes de Capão da Canoa</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">⚽</div>
+      <div>
+        <strong>Capão Esportes</strong>
+        <span>Sistema Inteligente</span>
+      </div>
+    </div>
+    <nav>
+      <button class="nav active" data-view="home">Início</button>
+      <button class="nav" data-view="publico">Campeonatos</button>
+      <button class="nav" data-view="admin">Painel restrito</button>
+      <button class="nav" data-view="ajuda">Ajuda</button>
+    </nav>
+    <div class="side-note">
+      <strong>Ambiente gratuito</strong>
+      <p>Protótipo pronto para GitHub Pages + Supabase Free.</p>
+    </div>
+  </aside>
+
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <small>Prefeitura Municipal de Capão da Canoa</small>
+        <h1>Sistema Inteligente</h1>
+        <p>Secretaria de Esportes de Capão da Canoa</p>
+      </div>
+      <div class="capao-badge">
+        <span>🌊</span>
+        <strong>Esporte municipal</strong>
+      </div>
+    </header>
+
+    <section id="home" class="view show">
+      <div class="hero">
+        <div>
+          <span class="eyebrow">Gestão online de campeonatos</span>
+          <h2>Organização simples, segura e separada por campeonato.</h2>
+          <p>Crie campeonatos, abra inscrições, receba denúncias, registre punições e acompanhe classificação, resultados e artilharia em um único lugar.</p>
+          <div class="hero-actions">
+            <button class="primary" data-view-target="publico">Ver campeonatos municipais</button>
+            <button class="secondary" data-view-target="admin">Entrar no painel restrito</button>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="ball">⚽</div>
+          <strong>Capão da Canoa</strong>
+          <span>Futebol • Futsal • Taças • Torneios</span>
+        </div>
+      </div>
+
+      <div class="section-title">
+        <div>
+          <h3>Campeonatos municipais</h3>
+          <p>Os campeonatos aparecem aqui conforme forem criados pelo responsável do sistema.</p>
+        </div>
+      </div>
+      <div id="homeChampionships" class="championship-grid"></div>
+    </section>
+
+    <section id="publico" class="view">
+      <div class="section-title">
+        <div>
+          <h2>Escolha um campeonato</h2>
+          <p>As informações são organizadas separadamente. Primeiro selecione o campeonato; depois acesse inscrições, denúncias, tabela, artilharia e punições.</p>
+        </div>
+      </div>
+      <div id="publicChampionships" class="championship-grid"></div>
+    </section>
+
+    <section id="championship" class="view">
+      <button class="back" data-view-target="publico">← Voltar aos campeonatos</button>
+      <div id="championshipHeader" class="championship-header"></div>
+      <div class="tabs" id="championshipTabs">
+        <button class="tab active" data-tab="visao">Visão geral</button>
+        <button class="tab" data-tab="inscricao">Inscrição</button>
+        <button class="tab" data-tab="denuncias">Denúncias</button>
+        <button class="tab" data-tab="resultados">Resultados</button>
+        <button class="tab" data-tab="classificacao">Classificação</button>
+        <button class="tab" data-tab="artilheiros">Artilheiros</button>
+        <button class="tab" data-tab="punicoes">Punições</button>
+      </div>
+      <div id="championshipContent"></div>
+    </section>
+
+    <section id="admin" class="view">
+      <div class="section-title">
+        <div>
+          <h2>Painel restrito</h2>
+          <p>Área para o responsável criar campeonatos, definir inscrições abertas e lançar dados oficiais.</p>
+        </div>
+      </div>
+      <div class="admin-grid">
+        <form id="championshipForm" class="panel">
+          <h3>Criar novo campeonato</h3>
+          <label>Nome do campeonato
+            <input name="nome" required placeholder="Ex: Campeonato Municipal de Futsal 2026">
+          </label>
+          <label>Modalidade
+            <select name="modalidade">
+              <option>Futsal</option>
+              <option>Futebol de campo</option>
+              <option>Futebol society</option>
+              <option>Vôlei</option>
+              <option>Outro</option>
+            </select>
+          </label>
+          <div class="two">
+            <label>Data de início
+              <input type="date" name="inicio" required>
+            </label>
+            <label>Data final prevista
+              <input type="date" name="fim" required>
+            </label>
+          </div>
+          <label>Status da inscrição
+            <select name="inscricoesAbertas">
+              <option value="true">Inscrições abertas</option>
+              <option value="false">Inscrições fechadas</option>
+            </select>
+          </label>
+          <label>Fases do campeonato
+            <input name="fases" placeholder="Grupos, Quartas, Semifinal, Final">
+          </label>
+          <button class="primary" type="submit">Criar campeonato</button>
+        </form>
+
+        <div class="panel">
+          <h3>Campeonatos cadastrados</h3>
+          <p class="muted">Use esta lista para conferir o que aparecerá na página inicial.</p>
+          <div id="adminChampionships" class="admin-list"></div>
+        </div>
+      </div>
+
+      <div class="panel wide">
+        <h3>Lançamento rápido de resultado</h3>
+        <form id="resultForm" class="inline-form">
+          <select name="campeonatoId" required></select>
+          <input name="timeA" required placeholder="Time A">
+          <input name="golsA" required type="number" min="0" placeholder="Gols A">
+          <input name="timeB" required placeholder="Time B">
+          <input name="golsB" required type="number" min="0" placeholder="Gols B">
+          <input name="goleadores" placeholder="Artilheiros: João=2; Pedro=1">
+          <button class="primary" type="submit">Salvar resultado</button>
+        </form>
+      </div>
+    </section>
+
+    <section id="ajuda" class="view">
+      <div class="panel wide">
+        <h2>Como usar</h2>
+        <ol class="help-list">
+          <li>O responsável entra no <strong>Painel restrito</strong> e cria um campeonato.</li>
+          <li>O campeonato aparece automaticamente na página inicial.</li>
+          <li>A pessoa clica no campeonato desejado.</li>
+          <li>Dentro daquele campeonato aparecem as abas próprias: inscrição, denúncias, resultados, classificação, artilheiros e punições.</li>
+          <li>Dados oficiais só são editados pelo responsável. Equipes apenas se inscrevem e enviam denúncias.</li>
+        </ol>
+      </div>
+    </section>
+  </main>
+
+  <template id="championshipCardTemplate">
+    <article class="champ-card">
+      <div class="card-icon">🏆</div>
+      <div>
+        <span class="status"></span>
+        <h3></h3>
+        <p></p>
+      </div>
+      <button class="primary small">Acessar campeonato</button>
+    </article>
+  </template>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>
