@@ -15,6 +15,31 @@
 @media print{body{background:#fff}.no-print{display:none!important}.card{box-shadow:none;border:0}.wrap,.top{padding:0}.hero{display:none}}
 
 .match-list{display:grid;gap:12px;margin-top:14px}.match-card{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:0 8px 22px rgba(15,23,42,.06);overflow:hidden}.match-card summary{list-style:none;cursor:pointer;padding:14px}.match-card summary::-webkit-details-marker{display:none}.match-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.round-pill{font-size:12px;font-weight:900;color:var(--blue);background:#eef5ff;border-radius:999px;padding:6px 10px}.champ-pill{font-size:12px;color:#64748b;font-weight:800;text-align:right}.match-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}.match-team{display:flex;align-items:center;gap:10px;min-width:0}.match-team.right{justify-content:flex-end;text-align:right}.match-logo{width:44px;height:44px;border-radius:14px;object-fit:contain;background:#f8fafc;border:1px solid var(--line);padding:4px;flex:0 0 auto}.match-logo-placeholder{width:44px;height:44px;border-radius:14px;background:#eef5ff;border:1px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--blue);flex:0 0 auto}.match-name{font-size:17px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.match-x{font-weight:400;color:#94a3b8;font-size:22px}.match-mini-meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px;color:#475569;font-size:13px}.match-mini-meta span{background:#f8fbff;border:1px solid var(--line);border-radius:999px;padding:6px 10px}.match-expanded{border-top:1px solid var(--line);padding:14px;background:#fbfdff}.match-expanded h4{margin:0 0 10px}.match-card[open] summary{background:#f8fbff}.match-hint{font-size:12px;color:#64748b;text-align:center;margin-top:8px}.match-score{font-size:20px;font-weight:900;color:#0f172a}.match-status{display:inline-flex;align-items:center;margin-top:8px}.gamesPublicBox .game{box-shadow:none}.game-map{width:100%;height:230px;border:0;border-radius:16px;margin-top:12px;background:#eef2f7}.game-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0}.game-meta div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}.map-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}@media(max-width:700px){.match-card summary{padding:12px}.match-teams{gap:7px}.match-logo,.match-logo-placeholder{width:38px;height:38px;border-radius:12px}.match-name{font-size:15px}.match-mini-meta{justify-content:flex-start}.game-meta{grid-template-columns:1fr}.game-map{height:260px}}
+
+/* v23 - cards compactos de jogos e modal de detalhes */
+.match-grid-v23{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-top:14px}
+.match-card-v23{border:1px solid var(--line);background:#fff;border-radius:18px;padding:14px;box-shadow:0 8px 22px rgba(15,23,42,.06);cursor:pointer;transition:.16s transform,.16s box-shadow}
+.match-card-v23:hover{transform:translateY(-2px);box-shadow:0 14px 32px rgba(15,23,42,.10)}
+.match-card-v23-top{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.match-card-v23-main{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;margin:8px 0}
+.match-side-v23{display:flex;align-items:center;gap:8px;min-width:0}
+.match-side-v23.right{justify-content:flex-end;text-align:right}
+.match-logo-v23{width:42px;height:42px;border-radius:13px;object-fit:contain;background:#f8fafc;border:1px solid var(--line);padding:4px;flex:0 0 auto}
+.match-logo-ph-v23{width:42px;height:42px;border-radius:13px;background:#eef5ff;border:1px solid var(--line);display:grid;place-items:center;font-weight:900;color:var(--blue);flex:0 0 auto}
+.match-name-v23{font-weight:900;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-x-v23{color:#94a3b8;font-size:20px}
+.match-card-v23-info{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;color:#475569;font-size:12px}
+.match-card-v23-info span{background:#f8fbff;border:1px solid var(--line);border-radius:999px;padding:5px 9px}
+.match-click-v23{font-size:12px;color:#64748b;margin-top:8px;text-align:center}
+.match-modal-v23{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:none;padding:18px;overflow:auto}
+.match-modal-v23.active{display:block}
+.match-modal-card-v23{max-width:920px;margin:34px auto;background:#fff;border-radius:24px;border:1px solid var(--line);box-shadow:0 26px 80px rgba(15,23,42,.30);overflow:hidden}
+.match-modal-head-v23{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--line);background:#f8fbff}
+.match-modal-body-v23{padding:18px}
+.match-modal-close-v23{border:0;background:#e5e7eb;color:#0f172a;border-radius:12px;padding:9px 12px;font-weight:900;cursor:pointer}
+.match-modal-teams-v23{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin:12px 0 16px}.match-modal-teams-v23 .match-logo-v23,.match-modal-teams-v23 .match-logo-ph-v23{width:58px;height:58px;border-radius:18px}
+@media(max-width:700px){.match-grid-v23{grid-template-columns:1fr}.match-modal-card-v23{margin:10px auto}.match-modal-teams-v23{gap:8px}.match-name-v23{font-size:15px}.match-card-v23-main{gap:7px}}
+
 </style>
 </head>
 <body>
@@ -149,7 +174,43 @@ function iniciaisTime(nome){return String(nome||'?').split(/\s+/).filter(Boolean
 function logoTimeHtml(nome,champId){const t=buscarTimePorNome(nome,champId);if(t&&t.logo_data)return `<img class="match-logo" src="${esc(t.logo_data)}" alt="Escudo ${esc(nome)}">`;return `<div class="match-logo-placeholder">${esc(iniciaisTime(nome))}</div>`}
 function nomeCampeonatoJogo(g){return esc((championships.find(c=>c.id===g.campeonato_id)||{}).nome||'Campeonato')}
 function resumoDataHoraJogo(g){let d=fmtGameDate(g.data_jogo),h=fmtGameTime(g.horario_jogo);if(d==='-'&&h==='-')return 'Data e horário a definir';if(d==='-')return h;if(h==='-')return d;return d+' • '+h}
-function renderGamesPublic(){let c=$('gamesChamp')?.value;let list=games.filter(g=>!c||g.campeonato_id===c);$('gamesPublicBox').innerHTML=list.length?`<div class="match-list">${list.map(g=>{let map=mapsUrl(g),embed=mapsEmbedUrl(g);let placar=(g.gols_a!=null&&g.gols_b!=null)?`<span class="match-score">${g.gols_a} x ${g.gols_b}</span>`:'<span class="match-x">x</span>';return `<details class="match-card"><summary><div class="match-top"><span class="round-pill">Rodada ${g.rodada||1}</span><span class="champ-pill">${nomeCampeonatoJogo(g)}</span></div><div class="match-teams"><div class="match-team">${logoTimeHtml(g.time_a,g.campeonato_id)}<span class="match-name">${esc(g.time_a)}</span></div>${placar}<div class="match-team right"><span class="match-name">${esc(g.time_b)}</span>${logoTimeHtml(g.time_b,g.campeonato_id)}</div></div><div class="match-mini-meta"><span>📅 ${esc(resumoDataHoraJogo(g))}</span><span>📍 ${esc(g.local_jogo||'Local a definir')}</span></div><div class="match-hint">Clique para ver endereço, mapa e rota</div></summary><div class="match-expanded"><h4>Informações da partida</h4><span class="tag match-status">${esc(g.status||'Agendado')}</span><div class="game-meta"><div><b>Data</b><br>${fmtGameDate(g.data_jogo)}</div><div><b>Horário</b><br>${fmtGameTime(g.horario_jogo)}</div><div><b>Local</b><br>${esc(g.local_jogo||'-')}</div><div><b>Endereço</b><br>${esc(g.endereco_jogo||'-')}</div></div>${map?`<div class="map-actions"><a class="btn small green" href="${esc(map)}" target="_blank">Como chegar</a></div>`:''}${embed?`<iframe class="game-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(embed)}"></iframe>`:''}</div></details>`}).join('')}</div>`:'<div class="empty">Nenhum jogo cadastrado.</div>'}
+function renderGamesPublic(){
+  let c=$('gamesChamp')?.value;
+  let list=games.filter(g=>!c||g.campeonato_id===c);
+  const box=$('gamesPublicBox');
+  if(!box)return;
+  if(!list.length){box.innerHTML='<div class="empty">Nenhum jogo cadastrado.</div>';return;}
+  box.innerHTML=`<div class="match-grid-v23">${list.map(g=>{
+    let placar=(g.gols_a!=null&&g.gols_b!=null)?`${g.gols_a} x ${g.gols_b}`:'x';
+    return `<button type="button" class="match-card-v23" onclick="abrirDetalhesJogo('${g.id}')">
+      <div class="match-card-v23-top">
+        <span class="round-pill">Rodada ${g.rodada||1}</span>
+        <span class="champ-pill">${nomeCampeonatoJogo(g)}</span>
+      </div>
+      <div class="match-card-v23-main">
+        <div class="match-side-v23">${logoTimeHtmlV23(g.time_a,g.campeonato_id)}<span class="match-name-v23">${esc(g.time_a)}</span></div>
+        <div class="match-x-v23">${esc(placar)}</div>
+        <div class="match-side-v23 right"><span class="match-name-v23">${esc(g.time_b)}</span>${logoTimeHtmlV23(g.time_b,g.campeonato_id)}</div>
+      </div>
+      <div class="match-card-v23-info">
+        <span>🕒 ${esc(resumoDataHoraJogo(g))}</span>
+        <span>📍 ${esc(g.local_jogo||'Local a definir')}</span>
+      </div>
+      <div class="match-click-v23">Clique para ver endereço, mapa e rota</div>
+    </button>`;
+  }).join('')}</div><div id="matchModalV23" class="match-modal-v23" onclick="fecharDetalhesJogoFora(event)"><div id="matchModalCardV23" class="match-modal-card-v23"></div></div>`;
+}
+function logoTimeHtmlV23(nome,champId){const t=buscarTimePorNome(nome,champId);if(t&&t.logo_data)return `<img class="match-logo-v23" src="${esc(t.logo_data)}" alt="Escudo ${esc(nome)}">`;return `<div class="match-logo-ph-v23">${esc(iniciaisTime(nome))}</div>`}
+function abrirDetalhesJogo(id){
+  const g=(games||[]).find(x=>x.id===id);if(!g)return;
+  const modal=$('matchModalV23');const card=$('matchModalCardV23');if(!modal||!card)return;
+  const map=mapsUrl(g),embed=mapsEmbedUrl(g);
+  const placar=(g.gols_a!=null&&g.gols_b!=null)?`<span class="match-score">${g.gols_a} x ${g.gols_b}</span>`:'<span class="match-x-v23">x</span>';
+  card.innerHTML=`<div class="match-modal-head-v23"><div><b>Detalhes da partida</b><br><span class="muted">${nomeCampeonatoJogo(g)} • Rodada ${g.rodada||1}</span></div><button class="match-modal-close-v23" onclick="fecharDetalhesJogo()">Fechar</button></div><div class="match-modal-body-v23"><div class="match-modal-teams-v23"><div class="match-side-v23">${logoTimeHtmlV23(g.time_a,g.campeonato_id)}<span class="match-name-v23">${esc(g.time_a)}</span></div><div>${placar}</div><div class="match-side-v23 right"><span class="match-name-v23">${esc(g.time_b)}</span>${logoTimeHtmlV23(g.time_b,g.campeonato_id)}</div></div><span class="tag match-status">${esc(g.status||'Agendado')}</span><div class="game-meta"><div><b>Data</b><br>${fmtGameDate(g.data_jogo)}</div><div><b>Horário</b><br>${fmtGameTime(g.horario_jogo)}</div><div><b>Local</b><br>${esc(g.local_jogo||'-')}</div><div><b>Endereço</b><br>${esc(g.endereco_jogo||'-')}</div></div>${map?`<div class="map-actions"><a class="btn small green" href="${esc(map)}" target="_blank">Como chegar</a><a class="btn small ghost" href="${esc(map)}" target="_blank">Abrir no Maps</a></div>`:''}${embed?`<iframe class="game-map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="${esc(embed)}"></iframe>`:'<div class="empty">Mapa não disponível. Cadastre o endereço ou link do Google Maps no painel administrativo.</div>'}</div>`;
+  modal.classList.add('active');
+}
+function fecharDetalhesJogo(){const modal=$('matchModalV23');if(modal)modal.classList.remove('active')}
+function fecharDetalhesJogoFora(e){if(e.target&&e.target.id==='matchModalV23')fecharDetalhesJogo()}
 function renderResults(){let list=games;$('resultsBox').innerHTML=list.length?list.map(g=>`<div class="game"><strong>Rodada ${g.rodada||1}: ${esc(g.time_a)} x ${esc(g.time_b)}</strong><p class="muted">Campeonato: ${esc((championships.find(c=>c.id===g.campeonato_id)||{}).nome||'')} • Status: ${esc(g.status||'')}</p><div class="row3"><input id="ra${g.id}" type="number" placeholder="Gols ${esc(g.time_a)}" value="${g.gols_a??''}"><input id="rb${g.id}" type="number" placeholder="Gols ${esc(g.time_b)}" value="${g.gols_b??''}"><button class="btn small green" onclick="saveResult('${g.id}')">Salvar/editar resultado</button></div><div class="two-actions"><button class="btn small ghost" onclick="clearResult('${g.id}')">Limpar resultado</button><button class="btn small red" onclick="deleteGame('${g.id}')">Excluir jogo</button></div></div>`).join(''):'<div class="empty">Nenhum jogo cadastrado.</div>'}
 async function saveResult(id){let va=$('ra'+id).value,vb=$('rb'+id).value;if(va===''||vb==='')return alert('Informe os dois placares.');let a=Number(va),b=Number(vb);let g=games.find(x=>x.id===id);let vencedor=a>b?g.time_a:b>a?g.time_b:'Empate';await db.from('jogos').update({gols_a:a,gols_b:b,status:'Finalizado',vencedor}).eq('id',id);await loadAll()}
 async function clearResult(id){if(!confirm('Limpar o resultado deste jogo?'))return;await db.from('jogos').update({gols_a:null,gols_b:null,status:'Agendado',vencedor:null}).eq('id',id);await loadAll()}
