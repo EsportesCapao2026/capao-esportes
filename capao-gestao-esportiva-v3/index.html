@@ -328,7 +328,7 @@ input[type="file"]::file-selector-button{border:0;border-radius:10px;background:
 <section class="section" id="confrontos"><div class="card"><h2>Jogos e confrontos</h2><p class="muted">Consulte rodada, data, horário, local, endereço e o mapa de cada partida.</p><div class="row3"><div><label>Escolha o campeonato</label><select id="gamesChamp" onchange="syncCategoriaSelectsV32();renderGamesPublic()"></select></div><div id="gamesCategoriaWrap" class="v32-cat-wrap"><label>Categoria</label><select id="gamesCategoria" onchange="renderGamesPublic()"></select></div><div id="gamesRoundWrap"><label>Rodada</label><select id="gamesRound" onchange="renderGamesPublic()"><option value="">Todas as rodadas</option></select></div></div><div class="bracket" id="gamesPublicBox"></div></div></section>
 <section class="section" id="punicoesPublicas"><div class="card"><h2>Punições vigentes</h2><p class="muted">Consulta pública de atletas com pendências esportivas vigentes.</p><div id="punPublicBox"></div></div></section>
 <section class="section" id="regrasPublicas"><div class="card"><h2>Regras do campeonato</h2><p class="muted">Consulte as regras municipais cadastradas pelo administrador e veja se a CBJD está ativada como regra subsidiária.</p><div class="row"><div><label>Escolha o campeonato</label><select id="rulesChamp" onchange="renderRulesPublic()"></select></div></div><div id="rulesPublicBox"></div></div></section>
-<section class="section" id="denuncia"><div class="card"><h2>Quero fazer uma denúncia</h2><p class="muted">A denúncia será salva no painel administrativo. O sistema gera PDF, salva na nuvem e abre o WhatsApp com uma mensagem pronta e link para a denúncia.</p><form class="form" id="complaintForm"><div class="row"><div><label>Seu nome</label><input id="denNome" required=""/></div><div><label>WhatsApp</label><input id="denWhats"/></div></div><div class="row"><div><label>Campeonato</label><select id="denCampeonato" required=""></select></div><div><label>Equipe reclamante</label><input id="denReclamante"/></div></div><div class="row"><div><label>Equipe denunciada</label><input id="denDenunciada"/></div><div><label>Partida ou rodada</label><input id="denPartida"/></div></div><label>Descrição da denúncia</label><textarea id="denDesc" placeholder="Escreva aqui o que aconteceu..." required=""></textarea><label>Imagens da denúncia</label><input accept="image/*" id="denImgs" multiple="" onchange="previewComplaintImages()" type="file"/><small class="muted">Você pode anexar até 3 imagens. Use fotos leves, de preferência até 3 MB cada.</small><div class="two-actions" id="denImgPreview"></div><div class="two-actions"><button class="btn green" type="submit">Enviar denúncia</button><button class="btn ghost" onclick="generateComplaintPdf(lastComplaint||null)" type="button">Gerar PDF da última denúncia</button></div></form><div id="denMsg"></div></div></section>
+<section class="section" id="denuncia"><div class="card"><h2>Quero fazer uma denúncia</h2><p class="muted">A denúncia será salva no painel administrativo. Escolha o campeonato, a equipe denunciada e a partida/rodada. O sistema gera PDF, salva na nuvem e abre o WhatsApp com uma mensagem pronta e link para a denúncia.</p><form class="form" id="complaintForm"><div class="row"><div><label>Seu nome</label><input id="denNome" required=""/></div><div><label>WhatsApp</label><input id="denWhats"/></div></div><div class="row"><div><label>Campeonato</label><select id="denCampeonato" required="" onchange="updateDenunciaCampeonatoV50()"></select></div><div><label>Clube que você representa</label><input id="denReclamante" placeholder="Ex.: Unidos, XT, São Paulo..."/></div></div><div class="row"><div><label>Equipe denunciada</label><select id="denDenunciada" onchange="updateDenunciaEquipeV50()"><option value="">Selecione o campeonato primeiro</option></select></div><div><label>Rodada / partida já realizada</label><select id="denPartida" onchange="updateDenunciaPartidaV50()"><option value="">Selecione a equipe denunciada</option></select></div></div><div id="denResumoPartida" class="msg" style="display:none"></div><div class="row"><div><label>O que você quer denunciar?</label><select id="denTipoAlvo" onchange="updateDenunciaAlvoV50()"><option value="geral">Denúncia geral</option><option value="atleta">Atleta da equipe denunciada</option><option value="comissao">Comissão técnica da equipe denunciada</option><option value="outro">Outro motivo</option></select></div><div id="denAtletaWrap" class="hidden"><label>Atleta denunciado</label><select id="denAtletaDenunciado"><option value="">Selecione uma equipe</option></select></div><div id="denComissaoWrap" class="hidden"><label>Comissão técnica</label><select id="denComissaoDenunciada"><option value="">Selecione uma equipe</option></select></div></div><div id="denOutroWrap" class="hidden"><label>Outro motivo/denunciado</label><input id="denOutroAlvo" placeholder="Escreva quem ou o que deseja denunciar"/></div><label>Descrição da denúncia</label><textarea id="denDesc" placeholder="Escreva aqui o que aconteceu..." required=""></textarea><label>Imagens da denúncia</label><input accept="image/*" id="denImgs" multiple="" onchange="previewComplaintImages()" type="file"/><small class="muted">Você pode anexar até 3 imagens. Use fotos leves, de preferência até 3 MB cada.</small><div class="two-actions" id="denImgPreview"></div><div class="two-actions"><button class="btn green" type="submit">Enviar denúncia</button><button class="btn ghost" onclick="generateComplaintPdf(lastComplaint||null)" type="button">Gerar PDF da última denúncia</button></div></form><div id="denMsg"></div></div></section>
 <section class="section" id="admin"><div class="card" id="loginBox"><h2>Acesso administrativo</h2><p class="muted">Digite a senha administrativa para acessar o painel de controle.</p><div class="row"><input id="adminPass" placeholder="Senha do administrador" type="password"/><button class="btn" onclick="adminLogin()">Entrar como admin</button></div><div id="loginMsg"></div><hr/><h3>Login master</h3><p class="muted">Use este acesso para trocar a senha do administrador quando necessário.</p><div class="row"><input id="masterPass" placeholder="Senha master" type="password"/><button class="btn ghost" onclick="masterLogin()">Entrar como master</button></div><div id="masterMsg"></div></div><div class="hidden admin-layout" id="adminArea"><aside class="side no-print"><h2>Painel de controle</h2><button class="active" data-admin="inicio" onclick="goAdmin('inicio')">Início</button><button data-admin="campeonatosAdmin" onclick="goAdmin('campeonatosAdmin')">Campeonatos</button><button data-admin="inscricoesAdmin" onclick="goAdmin('inscricoesAdmin')">Inscrições pendentes</button><button data-admin="clubesAdmin" onclick="goAdmin('clubesAdmin')">Clubes e atletas</button><button data-admin="confrontosAdmin" onclick="goAdmin('confrontosAdmin')">Jogos e rodadas</button><button data-admin="resultadosAdmin" onclick="goAdmin('resultadosAdmin')">Resultados</button><button data-admin="artilhariaAdmin" onclick="goAdmin('artilhariaAdmin')">Artilheiros</button><button data-admin="denunciasAdmin" onclick="goAdmin('denunciasAdmin')">Denúncias</button><button data-admin="punicoesAdmin" onclick="goAdmin('punicoesAdmin')">Pendências e punições</button><button data-admin="regrasAdmin" onclick="goAdmin('regrasAdmin')">Regras dos campeonatos</button><button data-admin="configAdmin" onclick="goAdmin('configAdmin')">Configurações</button><button onclick="adminLogout()">Sair</button></aside><div>
 <div class="admin-panel active card" id="inicio"><h2>Bem-vindo ao painel administrativo</h2><p class="muted">Gerencie campeonatos, inscrições, clubes, confrontos, resultados, artilharia, denúncias e punições sem misturar as informações da parte pública.</p><div class="grid" id="adminStats"></div></div>
 <div class="admin-panel" id="campeonatosAdmin"><div class="card"><h2>Criar campeonato</h2><form class="form" id="champForm"><div class="row"><div><label>Nome</label><input id="cNome" placeholder="Municipal de Futsal" required=""/></div><div><label>Modalidade</label><select id="cModalidade"><option>Futsal</option><option>Futebol de Campo</option><option>Society</option><option>Outro</option></select></div></div><div class="row"><div><label>Tipo de campeonato</label><select id="cTipo" onchange="toggleTipoPersonalizadoV33()"><option>Pontos corridos</option><option>Mata-mata</option><option>Fase de grupos + mata-mata</option><option>Triangular</option><option>Quadrangular</option><option>Eliminatória ida e volta</option><option value="Personalizado">Personalizado</option></select><input id="cTipoPersonalizado" class="hidden" placeholder="Digite o tipo. Ex.: Hexagonal, Grupos regionais, Liga + mata-mata" style="margin-top:10px"/></div><div><label>Status</label><select id="cStatus"><option value="rascunho">Rascunho</option><option value="inscricoes_abertas">Inscrições abertas</option><option value="inscricoes_encerradas">Inscrições encerradas</option><option value="em_andamento">Em andamento</option><option value="finalizado">Finalizado</option></select></div></div><div class="row"><div><label>Início do campeonato</label><input id="cInicio" required="" type="date"/></div><div><label>Fim previsto</label><input id="cFim" required="" type="date"/></div></div><div class="row"><div><label>Início das inscrições</label><input id="cInsInicio" type="datetime-local"/></div><div><label>Fim das inscrições</label><input id="cInsFim" type="datetime-local"/></div></div><label>Descrição</label><textarea id="cDesc"></textarea><div class="cat-card-v32" id="cCategoriasPanelV32">
@@ -524,9 +524,9 @@ function updatePremiumHome(){
 function renderAll(){renderChamps();fillSelects();renderPunPublic();renderRulesPublic();renderAdminStats();renderAdminChamps();renderPending();renderTeams();renderComplaintsAdmin();renderPunishments();renderGamesPublic();renderGamesAdmin();renderResults();renderScorers();renderAdminScorers();renderRulesAdmin();updatePremiumHome()}
 function goPublic(id){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('#publicTabs .tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===id));if(id==='inscricao')checkRegistrationWindow();}
 function renderChamps(){let box=$('championshipCards');if(!championships.length){box.innerHTML='<div class="empty">Nenhum campeonato cadastrado ainda. O administrador deve criar os campeonatos no painel.</div>';return}box.innerHTML=championships.map(c=>{let st=registrationStatus(c);return `<div class="card"><span class="tag ${st.cls}">${st.label}</span><h3>${esc(c.nome)}</h3><p class="muted">${esc(c.modalidade)} • ${esc(c.tipo||'')}</p><p><b>Início:</b> ${onlyDate(c.inicio)}<br><b>Fim previsto:</b> ${onlyDate(c.fim)}</p><p class="muted">${esc(c.descricao||'')}</p><div class="two-actions"><button class="btn small" onclick="selectChampAndGo('${c.id}','tabelas')">Tabela</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','confrontos')">Jogos</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','artilheiros')">Artilheiros</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','regrasPublicas')">Regras</button><button class="btn small ${st.can?'green':'gray'}" ${st.can?'':'disabled'} onclick="selectChampAndGo('${c.id}','inscricao')">${st.can?'Inscrever equipe':'Inscrição indisponível'}</button></div></div>`}).join('')}
-function selectChampAndGo(id,tab){goPublic(tab);['reqCampeonato','tableChamp','scorerChamp','gamesChamp','denCampeonato','rulesChamp'].forEach(x=>{if($(x))$(x).value=id});checkRegistrationWindow();syncCategoriaSelectsV32();renderStandings();renderScorers();renderGamesPublic();renderRulesPublic()}
+function selectChampAndGo(id,tab){goPublic(tab);['reqCampeonato','tableChamp','scorerChamp','gamesChamp','denCampeonato','rulesChamp'].forEach(x=>{if($(x))$(x).value=id});checkRegistrationWindow();syncCategoriaSelectsV32();updateDenunciaCampeonatoV50();renderStandings();renderScorers();renderGamesPublic();renderRulesPublic()}
 function registrationStatus(c){let now=new Date(),ini=c.inscricao_inicio?new Date(c.inscricao_inicio):null,fim=c.inscricao_fim?new Date(c.inscricao_fim):null,champIni=c.inicio?new Date(c.inicio+'T00:00:00'):null;if(c.status==='em_andamento'||(champIni&&now>=champIni))return{can:false,label:'Campeonato iniciado',cls:'red',msg:'Campeonato já iniciado. Não há como inscrever mais clubes.'};if(c.status==='finalizado')return{can:false,label:'Finalizado',cls:'red',msg:'Campeonato finalizado.'};if(c.status!=='inscricoes_abertas')return{can:false,label:'Inscrições fechadas',cls:'warn',msg:'As inscrições não estão abertas.'};if(ini&&now<ini)return{can:false,label:'Inscrições em breve',cls:'warn',msg:'As inscrições iniciam em '+fmtDate(ini)};if(fim&&now>fim)return{can:false,label:'Prazo encerrado',cls:'red',msg:'Prazo de inscrição encerrado em '+fmtDate(fim)};return{can:true,label:'Inscrições abertas',cls:'green',msg:'Inscrições abertas até '+(fim?fmtDate(fim):'data não definida')}}
-function fillSelects(){let opts=championships.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');['reqCampeonato','tableChamp','scorerChamp','gamesChamp','denCampeonato','rulesChamp','manualChamp','adminGamesChamp','goalChamp','adminRulesChamp'].forEach(id=>{if($(id))$(id).innerHTML=opts||'<option value="">Nenhum campeonato</option>'});if($('cfgWhats'))$('cfgWhats').value=config.whatsapp_responsavel||'';setTimeout(()=>{syncCategoriaSelectsV32();updateCategoriasPreviewV32();},0);}
+function fillSelects(){let opts=championships.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');['reqCampeonato','tableChamp','scorerChamp','gamesChamp','denCampeonato','rulesChamp','manualChamp','adminGamesChamp','goalChamp','adminRulesChamp'].forEach(id=>{if($(id))$(id).innerHTML=opts||'<option value="">Nenhum campeonato</option>'});if($('cfgWhats'))$('cfgWhats').value=config.whatsapp_responsavel||'';setTimeout(()=>{syncCategoriaSelectsV32();updateCategoriasPreviewV32();updateDenunciaCampeonatoV50();},0);}
 function checkRegistrationWindow(){let c=championships.find(x=>x.id===$('reqCampeonato').value);let st=c?registrationStatus(c):{can:false,msg:'Selecione um campeonato.'};$('submitTeamBtn').disabled=!st.can;$('submitTeamBtn').className=st.can?'btn green':'btn gray';$('inscStatusMsg').innerHTML=`<div class="msg ${st.can?'ok':'err'}">${esc(st.msg)}</div>`}
 function previewLogo(input,imgId){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>$(imgId).src=e.target.result;r.readAsDataURL(f)}
 function fileToData(file){return new Promise(res=>{if(!file)return res('');const r=new FileReader();r.onload=e=>res(e.target.result);r.readAsDataURL(file)})}
@@ -1245,7 +1245,8 @@ $('complaintForm').addEventListener('submit',async e=>{
     if(files.length>3)return alert('Envie no máximo 3 imagens.');
     for(const f of files){if(f.size>3*1024*1024)return alert(`A imagem ${f.name} está muito pesada. Use até 3 MB por imagem.`)}
     const protocolo='DEN-'+new Date().getFullYear()+'-'+String(Date.now()).slice(-6);
-    const base={campeonato_id:$('denCampeonato').value,protocolo,equipe_reclamante:$('denReclamante').value||$('denNome').value,responsavel:$('denNome').value,whatsapp:$('denWhats').value,equipe_denunciada:$('denDenunciada').value,atleta_citado:$('denPartida').value,motivo:'Denúncia esportiva',descricao:$('denDesc').value,status:'Recebida',link_denuncia:publicComplaintLink(protocolo)};
+    const ctx=await collectDenunciaContextV50();
+    const base={campeonato_id:$('denCampeonato').value,protocolo,equipe_reclamante:$('denReclamante').value||$('denNome').value,responsavel:$('denNome').value,whatsapp:$('denWhats').value,equipe_denunciada:ctx.equipe_denunciada,atleta_citado:ctx.partida_resumo,motivo:ctx.alvo_resumo||'Denúncia esportiva',descricao:ctx.descricao,status:'Recebida',link_denuncia:publicComplaintLink(protocolo)};
     $('denMsg').innerHTML='<div class="msg">Enviando denúncia, imagens e PDF para a nuvem. Aguarde...</div>';
     const imageUrls=[],imagePaths=[];
     for(let i=0;i<files.length;i++){
@@ -1349,6 +1350,126 @@ function ativarEnterComoConfirmacaoV36(){
   });
 }
 ativarEnterComoConfirmacaoV36();
+
+
+
+/* V50 - denúncia guiada por campeonato, equipe, rodada/partida e alvo */
+function denunciaTimesDoCampeonatoV50(champId){
+  return (teams||[]).filter(t=>String(t.campeonato_id)===String(champId)).sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+}
+function denunciaTeamByIdV50(id){return (teams||[]).find(t=>String(t.id)===String(id))||null}
+function denunciaJogosFinalizadosDoTimeV50(champId,teamName){
+  const n=normalizarNomeTime(teamName||'');
+  return (games||[]).filter(g=>String(g.campeonato_id)===String(champId) && (normalizarNomeTime(g.time_a)===n || normalizarNomeTime(g.time_b)===n) && (String(g.status||'').toLowerCase().includes('final') || g.gols_a!=null || g.gols_b!=null)).sort((a,b)=>(Number(a.rodada||0)-Number(b.rodada||0)) || String(a.created_at||'').localeCompare(String(b.created_at||'')));
+}
+function denunciaJogoLabelV50(g){
+  const placar=(g.gols_a!=null&&g.gols_b!=null)?` • ${g.gols_a} x ${g.gols_b}`:'';
+  return `Rodada ${g.rodada||'-'} - ${g.time_a||''} x ${g.time_b||''}${placar}`;
+}
+function updateDenunciaCampeonatoV50(){
+  if(!$('denCampeonato')||!$('denDenunciada'))return;
+  const champ=$('denCampeonato').value;
+  const arr=denunciaTimesDoCampeonatoV50(champ);
+  $('denDenunciada').innerHTML='<option value="">Selecione a equipe denunciada</option>'+arr.map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}</option>`).join('');
+  if($('denPartida'))$('denPartida').innerHTML='<option value="">Selecione a equipe denunciada</option>';
+  if($('denResumoPartida')){$('denResumoPartida').style.display='none';$('denResumoPartida').innerHTML=''}
+  updateDenunciaAlvoV50();
+}
+async function updateDenunciaEquipeV50(){
+  const champ=$('denCampeonato')?.value||'';
+  const team=denunciaTeamByIdV50($('denDenunciada')?.value||'');
+  const jogos=team?denunciaJogosFinalizadosDoTimeV50(champ,team.nome):[];
+  if($('denPartida')){
+    $('denPartida').innerHTML='<option value="">Selecione a rodada/partida</option>'+jogos.map(g=>`<option value="${esc(g.id)}">${esc(denunciaJogoLabelV50(g))}</option>`).join('');
+    if(!jogos.length)$('denPartida').innerHTML='<option value="">Nenhuma partida finalizada encontrada para esta equipe</option>';
+  }
+  await updateDenunciaAlvoV50();
+  updateDenunciaPartidaV50();
+}
+function updateDenunciaPartidaV50(){
+  const game=(games||[]).find(g=>String(g.id)===String($('denPartida')?.value||''));
+  const box=$('denResumoPartida');
+  if(!box)return;
+  if(!game){box.style.display='none';box.innerHTML='';return;}
+  box.style.display='block';
+  box.innerHTML=`<b>Partida selecionada:</b> ${esc(denunciaJogoLabelV50(game))}<br><small>Esta informação será enviada junto com a denúncia.</small>`;
+}
+function parseAtletasDenunciaV50(t){
+  let a=t?.atletas||[];
+  if(typeof a==='string'){
+    try{a=JSON.parse(a)}catch(e){a=[]}
+  }
+  return Array.isArray(a)?a:[];
+}
+async function equipeCompletaDenunciaV50(){
+  const id=$('denDenunciada')?.value||'';
+  if(!id)return null;
+  if(typeof carregarEquipeCompletaV47==='function')return await carregarEquipeCompletaV47(id);
+  return denunciaTeamByIdV50(id);
+}
+async function updateDenunciaAlvoV50(){
+  if(!$('denTipoAlvo'))return;
+  const tipo=$('denTipoAlvo').value;
+  ['denAtletaWrap','denComissaoWrap','denOutroWrap'].forEach(id=>{if($(id))$(id).classList.add('hidden')});
+  if(tipo==='atleta'){
+    if($('denAtletaWrap'))$('denAtletaWrap').classList.remove('hidden');
+    const t=await equipeCompletaDenunciaV50();
+    const atletas=parseAtletasDenunciaV50(t);
+    if($('denAtletaDenunciado'))$('denAtletaDenunciado').innerHTML='<option value="">Selecione o atleta</option>'+atletas.map(a=>`<option value="${esc(a.nome||'')}">${esc((a.numero?'#'+a.numero+' - ':'')+(a.nome||'Atleta sem nome'))}</option>`).join('');
+    if($('denAtletaDenunciado')&&!atletas.length)$('denAtletaDenunciado').innerHTML='<option value="">Nenhum atleta cadastrado nesta equipe</option>';
+  }else if(tipo==='comissao'){
+    if($('denComissaoWrap'))$('denComissaoWrap').classList.remove('hidden');
+    const t=await equipeCompletaDenunciaV50();
+    const tecnico=t?.tecnico_nome||t?.tecnico||'';
+    if($('denComissaoDenunciada'))$('denComissaoDenunciada').innerHTML='<option value="">Selecione</option>'+ (tecnico?`<option value="Técnico: ${esc(tecnico)}">Técnico: ${esc(tecnico)}</option>`:'<option value="Comissão técnica">Comissão técnica</option>');
+  }else if(tipo==='outro'){
+    if($('denOutroWrap'))$('denOutroWrap').classList.remove('hidden');
+  }
+}
+async function collectDenunciaContextV50(){
+  const t=await equipeCompletaDenunciaV50();
+  const game=(games||[]).find(g=>String(g.id)===String($('denPartida')?.value||''));
+  const tipo=$('denTipoAlvo')?.value||'geral';
+  let alvo='Denúncia geral';
+  if(tipo==='atleta')alvo='Atleta denunciado: '+($('denAtletaDenunciado')?.value||'não informado');
+  if(tipo==='comissao')alvo='Comissão técnica denunciada: '+($('denComissaoDenunciada')?.value||'não informada');
+  if(tipo==='outro')alvo='Outro motivo/denunciado: '+($('denOutroAlvo')?.value||'não informado');
+  const partida=game?denunciaJogoLabelV50(game):($('denPartida')?.selectedOptions?.[0]?.textContent||'Partida não selecionada');
+  const descOriginal=$('denDesc')?.value||'';
+  const descricao=`${descOriginal}
+
+--- Dados selecionados no formulário ---
+Equipe denunciada: ${t?.nome||'não selecionada'}
+Partida/Rodada: ${partida}
+${alvo}`;
+  return {equipe_denunciada:t?.nome||'',partida_resumo:partida,alvo_resumo:alvo,descricao};
+}
+function toggleComplaintV50(id){const el=$('complaintDetail_'+id);if(el)el.classList.toggle('hidden')}
+renderComplaintsAdmin=function(){
+  $('complaintsAdminBox').innerHTML=complaints.length?complaints.map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo)}">
+      <strong>${esc(d.protocolo)}</strong>
+      <p class="muted">${esc(d.responsavel||'')} • ${fmtDate(d.created_at)}</p>
+      <p><b>${esc(d.equipe_reclamante||'-')}</b> denunciou <b>${esc(d.equipe_denunciada||'-')}</b></p>
+      <p class="muted"><b>Partida/Rodada:</b> ${esc(d.atleta_citado||'-')} ${d.motivo?`• <b>Alvo:</b> ${esc(d.motivo)}`:''}</p>
+      <div class="two-actions">
+        <button class="btn small green" onclick="toggleComplaintV50('${esc(d.id)}')">Abrir denúncia</button>
+        ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${JSON.stringify(d)})'>PDF</button>`}
+        <button class="btn small" onclick='openWhatsappComplaint(${JSON.stringify(d)})'>WhatsApp</button>
+        <button class="btn small red" onclick="deleteComplaint('${esc(d.id)}','${esc(d.protocolo||'')}')">🗑 Excluir denúncia</button>
+      </div>
+      <div id="complaintDetail_${esc(d.id)}" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <h3>Denúncia completa</h3>
+        <p><b>Responsável:</b> ${esc(d.responsavel||'-')} ${d.whatsapp?`• <b>WhatsApp:</b> ${esc(d.whatsapp)}`:''}</p>
+        <p><b>Equipe reclamante:</b> ${esc(d.equipe_reclamante||'-')}</p>
+        <p><b>Equipe denunciada:</b> ${esc(d.equipe_denunciada||'-')}</p>
+        <p><b>Partida/Rodada:</b> ${esc(d.atleta_citado||'-')}</p>
+        <p><b>Alvo da denúncia:</b> ${esc(d.motivo||'-')}</p>
+        <p style="white-space:pre-wrap"><b>Descrição:</b><br>${esc(d.descricao||'')}</p>
+        <div>${(d.imagens_urls||[]).map(u=>`<img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px">`).join('')}</div>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>'
+};
 
 window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();updateCategoriasPreviewV32();loadAll()});
 
@@ -1493,6 +1614,135 @@ approveRequest=async function(id){
   await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');
 };
 
+
+
+
+
+// V51 - Denuncias: aprovar/reprovar e aplicar punicao sem alterar restante do sistema
+function statusDenunciaLabelV51(s){
+  s=String(s||'Recebida').toLowerCase();
+  if(s.includes('aprov'))return 'Aprovada';
+  if(s.includes('reprov'))return 'Reprovada';
+  if(s.includes('pun'))return 'Punição aplicada';
+  return s.charAt(0).toUpperCase()+s.slice(1);
+}
+function statusDenunciaClassV51(s){
+  s=String(s||'').toLowerCase();
+  if(s.includes('aprov')||s.includes('pun'))return 'ok';
+  if(s.includes('reprov'))return 'err';
+  return '';
+}
+function extrairAtletaDenunciaV51(d){
+  const textos=[d?.motivo,d?.descricao,d?.atleta_citado].filter(Boolean).join('\n');
+  let m=textos.match(/Atleta denunciado:\s*([^\n]+)/i);
+  if(m&&m[1])return m[1].replace(/^#\d+\s*-\s*/,'').trim();
+  m=textos.match(/#\d+\s*-\s*([^\n]+)/i);
+  if(m&&m[1])return m[1].trim();
+  return '';
+}
+function safeJsonAttrV51(obj){return JSON.stringify(obj).replace(/'/g,'&#39;')}
+function abrirDenunciaAdminV51(id){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  const imgs=[...(d.imagens_urls||[]),...(d.arquivos_denuncia||[]),...(d.imagens_denuncia||[])].filter(Boolean);
+  const atleta=extrairAtletaDenunciaV51(d);
+  const html=`
+    <div class="team-report-modal-v34 active" id="denunciaModalV51">
+      <div class="team-report-panel-v34" style="max-width:980px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start">
+          <div>
+            <h2>Denúncia ${esc(d.protocolo||'')}</h2>
+            <p class="muted">Status: <b>${esc(statusDenunciaLabelV51(d.status))}</b> • ${fmtDate(d.created_at)}</p>
+          </div>
+          <button class="btn ghost" onclick="document.getElementById('denunciaModalV51')?.remove()">Fechar</button>
+        </div>
+        <div class="card" style="box-shadow:none;margin-top:12px">
+          <div class="row3">
+            <div><b>Responsável</b><br>${esc(d.responsavel||d.nome||'-')}</div>
+            <div><b>WhatsApp</b><br>${esc(d.whatsapp||'-')}</div>
+            <div><b>Equipe reclamante</b><br>${esc(d.equipe_reclamante||'-')}</div>
+          </div>
+          <div class="row3" style="margin-top:12px">
+            <div><b>Equipe denunciada</b><br>${esc(d.equipe_denunciada||'-')}</div>
+            <div><b>Partida/Rodada</b><br>${esc(d.atleta_citado||d.partida_rodada||'-')}</div>
+            <div><b>Alvo</b><br>${esc(d.motivo||atleta||'-')}</div>
+          </div>
+          <h3 style="margin-top:16px">Descrição</h3>
+          <p style="white-space:pre-wrap">${esc(d.descricao||'-')}</p>
+          ${imgs.length?`<h3>Imagens/anexos</h3><div class="two-actions">${imgs.map(u=>`<a href="${esc(u)}" target="_blank"><img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px"></a>`).join('')}</div>`:''}
+        </div>
+        <div class="two-actions" style="margin-top:14px">
+          <button class="btn green" onclick="setStatusDenunciaV51('${esc(d.id)}','aprovada')">Aprovar denúncia</button>
+          <button class="btn red" onclick="setStatusDenunciaV51('${esc(d.id)}','reprovada')">Reprovar denúncia</button>
+          <button class="btn" onclick="aplicarPunicaoDaDenunciaV51('${esc(d.id)}')">Aplicar punição</button>
+          ${d.pdf_url?`<a class="btn ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn ghost" onclick='generateComplaintPdf(${safeJsonAttrV51(d)})'>Gerar PDF</button>`}
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('denunciaModalV51')?.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+async function setStatusDenunciaV51(id,status){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  const {error}=await db.from('denuncias').update({status}).eq('id',id);
+  if(error)return alert(error.message);
+  await loadAll();
+  alert(status==='aprovada'?'Denúncia aprovada.':'Denúncia reprovada.');
+  document.getElementById('denunciaModalV51')?.remove();
+  goAdmin('denunciasAdmin');
+}
+function aplicarPunicaoDaDenunciaV51(id){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  document.getElementById('denunciaModalV51')?.remove();
+  goAdmin('punicoesAdmin');
+  setTimeout(()=>{
+    const atleta=extrairAtletaDenunciaV51(d);
+    if($('punAtleta'))$('punAtleta').value=atleta||d.equipe_denunciada||'';
+    if($('punDoc'))$('punDoc').value='';
+    if($('punEquipe'))$('punEquipe').value=d.equipe_denunciada||'';
+    if($('punTipo'))$('punTipo').value='Punição aplicada por denúncia';
+    if($('punInicio')&&!$('punInicio').value)$('punInicio').value=new Date().toISOString().slice(0,10);
+    if($('punDesc'))$('punDesc').value=`Origem: denúncia ${d.protocolo||''}\nEquipe reclamante: ${d.equipe_reclamante||''}\nEquipe denunciada: ${d.equipe_denunciada||''}\nPartida/Rodada: ${d.atleta_citado||d.partida_rodada||''}\nAlvo: ${d.motivo||atleta||''}\n\nDescrição da denúncia:\n${d.descricao||''}`;
+    let aviso=$('punFromDenunciaV51');
+    if(!aviso&&$('punForm')){
+      $('punForm').insertAdjacentHTML('beforebegin','<div id="punFromDenunciaV51" class="msg ok"><b>Punição iniciada a partir de denúncia.</b> Confira os dados, preencha a data final e clique em Salvar punição ou Salvar e gerar PDF.</div>');
+    }
+    $('punForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },250);
+}
+async function aprovarEAplicarPunicaoDaDenunciaV51(id){
+  const {error}=await db.from('denuncias').update({status:'aprovada'}).eq('id',id);
+  if(error)return alert(error.message);
+  await loadComplaints();
+  aplicarPunicaoDaDenunciaV51(id);
+}
+function renderComplaintsAdmin(){
+  const box=$('complaintsAdminBox');
+  if(!box)return;
+  box.innerHTML=complaints.length?complaints.map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo)}">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap">
+        <div>
+          <strong>${esc(d.protocolo||'Sem protocolo')}</strong>
+          <p class="muted">${esc(d.responsavel||d.nome||'-')} • ${fmtDate(d.created_at)}</p>
+        </div>
+        <span class="msg ${statusDenunciaClassV51(d.status)}" style="padding:6px 10px;margin:0">${esc(statusDenunciaLabelV51(d.status))}</span>
+      </div>
+      <p><b>${esc(d.equipe_reclamante||'-')}</b> denunciou <b>${esc(d.equipe_denunciada||'-')}</b></p>
+      <p class="muted">${esc((d.descricao||'').slice(0,160))}${(d.descricao||'').length>160?'...':''}</p>
+      <div class="two-actions">
+        <button class="btn small" onclick="abrirDenunciaAdminV51('${esc(d.id)}')">Abrir denúncia</button>
+        <button class="btn small green" onclick="setStatusDenunciaV51('${esc(d.id)}','aprovada')">Aprovar</button>
+        <button class="btn small red" onclick="setStatusDenunciaV51('${esc(d.id)}','reprovada')">Reprovar</button>
+        <button class="btn small" onclick="aprovarEAplicarPunicaoDaDenunciaV51('${esc(d.id)}')">Aplicar punição</button>
+        ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${safeJsonAttrV51(d)})'>PDF</button>`}
+        <button class="btn small ghost" onclick='openWhatsappComplaint(${safeJsonAttrV51(d)})'>WhatsApp</button>
+        <button class="btn small red" onclick="deleteComplaint('${esc(d.id)}','${esc(d.protocolo||'')}')">Excluir</button>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>';
+}
 
 </script>
 </body>
