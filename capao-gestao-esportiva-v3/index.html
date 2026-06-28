@@ -1379,6 +1379,109 @@ openTeamReportV34=function(id){
 viewTeamPlayers=function(id){openTeamReportV34(id)};
 closeTeamReportV34=function(){renderTeams()};
 
+
+/* V47 - filtro de clubes corrigido de verdade: lista leve sem imagens/documentos pesados */
+const fullTeamCacheV47 = new Map();
+
+async function loadTeams(){
+  const cols = 'id,campeonato_id,nome,responsavel,whatsapp,email,endereco,cep,status,categoria_nome,serie_nome,categoria_genero,tecnico_nome,created_at';
+  const {data,error}=await db.from('equipes').select(cols).order('created_at',{ascending:false});
+  if(error){
+    console.error('Erro ao carregar equipes:', error);
+    teams=[];
+    return;
+  }
+  teams=data||[];
+}
+
+async function carregarEquipeCompletaV47(id){
+  if(fullTeamCacheV47.has(id))return fullTeamCacheV47.get(id);
+  const local=(teams||[]).find(x=>String(x.id)===String(id));
+  const {data,error}=await db.from('equipes').select('*').eq('id',id).single();
+  if(error){
+    console.error('Erro ao carregar equipe completa:', error);
+    if(local)return local;
+    throw error;
+  }
+  const completa={...(local||{}),...(data||{})};
+  fullTeamCacheV47.set(id,completa);
+  const idx=(teams||[]).findIndex(x=>String(x.id)===String(id));
+  if(idx>=0)teams[idx]={...teams[idx],...completa};
+  return completa;
+}
+
+function renderTeams(){
+  const currentChamp=$('teamFilterChampV36')?.value || window.__teamFiltroChampV46 || $('manualChamp')?.value || (championships[0]?.id||'');
+  const champ=String(currentChamp||'');
+  const c=championships.find(x=>String(x.id)===champ)||{};
+  const generos=categoriasBaseDoCampeonatoV36(c);
+  const genero=$('teamFilterGeneroV36')?.value || window.__teamFiltroGeneroV46 || '';
+  const series=seriesDoCampeonatoV36(c,genero);
+  const serie=$('teamFilterSerieV36')?.value || window.__teamFiltroSerieV46 || '';
+
+  const todosDoCampeonato=(teams||[]).filter(t=>!champ || idFiltroTimeV46(t?.campeonato_id)===idFiltroTimeV46(champ));
+  let arr=todosDoCampeonato.filter(t=>teamMatchesFilterV36(t,champ,genero,serie));
+  const fallbackAtivo=(!arr.length && todosDoCampeonato.length && (genero || serie));
+  if(fallbackAtivo){ arr=todosDoCampeonato; }
+
+  let filterHtml=`<div class="team-filter-bar-v36">
+    <div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="window.__teamFiltroChampV46=this.value;window.__teamFiltroGeneroV46='';window.__teamFiltroSerieV46='';renderTeams()">${championships.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===champ?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+    <div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="window.__teamFiltroGeneroV46=this.value;window.__teamFiltroSerieV46='';renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc(g)}" ${String(g)===String(genero)?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+    <div><label>Série</label><select id="teamFilterSerieV36" onchange="window.__teamFiltroSerieV46=this.value;renderTeams()"><option value="">Todas / sem série</option>${series.map(s=>`<option value="${esc(s)}" ${String(s)===String(serie)?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+    <button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button>
+  </div>`;
+
+  const resumo=`<div class="msg" style="margin:10px 0"><b>Clubes carregados neste campeonato:</b> ${todosDoCampeonato.length} ${genero||serie?`• <b>Resultado do filtro:</b> ${arr.length}`:''}</div>`;
+  const aviso=fallbackAtivo?`<div class="msg warn"><b>Atenção:</b> não encontrei clubes exatamente nessa categoria/série, então estou mostrando todos os clubes aprovados deste campeonato para você não ficar sem acesso aos times.</div>`:'';
+  let html=arr.length?`${resumo}${aviso}<div class="team-compact-list-v36">${arr.map(t=>`
+    <div class="team-compact-row-v36">
+      <div class="team-compact-main-v36">
+        <div class="team-logo-ph-v36">${esc(iniciaisTime(t.nome))}</div>
+        <div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgeDivisaoTimeV36(t)}</div><small class="muted">${esc((championships.find(c=>String(c.id)===String(t.campeonato_id))||{}).nome||'Campeonato')}</small></div>
+      </div>
+      <button class="btn small ghost" onclick="viewTeamPlayers('${esc(t.id)}')">Ver time</button>
+    </div>`).join('')}</div>`:`${resumo}<div class="empty">Nenhum clube aprovado encontrado neste campeonato. Se você acabou de aceitar uma inscrição, clique em Atualizar no navegador e confira se ela entrou na tabela equipes.</div>`;
+  $('teamsBox').innerHTML=filterHtml+html;
+}
+
+openTeamReportV34=async function(id){
+  try{
+    $('teamsBox').innerHTML='<div class="msg">Carregando dados completos do time...</div>';
+    const t=await carregarEquipeCompletaV47(id);
+    $('teamsBox').innerHTML=cardDetalhesEquipeV44(t,'team');
+    $('teamsBox').scrollIntoView({behavior:'smooth',block:'start'});
+  }catch(e){
+    $('teamsBox').innerHTML='<div class="msg red">Erro ao carregar os dados completos do time: '+esc(e.message||e)+'</div>';
+  }
+};
+viewTeamPlayers=function(id){openTeamReportV34(id)};
+closeTeamReportV34=function(){renderTeams()};
+
+gerarPdfEquipeV34=async function(id){
+  try{
+    const t=await carregarEquipeCompletaV47(id);
+    gerarPdfEquipePadraoV45(t,'team');
+  }catch(e){
+    alert('Erro ao carregar os dados completos para gerar PDF: '+(e.message||e));
+  }
+};
+
+/* Evita baixar imagem/documentos gigantes ao aceitar inscrição: pega de volta só o id */
+approveRequest=async function(id){
+  let r=requests.find(x=>x.id===id);if(!r)return;
+  let categoria=($('pendCat_'+id)?.value || categoriaRecordLabelV35(r) || r.categoria_nome || '').trim();
+  const c=championships.find(x=>x.id===r.campeonato_id)||{};
+  if(categoriaObrigatoriaV32(r.campeonato_id)&&!categoria){alert('Selecione a categoria/série correta antes de aceitar.');return;}
+  let div=divisaoPartsV32(categoria);
+  let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:categoria,categoria_genero:div.categoria_genero||r.categoria_genero||'',serie_nome:div.serie_nome||r.serie_nome||'',nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,tecnico_nome:r.tecnico_nome||'',logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select('id').single();
+  if(error)return alert(error.message);
+  for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}
+  await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString(),categoria_nome:categoria,categoria_genero:div.categoria_genero||'',serie_nome:div.serie_nome||''}).eq('id',id);
+  fullTeamCacheV47.clear();
+  await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');
+};
+
+
 </script>
 </body>
 </html>
