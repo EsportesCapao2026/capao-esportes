@@ -1253,5 +1253,120 @@ document.addEventListener('change',function(e){
   if(e.target&&['manualChamp','manualCategoria'].includes(e.target.id)){setTimeout(renderTeams,0)}
 });
 </script>
+
+<script>
+/* V42 - filtro de clubes aprovado/pendente mais claro e tolerante */
+(function(){
+  function normV42(v){
+    return String(v||'')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function partsV42(obj){
+    const catNome=String(obj?.categoria_nome||'');
+    let gen=String(obj?.categoria_genero||'').trim();
+    let serie=String(obj?.serie_nome||'').trim();
+    if(!gen && typeof divisaoPartsV32==='function'){
+      try{ gen=divisaoPartsV32(catNome).categoria_genero||''; }catch(e){}
+    }
+    if(!serie && typeof divisaoPartsV32==='function'){
+      try{ serie=divisaoPartsV32(catNome).serie_nome||''; }catch(e){}
+    }
+    if(!gen && catNome){
+      const n=normV42(catNome);
+      if(n.includes('masculino')) gen='Masculino';
+      else if(n.includes('feminino')) gen='Feminino';
+      else gen=catNome;
+    }
+    if(!serie && catNome){
+      const m=catNome.match(/S[eé]rie\s+[^-]+/i);
+      if(m) serie=m[0].trim();
+    }
+    return {genero:gen, serie:serie, label:catNome};
+  }
+  function matchesV42(item,champId,genero,serie){
+    if(champId && String(item.campeonato_id)!==String(champId)) return false;
+    const p=partsV42(item);
+    const gSel=normV42(genero);
+    const sSel=normV42(serie);
+    const gRec=normV42(p.genero || p.label);
+    const sRec=normV42(p.serie);
+    const label=normV42(p.label);
+    if(gSel){
+      const okG = gRec===gSel || label===gSel || label.includes(gSel) || gRec.includes(gSel) || gSel.includes(gRec);
+      if(!okG) return false;
+    }
+    if(sSel){
+      const okS = sRec===sSel || label.includes(sSel) || sRec.includes(sSel) || sSel.includes(sRec);
+      if(!okS) return false;
+    }
+    return true;
+  }
+  function badgesV42(item){
+    const p=partsV42(item);
+    return `${p.genero?`<span class="cat-mini-v32">${esc(p.genero)}</span>`:''}${p.serie?`<span class="cat-mini-v32 serie-v36">${esc(p.serie)}</span>`:''}`;
+  }
+  window.renderTeams=function(){
+    const champSel=$('teamFilterChampV36');
+    const generoSel=$('teamFilterGeneroV36');
+    const serieSel=$('teamFilterSerieV36');
+    const champ=champSel?.value || $('manualChamp')?.value || '';
+    const c=(championships||[]).find(x=>String(x.id)===String(champ))||{};
+    let generos=[];
+    try{ generos=typeof categoriasBaseDoCampeonatoV36==='function'?categoriasBaseDoCampeonatoV36(c):[]; }catch(e){ generos=[]; }
+    const generosFromTeams=[...(teams||[]),...(requests||[])].filter(x=>!champ||String(x.campeonato_id)===String(champ)).map(x=>partsV42(x).genero).filter(Boolean);
+    generos=[...new Set([...generos,...generosFromTeams])];
+    const genero=generoSel?.value || '';
+    let series=[];
+    try{ series=typeof seriesDoCampeonatoV36==='function'?seriesDoCampeonatoV36(c,genero):[]; }catch(e){ series=[]; }
+    const seriesFromTeams=[...(teams||[]),...(requests||[])].filter(x=>matchesV42(x,champ,genero,'')).map(x=>partsV42(x).serie).filter(Boolean);
+    series=[...new Set([...series,...seriesFromTeams])];
+    const serie=serieSel?.value || '';
+    const aprovados=(teams||[]).filter(t=>matchesV42(t,champ,genero,serie));
+    const pendentes=(requests||[]).filter(r=>String(r.status||'').toLowerCase()==='pendente' && matchesV42(r,champ,genero,serie));
+    let filterHtml=`<div class="team-filter-bar-v36">
+      <div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()"><option value="">Todos</option>${(championships||[]).map(c=>`<option value="${esc(c.id)}" ${String(c.id)===String(champ)?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+      <div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc(g)}" ${g===genero?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+      <div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(s=>`<option value="${esc(s)}" ${s===serie?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+      <button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button>
+    </div>`;
+    let html='';
+    if(aprovados.length){
+      html+=`<div class="team-compact-list-v36">${aprovados.map(t=>`
+        <div class="team-compact-row-v36">
+          <div class="team-compact-main-v36">
+            ${t.logo_data?`<img src="${esc(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc(t.nome)}">`:`<div class="team-logo-ph-v36">${esc(typeof iniciaisTime==='function'?iniciaisTime(t.nome):(t.nome||'?').slice(0,2).toUpperCase())}</div>`}
+            <div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgesV42(t)}</div></div>
+          </div>
+          <button class="btn small ghost" onclick="viewTeamPlayers('${esc(t.id)}')">Ver time</button>
+        </div>`).join('')}</div>`;
+    }else{
+      html+=`<div class="empty">Nenhum clube aprovado para este filtro.</div>`;
+    }
+    if(pendentes.length){
+      html+=`<div class="card" style="margin-top:14px;border-color:rgba(245,197,66,.35)">
+        <h3>Inscrições pendentes encontradas</h3>
+        <p class="muted">Estes clubes ainda não aparecem como aprovados. Para entrarem na lista oficial, aceite a inscrição.</p>
+        <div class="team-compact-list-v36">${pendentes.map(r=>`
+          <div class="team-compact-row-v36">
+            <div class="team-compact-main-v36">
+              ${r.logo_data?`<img src="${esc(r.logo_data)}" class="team-logo-v36" alt="Escudo ${esc(r.nome_time)}">`:`<div class="team-logo-ph-v36">${esc((r.nome_time||'?').slice(0,2).toUpperCase())}</div>`}
+              <div><strong>${esc(r.nome_time)}</strong><div class="team-badges-v36">${badgesV42(r)} <span class="cat-mini-v32" style="border-color:#f5c542;color:#f5c542">Pendente</span></div></div>
+            </div>
+            <button class="btn small" onclick="goAdmin('inscricoesAdmin')">Ver pendência</button>
+          </div>`).join('')}</div>
+      </div>`;
+    }
+    if($('teamsBox')) $('teamsBox').innerHTML=filterHtml+html;
+  };
+  window.limparFiltroTimesV36=function(){
+    if($('teamFilterChampV36')) $('teamFilterChampV36').value='';
+    if($('teamFilterGeneroV36')) $('teamFilterGeneroV36').value='';
+    if($('teamFilterSerieV36')) $('teamFilterSerieV36').value='';
+    renderTeams();
+  };
+})();
+</script>
+
 </body>
 </html>
