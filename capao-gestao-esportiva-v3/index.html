@@ -288,6 +288,9 @@ input[type="file"]::file-selector-button{border:0;border-radius:10px;background:
 .captain-badge-v34{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:999px;background:#facc15;color:#111827;font-weight:900;margin-left:6px}.team-filter-bar-v34{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin:12px 0 16px}.team-filter-bar-v34 .btn{align-self:end}.player-captain-v34{display:flex;align-items:center;gap:8px;margin-top:8px;font-weight:800;color:#19f5a8}.player-captain-v34 input{width:auto}.team-report-actions-v34{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
 @media(max-width:760px){.team-report-meta-v34,.team-filter-bar-v34{grid-template-columns:1fr}.team-report-modal-v34{padding:12px}.team-report-card-v34{margin:10px auto}}
 
+
+.team-filter-bar-v36{display:grid;grid-template-columns:1.2fr .8fr .8fr auto;gap:12px;align-items:end;margin:12px 0 18px}.team-compact-list-v36{display:grid;gap:10px}.team-compact-row-v36{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.045);border-radius:18px}.team-compact-main-v36{display:flex;align-items:center;gap:14px}.team-logo-v36,.team-logo-ph-v36{width:48px;height:48px;border-radius:14px;object-fit:contain;background:#edf2f7;color:#0f172a;display:grid;place-items:center;font-weight:900}.team-badges-v36{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.serie-v36{border-color:rgba(20,184,166,.55)!important;color:#67e8f9!important}.team-report-modal-v34{z-index:9999}.match-modal-v23{z-index:9998}.match-modal-card-v23{max-width:min(920px,calc(100vw - 40px));margin-left:auto;margin-right:auto}.team-report-card-v34{max-width:min(980px,calc(100vw - 40px));margin-left:auto;margin-right:auto}@media(max-width:900px){.team-filter-bar-v36{grid-template-columns:1fr}.team-compact-row-v36{align-items:flex-start;flex-direction:column}.team-compact-row-v36 .btn{width:100%}}
+
 </style>
 </head>
 <body>
@@ -615,13 +618,68 @@ function viewRequest(id){let r=requests.find(x=>x.id===id);alert(`Time: ${r.nome
 async function approveRequest(id){let r=requests.find(x=>x.id===id);if(!r)return;let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:r.categoria_nome||'',categoria_genero:r.categoria_genero||divisaoPartsV32(r.categoria_nome||'').categoria_genero,serie_nome:r.serie_nome||divisaoPartsV32(r.categoria_nome||'').serie_nome,nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,tecnico_nome:r.tecnico_nome||'',logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select().single();if(error)return alert(error.message);for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString()}).eq('id',id);await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.')}
 async function rejectRequest(id){let motivo=prompt('Motivo da recusa:')||'';await db.from('inscricoes_clubes').update({status:'recusada',motivo_recusa:motivo,updated_at:new Date().toISOString()}).eq('id',id);await loadAll()}
 $('manualTeamForm').addEventListener('submit',async e=>{e.preventDefault();try{let champId=$('manualChamp').value;let categoria=categoriaObrigatoriaV32(champId)?selectedCategoriaV32('manualCategoria'):'';if(categoriaObrigatoriaV32(champId)&&!categoria)throw new Error('Selecione a categoria e a série do clube.');let div=divisaoPartsV32(categoria);let atletas=await collectManualPlayers();let logo=await fileToData($('manualLogo').files[0]);let {data,error}=await db.from('equipes').insert({campeonato_id:champId,categoria_nome:categoria,categoria_genero:div.categoria_genero,serie_nome:div.serie_nome,nome:$('manualTeam').value,responsavel:$('manualResp').value,whatsapp:$('manualWhats').value,tecnico_nome:$('manualTecnico')?.value||'',logo_data:logo,status:'ativo',atletas}).select().single();if(error)throw error;for(const a of atletas){let {data:at,error:atErr}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(atErr)throw atErr;if(at)await db.from('inscricoes').insert({campeonato_id:champId,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}resetManualTeamForm();await loadAll();alert('Clube e atletas adicionados manualmente.')}catch(err){alert(err.message)}})
+function categoriasBaseDoCampeonatoV36(c){
+  if(!c)return [];
+  let cfg=c.categorias_config;
+  if(typeof cfg==='string'){try{cfg=JSON.parse(cfg)}catch(e){cfg={}}}
+  let base=(cfg&&Array.isArray(cfg.categorias))?cfg.categorias:[];
+  if(!base.length){
+    base=uniqV33(categoriasDoCampeonatoV32(c).map(x=>divisaoPartsV32(x).categoria_genero||x));
+  }
+  return base.map(String).filter(Boolean);
+}
+function seriesDoCampeonatoV36(c,genero){
+  const cats=categoriasDoCampeonatoV32(c);
+  const alvo=normalizeCategoriaV35(genero||'');
+  let series=[];
+  cats.forEach(label=>{
+    const p=divisaoPartsV32(label);
+    if(!p.serie_nome)return;
+    if(!alvo || normalizeCategoriaV35(p.categoria_genero)===alvo)series.push(p.serie_nome);
+  });
+  return uniqV33(series);
+}
+function teamMatchesFilterV36(t,champ,genero,serie){
+  if(champ&&t.campeonato_id!==champ)return false;
+  const recGenero=normalizeCategoriaV35(t.categoria_genero||divisaoPartsV32(t.categoria_nome||'').categoria_genero||t.categoria_nome||'');
+  const recSerie=normalizeCategoriaV35(t.serie_nome||divisaoPartsV32(t.categoria_nome||'').serie_nome||'');
+  if(genero && recGenero!==normalizeCategoriaV35(genero))return false;
+  if(serie && recSerie!==normalizeCategoriaV35(serie))return false;
+  return true;
+}
+function badgeDivisaoTimeV36(t){
+  const genero=t.categoria_genero||divisaoPartsV32(t.categoria_nome||'').categoria_genero||'';
+  const serie=t.serie_nome||divisaoPartsV32(t.categoria_nome||'').serie_nome||'';
+  return `${genero?`<span class="cat-mini-v32">${esc(genero)}</span>`:''}${serie?`<span class="cat-mini-v32 serie-v36">${esc(serie)}</span>`:''}`;
+}
 function renderTeams(){
-  const champ=$('manualChamp')?.value||'';
-  const cat=$('manualCategoria')?.value||'';
-  let arr=(teams||[]).filter(t=>(!champ||t.campeonato_id===champ)&&categoriaMatchesV35(t,cat));
-  let filterHtml=`<div class="team-filter-bar-v34"><div><label>Filtrar campeonato</label><select id="teamFilterChampV34" onchange="$('manualChamp').value=this.value;syncCategoriaSelectsV32();renderTeams()">${championships.map(c=>`<option value="${c.id}" ${c.id===champ?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div><div><label>Filtrar categoria/série</label><select id="teamFilterCatV34" onchange="$('manualCategoria').value=this.value;renderTeams()"><option value="">Todas</option>${categoriasDoCampeonatoV32(championships.find(c=>c.id===champ)||{}).map(x=>`<option value="${esc(x)}" ${x===cat?'selected':''}>${esc(x)}</option>`).join('')}</select></div><button class="btn ghost" onclick="$('manualCategoria').value='';renderTeams()">Limpar filtro</button></div>`;
-  let html=arr.length?'<table class="table"><tr><th>Escudo</th><th>Time</th><th>Campeonato</th><th>Responsável</th><th>Ações</th></tr>'+arr.map(t=>`<tr><td>${t.logo_data?`<img src="${t.logo_data}" class="preview">`:''}</td><td><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong>${esc(t.nome)}</strong>${t.categoria_nome?`<span class="cat-mini-v32">${esc(t.categoria_nome)}</span>`:''}<button class="btn small red" onclick="deleteTeam('${t.id}')">Excluir</button></div></td><td>${esc((championships.find(c=>c.id===t.campeonato_id)||{}).nome)}</td><td>${esc(t.responsavel)}<br><span class="muted">${esc(t.whatsapp)}</span></td><td><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver atletas</button></td></tr>`).join('')+'</table>':'<div class="empty">Nenhum clube aprovado para este filtro.</div>';
+  const champ=$('teamFilterChampV36')?.value || $('manualChamp')?.value || '';
+  const c=championships.find(x=>x.id===champ)||{};
+  const generos=categoriasBaseDoCampeonatoV36(c);
+  const genero=$('teamFilterGeneroV36')?.value || '';
+  const series=seriesDoCampeonatoV36(c,genero);
+  const serie=$('teamFilterSerieV36')?.value || '';
+  let arr=(teams||[]).filter(t=>teamMatchesFilterV36(t,champ,genero,serie));
+  let filterHtml=`<div class="team-filter-bar-v36">
+    <div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()">${championships.map(c=>`<option value="${c.id}" ${c.id===champ?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+    <div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc(g)}" ${g===genero?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+    <div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(s=>`<option value="${esc(s)}" ${s===serie?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+    <button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button>
+  </div>`;
+  let html=arr.length?`<div class="team-compact-list-v36">${arr.map(t=>`
+    <div class="team-compact-row-v36">
+      <div class="team-compact-main-v36">
+        ${t.logo_data?`<img src="${esc(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc(t.nome)}">`:`<div class="team-logo-ph-v36">${esc(iniciaisTime(t.nome))}</div>`}
+        <div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgeDivisaoTimeV36(t)}</div></div>
+      </div>
+      <button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button>
+    </div>`).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro.</div>';
   $('teamsBox').innerHTML=filterHtml+html;
+}
+function limparFiltroTimesV36(){
+  if($('teamFilterGeneroV36'))$('teamFilterGeneroV36').value='';
+  if($('teamFilterSerieV36'))$('teamFilterSerieV36').value='';
+  renderTeams();
 }
 function viewTeamPlayers(id){openTeamReportV34(id)}
 function openTeamReportV34(id){
@@ -1069,6 +1127,23 @@ async function saveConfig(){
   $('cfgMsg').innerHTML='<div class="msg ok">Configuração salva.</div>';
   await loadConfig();
 }
+
+
+// V36 - Enter confirma login e ações principais
+function ativarEnterComoConfirmacaoV36(){
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return;
+    const el=e.target;
+    if(!el)return;
+    if(el.id==='adminPass'){e.preventDefault();adminLogin();return;}
+    if(el.id==='masterPass'){e.preventDefault();masterLogin();return;}
+    if(el.closest&&el.closest('form'))return;
+    const modalAberto=document.querySelector('.team-report-modal-v34.active,.match-modal-v23.active');
+    if(modalAberto){const btn=modalAberto.querySelector('button.btn,button.match-modal-close-v23'); if(btn){e.preventDefault();btn.click();}}
+  });
+}
+ativarEnterComoConfirmacaoV36();
+
 window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();updateCategoriasPreviewV32();loadAll()});
 
 
