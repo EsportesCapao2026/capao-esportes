@@ -335,5 +335,217 @@ async function saveConfig(){
 }
 window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();loadAll()});
 </script>
+<script>
+/* CORRECAO CBJD - EXIBIR POR ARTIGO COMPLETO, NAO POR PAGINA */
+(function () {
+  if (window.__cbjdArtigosCorrigido) return;
+  window.__cbjdArtigosCorrigido = true;
+
+  const CBJD_SUPABASE_URL = 'https://ugqoqecxbeqnyekezlec.supabase.co';
+  const CBJD_SUPABASE_KEY = 'sb_publishable_f-apeDU5xqGuxSimTVn2gQ_AUdV5uBb';
+
+  const cbjdClient = window.supabase.createClient(CBJD_SUPABASE_URL, CBJD_SUPABASE_KEY);
+
+  let cbjdArtigosCache = [];
+
+  function limparTextoCBJD(texto) {
+    return String(texto || '')
+      .replace(/\uFFFE/g, '')
+      .replace(/￾/g, '')
+      .replace(/(\w)-\s+(\w)/g, '$1$2')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function formatarArtigo(texto) {
+    return limparTextoCBJD(texto)
+      .replace(/(PENA:)/g, '\n\n$1')
+      .replace(/(Parágrafo único\.?)/g, '\n\n$1')
+      .replace(/(§ ?\d+[º°]?)/g, '\n\n$1')
+      .replace(/(\bI —)/g, '\n\n$1')
+      .replace(/(\bII —)/g, '\n$1')
+      .replace(/(\bIII —)/g, '\n$1')
+      .replace(/(\bIV —)/g, '\n$1')
+      .replace(/(\bV —)/g, '\n$1')
+      .replace(/(\bVI —)/g, '\n$1')
+      .replace(/(\bVII —)/g, '\n$1')
+      .replace(/(\bVIII —)/g, '\n$1')
+      .replace(/(\bIX —)/g, '\n$1')
+      .replace(/(\bX —)/g, '\n$1')
+      .replace(/(\bXI —)/g, '\n$1')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  function montarArtigosCBJD(paginas) {
+    const textoCompleto = paginas
+      .sort((a, b) => Number(a.pagina) - Number(b.pagina))
+      .map(p => `\n\n[[PAGINA:${p.pagina}]]\n${p.texto}`)
+      .join('\n\n');
+
+    const texto = limparTextoCBJD(textoCompleto);
+
+    const regexArtigos = /Art\. ?\d+[A-Z]?\.?/g;
+    const encontrados = [...texto.matchAll(regexArtigos)];
+
+    const artigos = [];
+
+    for (let i = 0; i < encontrados.length; i++) {
+      const inicio = encontrados[i].index;
+      const fim = i + 1 < encontrados.length ? encontrados[i + 1].index : texto.length;
+      const blocoOriginal = texto.slice(inicio, fim).trim();
+
+      const numeroMatch = blocoOriginal.match(/^Art\. ?(\d+[A-Z]?)/);
+      const numero = numeroMatch ? numeroMatch[1] : '';
+
+      const paginasAntes = texto.slice(Math.max(0, inicio - 500), inicio);
+      const paginaMatch = paginasAntes.match(/\[\[PAGINA:(\d+)\]\]/g);
+      const paginaInicial = paginaMatch && paginaMatch.length
+        ? paginaMatch[paginaMatch.length - 1].replace(/\D/g, '')
+        : '';
+
+      artigos.push({
+        numero,
+        pagina: paginaInicial,
+        texto: formatarArtigo(blocoOriginal.replace(/\[\[PAGINA:\d+\]\]/g, ''))
+      });
+    }
+
+    return artigos;
+  }
+
+  async function carregarArtigosCBJD() {
+    if (cbjdArtigosCache.length) return cbjdArtigosCache;
+
+    const { data, error } = await cbjdClient
+      .from('cbjd_paginas')
+      .select('pagina,texto')
+      .order('pagina', { ascending: true });
+
+    if (error) {
+      console.error('Erro ao carregar CBJD:', error);
+      return [];
+    }
+
+    cbjdArtigosCache = montarArtigosCBJD(data || []);
+    return cbjdArtigosCache;
+  }
+
+  function buscarArtigos(artigos, termo) {
+    const busca = String(termo || '').trim().toLowerCase();
+
+    if (!busca) {
+      return artigos;
+    }
+
+    return artigos.filter(artigo => {
+      const numero = artigo.numero.toLowerCase();
+      const texto = artigo.texto.toLowerCase();
+
+      return (
+        numero === busca ||
+        numero.replace(/[^\d]/g, '') === busca.replace(/[^\d]/g, '') ||
+        texto.includes(busca)
+      );
+    });
+  }
+
+  function renderizarResultadoCBJD(artigos, termo = '') {
+    const box = document.getElementById('cbjdResultadosCorrigidos');
+    if (!box) return;
+
+    const encontrados = buscarArtigos(artigos, termo);
+
+    if (!encontrados.length) {
+      box.innerHTML = `
+        <div class="card">
+          <b>Nenhum artigo encontrado.</b>
+          <p>Tente pesquisar apenas o número, por exemplo: <b>214</b>.</p>
+        </div>
+      `;
+      return;
+    }
+
+    box.innerHTML = encontrados.map(artigo => `
+      <details class="cbjd-page" open>
+        <summary>
+          <strong>Art. ${artigo.numero} - CBJD</strong>
+          ${artigo.pagina ? `<span style="font-size:12px;color:#64748b;margin-left:8px;">pág. ${artigo.pagina}</span>` : ''}
+        </summary>
+        <pre>${artigo.texto}</pre>
+      </details>
+    `).join('');
+  }
+
+  async function carregarTelaCBJDCorrigida() {
+    const secao = document.getElementById('regrasPublicas');
+    if (!secao) return;
+
+    secao.innerHTML = `
+      <div class="card">
+        <h2>Regras do CBJD</h2>
+        <p style="color:#475569;margin-top:4px;">
+          Leitura organizada por artigo completo. Ao pesquisar, o sistema mostra o artigo junto com suas penas e parágrafos.
+        </p>
+
+        <div class="cbjd-tools" style="display:grid;grid-template-columns:1fr auto;gap:10px;margin:12px 0;">
+          <input 
+            id="buscaCBJDCorrigida" 
+            placeholder="Pesquisar artigo ou palavra-chave. Exemplo: 214, atleta irregular, agressão..." 
+            style="padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:15px;width:100%;"
+          />
+          <button 
+            id="btnLimparCBJDCorrigido"
+            class="btn"
+            style="padding:12px 16px;border-radius:12px;"
+          >
+            Limpar
+          </button>
+        </div>
+
+        <div id="cbjdResultadosCorrigidos">
+          <div class="card">Carregando regras do CBJD...</div>
+        </div>
+      </div>
+    `;
+
+    const artigos = await carregarArtigosCBJD();
+
+    const input = document.getElementById('buscaCBJDCorrigida');
+    const btnLimpar = document.getElementById('btnLimparCBJDCorrigido');
+
+    renderizarResultadoCBJD(artigos, '');
+
+    input.addEventListener('input', () => {
+      renderizarResultadoCBJD(artigos, input.value);
+    });
+
+    btnLimpar.addEventListener('click', () => {
+      input.value = '';
+      renderizarResultadoCBJD(artigos, '');
+      input.focus();
+    });
+  }
+
+  window.carregarTelaCBJDCorrigida = carregarTelaCBJDCorrigida;
+
+  document.addEventListener('click', function (e) {
+    const botao = e.target.closest('[data-tab="regrasPublicas"]');
+    if (botao) {
+      setTimeout(carregarTelaCBJDCorrigida, 100);
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    setTimeout(function () {
+      const secao = document.getElementById('regrasPublicas');
+      if (secao && secao.classList.contains('active')) {
+        carregarTelaCBJDCorrigida();
+      }
+    }, 300);
+  });
+})();
+</script>
 </body>
 </html>
