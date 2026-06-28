@@ -5,8 +5,298 @@
 <meta charset="utf-8"/>
 <meta content="width=device-width,initial-scale=1" name="viewport"/>
 <title>Sistema de Campeonatos Municipais de Capão da Canoa | v27 menu lateral correto</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+
+
+/* V52 - ajustes finos: denúncia com categoria/série e botão aplicar punição no detalhe */
+function ensureDenunciaCategoriaSerieV52(){
+  if(document.getElementById('denCategoriaV52'))return;
+  const champ=document.getElementById('denCampeonato');
+  if(!champ)return;
+  const row=champ.closest('.row');
+  if(!row)return;
+  const div=document.createElement('div');
+  div.className='row';
+  div.id='denCategoriaSerieRowV52';
+  div.innerHTML=`
+    <div><label>Categoria</label><select id="denCategoriaV52" onchange="updateDenunciaCategoriaSerieV52()"><option value="">Todas as categorias</option></select></div>
+    <div><label>Série</label><select id="denSerieV52" onchange="updateDenunciaEquipeListaV52()"><option value="">Todas as séries</option></select></div>`;
+  row.insertAdjacentElement('afterend',div);
+}
+function denNormV52(v){return String(v||'').trim().toLowerCase()}
+function denCategoriaEquipeV52(t){return t?.categoria_genero||t?.categoria_nome||''}
+function denSerieEquipeV52(t){return t?.serie_nome||''}
+function denTimesBaseV52(){
+  const champ=document.getElementById('denCampeonato')?.value||'';
+  return (teams||[]).filter(t=>String(t.campeonato_id)===String(champ));
+}
+function updateDenunciaCategoriasV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const catSel=document.getElementById('denCategoriaV52');
+  const serSel=document.getElementById('denSerieV52');
+  if(!catSel||!serSel)return;
+  const arr=denTimesBaseV52();
+  const cats=[];
+  arr.forEach(t=>{const c=denCategoriaEquipeV52(t); if(c&&!cats.some(x=>denNormV52(x)===denNormV52(c)))cats.push(c)});
+  const old=catSel.value;
+  catSel.innerHTML='<option value="">Todas as categorias</option>'+cats.sort().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(cats.some(c=>String(c)===String(old)))catSel.value=old;
+  updateDenunciaSeriesV52();
+}
+function updateDenunciaSeriesV52(){
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serSel=document.getElementById('denSerieV52');
+  if(!serSel)return;
+  const arr=denTimesBaseV52().filter(t=>!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat));
+  const series=[];
+  arr.forEach(t=>{const s=denSerieEquipeV52(t); if(s&&!series.some(x=>denNormV52(x)===denNormV52(s)))series.push(s)});
+  const old=serSel.value;
+  serSel.innerHTML='<option value="">Todas as séries</option>'+series.sort().map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  if(series.some(s=>String(s)===String(old)))serSel.value=old;
+}
+function updateDenunciaCategoriaSerieV52(){
+  updateDenunciaSeriesV52();
+  updateDenunciaEquipeListaV52();
+}
+function updateDenunciaEquipeListaV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const den=document.getElementById('denDenunciada');
+  const part=document.getElementById('denPartida');
+  if(!den)return;
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serie=document.getElementById('denSerieV52')?.value||'';
+  let arr=denTimesBaseV52().filter(t=>(!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat))&&(!serie||denNormV52(denSerieEquipeV52(t))===denNormV52(serie)));
+  arr=arr.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+  den.innerHTML='<option value="">Selecione a equipe denunciada</option>'+arr.map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}${denCategoriaEquipeV52(t)?' • '+esc(denCategoriaEquipeV52(t)):''}${denSerieEquipeV52(t)?' • '+esc(denSerieEquipeV52(t)):''}</option>`).join('');
+  if(part)part.innerHTML='<option value="">Selecione a equipe denunciada</option>';
+  const box=document.getElementById('denResumoPartida'); if(box){box.style.display='none';box.innerHTML=''}
+  if(typeof updateDenunciaAlvoV50==='function')updateDenunciaAlvoV50();
+}
+const updateDenunciaCampeonatoV50OriginalV52 = typeof updateDenunciaCampeonatoV50==='function' ? updateDenunciaCampeonatoV50 : null;
+updateDenunciaCampeonatoV50=function(){
+  ensureDenunciaCategoriaSerieV52();
+  updateDenunciaCategoriasV52();
+  updateDenunciaEquipeListaV52();
+};
+const collectDenunciaContextV50OriginalV52 = typeof collectDenunciaContextV50==='function' ? collectDenunciaContextV50 : null;
+collectDenunciaContextV50=async function(){
+  const base=collectDenunciaContextV50OriginalV52?await collectDenunciaContextV50OriginalV52():{descricao:document.getElementById('denDesc')?.value||''};
+  const categoria=document.getElementById('denCategoriaV52')?.value||'Não informada';
+  const serie=document.getElementById('denSerieV52')?.value||'Não informada';
+  base.descricao = `${base.descricao||''}\nCategoria: ${categoria}\nSérie: ${serie}`;
+  base.categoria_resumo=categoria;
+  base.serie_resumo=serie;
+  return base;
+};
+function extrairLinhaDenunciaV52(d,label){
+  const re=new RegExp(label+'\\s*:\\s*([^\\n]+)','i');
+  const m=String(d?.descricao||'').match(re);
+  return m&&m[1]?m[1].trim():'';
+}
+function aplicarPunicaoDaDenunciaV52(id){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  if(document.getElementById('denunciaModalV51'))document.getElementById('denunciaModalV51').remove();
+  if(typeof goAdmin==='function')goAdmin('punicoesAdmin');
+  setTimeout(()=>{
+    const atleta=(typeof extrairAtletaDenunciaV51==='function'?extrairAtletaDenunciaV51(d):'')||extrairLinhaDenunciaV52(d,'Atleta denunciado');
+    const partida=extrairLinhaDenunciaV52(d,'Partida/Rodada')||d.atleta_citado||d.partida_rodada||'';
+    const categoria=extrairLinhaDenunciaV52(d,'Categoria');
+    const serie=extrairLinhaDenunciaV52(d,'Série|Serie');
+    if(document.getElementById('punAtleta'))document.getElementById('punAtleta').value=atleta||d.equipe_denunciada||'';
+    if(document.getElementById('punEquipe'))document.getElementById('punEquipe').value=d.equipe_denunciada||'';
+    if(document.getElementById('punTipo'))document.getElementById('punTipo').value='Punição aplicada por denúncia';
+    if(document.getElementById('punInicio')&&!document.getElementById('punInicio').value)document.getElementById('punInicio').value=new Date().toISOString().slice(0,10);
+    if(document.getElementById('punDesc'))document.getElementById('punDesc').value=`Origem: denúncia ${d.protocolo||''}\nEquipe reclamante: ${d.equipe_reclamante||''}\nEquipe denunciada: ${d.equipe_denunciada||''}\nCategoria: ${categoria||'-'}\nSérie: ${serie||'-'}\nPartida/Rodada: ${partida||'-'}\nAlvo: ${d.motivo||atleta||'-'}\n\nDescrição da denúncia:\n${d.descricao||''}`;
+    let aviso=document.getElementById('punFromDenunciaV52');
+    if(!aviso&&document.getElementById('punForm')){
+      document.getElementById('punForm').insertAdjacentHTML('beforebegin','<div id="punFromDenunciaV52" class="msg ok"><b>Punição iniciada a partir de denúncia.</b> Os dados disponíveis já foram preenchidos. Informe a pena, período/data final e salve.</div>');
+    }
+    document.getElementById('punForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },300);
+}
+aplicarPunicaoDaDenunciaV51=aplicarPunicaoDaDenunciaV52;
+function botoesDenunciaV52(d){
+  return `<button class="btn small" onclick="abrirDenunciaAdminV51('${esc(d.id)}')">Abrir denúncia</button>
+  ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>PDF</button>`}
+  <button class="btn small" onclick='openWhatsappComplaint(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>WhatsApp</button>
+  <button class="btn small green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button>
+  <button class="btn small red" onclick="deleteComplaint('${esc(d.id)}','${esc(d.protocolo||'')}')">🗑 Excluir denúncia</button>`;
+}
+function renderComplaintsAdminV52(){
+  const box=document.getElementById('complaintsAdminBox');
+  if(!box)return;
+  box.innerHTML=(complaints||[]).length?(complaints||[]).map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo||d.id)}">
+      <strong>${esc(d.protocolo||'Sem protocolo')}</strong>
+      <p class="muted">${esc(d.responsavel||d.nome||'')} • ${fmtDate(d.created_at)}</p>
+      <p><b>${esc(d.equipe_reclamante||'-')}</b> denunciou <b>${esc(d.equipe_denunciada||'-')}</b></p>
+      <p class="muted"><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')} ${d.motivo?`• <b>Alvo:</b> ${esc(d.motivo)}`:''}</p>
+      <div class="two-actions">${botoesDenunciaV52(d)}</div>
+      <div id="complaintDetail_${esc(d.id)}" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <h3>Denúncia completa</h3>
+        <p><b>Responsável:</b> ${esc(d.responsavel||d.nome||'-')} ${d.whatsapp?`• <b>WhatsApp:</b> ${esc(d.whatsapp)}`:''}</p>
+        <p><b>Equipe reclamante:</b> ${esc(d.equipe_reclamante||'-')}</p>
+        <p><b>Equipe denunciada:</b> ${esc(d.equipe_denunciada||'-')}</p>
+        <p><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')}</p>
+        <p><b>Alvo da denúncia:</b> ${esc(d.motivo||'-')}</p>
+        <p style="white-space:pre-wrap"><b>Descrição:</b><br>${esc(d.descricao||'')}</p>
+        <div>${([...(d.imagens_urls||[]),...(d.arquivos_denuncia||[]),...(d.imagens_denuncia||[])].filter(Boolean)).map(u=>`<img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px">`).join('')}</div>
+        <div class="two-actions" style="margin-top:12px"><button class="btn green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button></div>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>';
+}
+renderComplaintsAdmin=renderComplaintsAdminV52;
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},600));
+window.addEventListener('load',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},1200));
+
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+
+
+/* V52 - ajustes finos: denúncia com categoria/série e botão aplicar punição no detalhe */
+function ensureDenunciaCategoriaSerieV52(){
+  if(document.getElementById('denCategoriaV52'))return;
+  const champ=document.getElementById('denCampeonato');
+  if(!champ)return;
+  const row=champ.closest('.row');
+  if(!row)return;
+  const div=document.createElement('div');
+  div.className='row';
+  div.id='denCategoriaSerieRowV52';
+  div.innerHTML=`
+    <div><label>Categoria</label><select id="denCategoriaV52" onchange="updateDenunciaCategoriaSerieV52()"><option value="">Todas as categorias</option></select></div>
+    <div><label>Série</label><select id="denSerieV52" onchange="updateDenunciaEquipeListaV52()"><option value="">Todas as séries</option></select></div>`;
+  row.insertAdjacentElement('afterend',div);
+}
+function denNormV52(v){return String(v||'').trim().toLowerCase()}
+function denCategoriaEquipeV52(t){return t?.categoria_genero||t?.categoria_nome||''}
+function denSerieEquipeV52(t){return t?.serie_nome||''}
+function denTimesBaseV52(){
+  const champ=document.getElementById('denCampeonato')?.value||'';
+  return (teams||[]).filter(t=>String(t.campeonato_id)===String(champ));
+}
+function updateDenunciaCategoriasV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const catSel=document.getElementById('denCategoriaV52');
+  const serSel=document.getElementById('denSerieV52');
+  if(!catSel||!serSel)return;
+  const arr=denTimesBaseV52();
+  const cats=[];
+  arr.forEach(t=>{const c=denCategoriaEquipeV52(t); if(c&&!cats.some(x=>denNormV52(x)===denNormV52(c)))cats.push(c)});
+  const old=catSel.value;
+  catSel.innerHTML='<option value="">Todas as categorias</option>'+cats.sort().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(cats.some(c=>String(c)===String(old)))catSel.value=old;
+  updateDenunciaSeriesV52();
+}
+function updateDenunciaSeriesV52(){
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serSel=document.getElementById('denSerieV52');
+  if(!serSel)return;
+  const arr=denTimesBaseV52().filter(t=>!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat));
+  const series=[];
+  arr.forEach(t=>{const s=denSerieEquipeV52(t); if(s&&!series.some(x=>denNormV52(x)===denNormV52(s)))series.push(s)});
+  const old=serSel.value;
+  serSel.innerHTML='<option value="">Todas as séries</option>'+series.sort().map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  if(series.some(s=>String(s)===String(old)))serSel.value=old;
+}
+function updateDenunciaCategoriaSerieV52(){
+  updateDenunciaSeriesV52();
+  updateDenunciaEquipeListaV52();
+}
+function updateDenunciaEquipeListaV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const den=document.getElementById('denDenunciada');
+  const part=document.getElementById('denPartida');
+  if(!den)return;
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serie=document.getElementById('denSerieV52')?.value||'';
+  let arr=denTimesBaseV52().filter(t=>(!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat))&&(!serie||denNormV52(denSerieEquipeV52(t))===denNormV52(serie)));
+  arr=arr.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+  den.innerHTML='<option value="">Selecione a equipe denunciada</option>'+arr.map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}${denCategoriaEquipeV52(t)?' • '+esc(denCategoriaEquipeV52(t)):''}${denSerieEquipeV52(t)?' • '+esc(denSerieEquipeV52(t)):''}</option>`).join('');
+  if(part)part.innerHTML='<option value="">Selecione a equipe denunciada</option>';
+  const box=document.getElementById('denResumoPartida'); if(box){box.style.display='none';box.innerHTML=''}
+  if(typeof updateDenunciaAlvoV50==='function')updateDenunciaAlvoV50();
+}
+const updateDenunciaCampeonatoV50OriginalV52 = typeof updateDenunciaCampeonatoV50==='function' ? updateDenunciaCampeonatoV50 : null;
+updateDenunciaCampeonatoV50=function(){
+  ensureDenunciaCategoriaSerieV52();
+  updateDenunciaCategoriasV52();
+  updateDenunciaEquipeListaV52();
+};
+const collectDenunciaContextV50OriginalV52 = typeof collectDenunciaContextV50==='function' ? collectDenunciaContextV50 : null;
+collectDenunciaContextV50=async function(){
+  const base=collectDenunciaContextV50OriginalV52?await collectDenunciaContextV50OriginalV52():{descricao:document.getElementById('denDesc')?.value||''};
+  const categoria=document.getElementById('denCategoriaV52')?.value||'Não informada';
+  const serie=document.getElementById('denSerieV52')?.value||'Não informada';
+  base.descricao = `${base.descricao||''}\nCategoria: ${categoria}\nSérie: ${serie}`;
+  base.categoria_resumo=categoria;
+  base.serie_resumo=serie;
+  return base;
+};
+function extrairLinhaDenunciaV52(d,label){
+  const re=new RegExp(label+'\\s*:\\s*([^\\n]+)','i');
+  const m=String(d?.descricao||'').match(re);
+  return m&&m[1]?m[1].trim():'';
+}
+function aplicarPunicaoDaDenunciaV52(id){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  if(document.getElementById('denunciaModalV51'))document.getElementById('denunciaModalV51').remove();
+  if(typeof goAdmin==='function')goAdmin('punicoesAdmin');
+  setTimeout(()=>{
+    const atleta=(typeof extrairAtletaDenunciaV51==='function'?extrairAtletaDenunciaV51(d):'')||extrairLinhaDenunciaV52(d,'Atleta denunciado');
+    const partida=extrairLinhaDenunciaV52(d,'Partida/Rodada')||d.atleta_citado||d.partida_rodada||'';
+    const categoria=extrairLinhaDenunciaV52(d,'Categoria');
+    const serie=extrairLinhaDenunciaV52(d,'Série|Serie');
+    if(document.getElementById('punAtleta'))document.getElementById('punAtleta').value=atleta||d.equipe_denunciada||'';
+    if(document.getElementById('punEquipe'))document.getElementById('punEquipe').value=d.equipe_denunciada||'';
+    if(document.getElementById('punTipo'))document.getElementById('punTipo').value='Punição aplicada por denúncia';
+    if(document.getElementById('punInicio')&&!document.getElementById('punInicio').value)document.getElementById('punInicio').value=new Date().toISOString().slice(0,10);
+    if(document.getElementById('punDesc'))document.getElementById('punDesc').value=`Origem: denúncia ${d.protocolo||''}\nEquipe reclamante: ${d.equipe_reclamante||''}\nEquipe denunciada: ${d.equipe_denunciada||''}\nCategoria: ${categoria||'-'}\nSérie: ${serie||'-'}\nPartida/Rodada: ${partida||'-'}\nAlvo: ${d.motivo||atleta||'-'}\n\nDescrição da denúncia:\n${d.descricao||''}`;
+    let aviso=document.getElementById('punFromDenunciaV52');
+    if(!aviso&&document.getElementById('punForm')){
+      document.getElementById('punForm').insertAdjacentHTML('beforebegin','<div id="punFromDenunciaV52" class="msg ok"><b>Punição iniciada a partir de denúncia.</b> Os dados disponíveis já foram preenchidos. Informe a pena, período/data final e salve.</div>');
+    }
+    document.getElementById('punForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },300);
+}
+aplicarPunicaoDaDenunciaV51=aplicarPunicaoDaDenunciaV52;
+function botoesDenunciaV52(d){
+  return `<button class="btn small" onclick="abrirDenunciaAdminV51('${esc(d.id)}')">Abrir denúncia</button>
+  ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>PDF</button>`}
+  <button class="btn small" onclick='openWhatsappComplaint(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>WhatsApp</button>
+  <button class="btn small green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button>
+  <button class="btn small red" onclick="deleteComplaint('${esc(d.id)}','${esc(d.protocolo||'')}')">🗑 Excluir denúncia</button>`;
+}
+function renderComplaintsAdminV52(){
+  const box=document.getElementById('complaintsAdminBox');
+  if(!box)return;
+  box.innerHTML=(complaints||[]).length?(complaints||[]).map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo||d.id)}">
+      <strong>${esc(d.protocolo||'Sem protocolo')}</strong>
+      <p class="muted">${esc(d.responsavel||d.nome||'')} • ${fmtDate(d.created_at)}</p>
+      <p><b>${esc(d.equipe_reclamante||'-')}</b> denunciou <b>${esc(d.equipe_denunciada||'-')}</b></p>
+      <p class="muted"><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')} ${d.motivo?`• <b>Alvo:</b> ${esc(d.motivo)}`:''}</p>
+      <div class="two-actions">${botoesDenunciaV52(d)}</div>
+      <div id="complaintDetail_${esc(d.id)}" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <h3>Denúncia completa</h3>
+        <p><b>Responsável:</b> ${esc(d.responsavel||d.nome||'-')} ${d.whatsapp?`• <b>WhatsApp:</b> ${esc(d.whatsapp)}`:''}</p>
+        <p><b>Equipe reclamante:</b> ${esc(d.equipe_reclamante||'-')}</p>
+        <p><b>Equipe denunciada:</b> ${esc(d.equipe_denunciada||'-')}</p>
+        <p><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')}</p>
+        <p><b>Alvo da denúncia:</b> ${esc(d.motivo||'-')}</p>
+        <p style="white-space:pre-wrap"><b>Descrição:</b><br>${esc(d.descricao||'')}</p>
+        <div>${([...(d.imagens_urls||[]),...(d.arquivos_denuncia||[]),...(d.imagens_denuncia||[])].filter(Boolean)).map(u=>`<img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px">`).join('')}</div>
+        <div class="two-actions" style="margin-top:12px"><button class="btn green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button></div>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>';
+}
+renderComplaintsAdmin=renderComplaintsAdminV52;
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},600));
+window.addEventListener('load',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},1200));
+
+</script>
 <style>
 :root{--blue:#0a4ea3;--blue2:#073b7d;--green:#11a36a;--yellow:#f5c542;--bg:#f4f7fb;--card:#fff;--text:#172033;--muted:#6b7280;--line:#dbe3ef;--danger:#c62828;--warn:#b7791f;--radius:18px;--shadow:0 18px 50px rgba(10,78,163,.12)}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:linear-gradient(135deg,#eef5ff 0%,#f9fbff 45%,#edf7f3 100%);color:var(--text)}button,input,select,textarea{font:inherit}button{cursor:pointer}.app{min-height:100vh}.top{padding:26px 18px}.hero{max-width:1180px;margin:0 auto;background:linear-gradient(135deg,var(--blue),var(--blue2));border-radius:30px;padding:30px;color:#fff;display:grid;grid-template-columns:1fr auto;gap:24px;box-shadow:var(--shadow);overflow:hidden;position:relative}.hero:after{content:"⚽";font-size:160px;opacity:.12;position:absolute;right:70px;top:-30px}.brand{display:flex;gap:16px;align-items:center}.logo{width:64px;height:64px;border-radius:22px;background:rgba(255,255,255,.14);display:grid;place-items:center;font-size:34px;border:1px solid rgba(255,255,255,.22)}h1{margin:0;font-size:34px;line-height:1.05}.sub{margin:8px 0 0;color:#dbeafe;font-size:17px}.hero-actions{display:flex;align-items:center;gap:10px;z-index:1}.btn{border:0;border-radius:14px;padding:12px 16px;background:var(--blue);color:#fff;font-weight:700;box-shadow:0 8px 18px rgba(10,78,163,.18)}.btn.secondary{background:#fff;color:var(--blue)}.btn.ghost{background:#edf4ff;color:var(--blue);box-shadow:none}.btn.green{background:var(--green)}.btn.red{background:var(--danger)}.btn.gray{background:#e5e7eb;color:#6b7280;box-shadow:none;cursor:not-allowed}.btn.small{padding:8px 10px;border-radius:10px;font-size:13px}.wrap{max-width:1180px;margin:0 auto;padding:0 18px 60px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:0 10px 28px rgba(15,23,42,.06)}.card h3{margin:0 0 8px}.muted{color:var(--muted)}.tag{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#eef5ff;color:var(--blue);font-weight:700;font-size:12px}.tag.green{background:#eafaf2;color:#08764b}.tag.red{background:#feecec;color:#b91c1c}.tag.warn{background:#fff7e6;color:#9a5b00}.tabs{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}.tab{border:1px solid var(--line);background:#fff;color:#334155;border-radius:14px;padding:10px 14px;font-weight:800}.tab.active{background:var(--blue);color:#fff;border-color:var(--blue)}.section{display:none}.section.active{display:block}.form{display:grid;gap:12px}.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}label{font-weight:800;font-size:13px;color:#334155}input,select,textarea{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--text)}textarea{min-height:110px}.table{width:100%;border-collapse:separate;border-spacing:0 8px}.table th{text-align:left;font-size:12px;text-transform:uppercase;color:#64748b;padding:0 10px}.table td{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px 10px}.table td:first-child{border-left:1px solid var(--line);border-radius:14px 0 0 14px}.table td:last-child{border-right:1px solid var(--line);border-radius:0 14px 14px 0}.admin-layout{display:grid;grid-template-columns:260px 1fr;gap:18px}.side{background:#082f63;color:#fff;border-radius:24px;padding:16px;position:sticky;top:12px;height:max-content}.side h2{font-size:18px;margin:6px 8px 16px}.side button{display:block;width:100%;text-align:left;margin:6px 0;background:transparent;border:0;color:#dbeafe;padding:12px;border-radius:13px;font-weight:800}.side button.active,.side button:hover{background:rgba(255,255,255,.12);color:#fff}.admin-panel{display:none}.admin-panel.active{display:block}.player{border:1px solid var(--line);border-radius:16px;padding:14px;background:#f8fbff;margin:10px 0}.player-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.preview{width:72px;height:72px;border-radius:16px;background:#eef2f7;border:1px dashed #b6c3d6;object-fit:contain;padding:4px}.msg{padding:12px 14px;border-radius:14px;background:#eef5ff;border:1px solid #c7ddff;color:#154b89;margin:12px 0}.msg.err{background:#fff1f1;border-color:#ffc9c9;color:#a51515}.msg.ok{background:#ecfdf5;border-color:#b7f4d3;color:#096b44}.hidden{display:none!important}.two-actions{display:flex;gap:8px;flex-wrap:wrap}.champ-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin:20px 0}.empty{padding:28px;border:1px dashed #b9c5d6;border-radius:18px;text-align:center;color:#64748b;background:#fff}.bracket{display:grid;gap:12px}.game{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}.game strong{display:block;margin-bottom:6px}.kbd{background:#eef2ff;color:#273a9b;padding:2px 7px;border-radius:8px;font-size:12px;font-weight:800}
@@ -1743,6 +2033,151 @@ function renderComplaintsAdmin(){
       </div>
     </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>';
 }
+
+
+
+
+/* V52 - ajustes finos: denúncia com categoria/série e botão aplicar punição no detalhe */
+function ensureDenunciaCategoriaSerieV52(){
+  if(document.getElementById('denCategoriaV52'))return;
+  const champ=document.getElementById('denCampeonato');
+  if(!champ)return;
+  const row=champ.closest('.row');
+  if(!row)return;
+  const div=document.createElement('div');
+  div.className='row';
+  div.id='denCategoriaSerieRowV52';
+  div.innerHTML=`
+    <div><label>Categoria</label><select id="denCategoriaV52" onchange="updateDenunciaCategoriaSerieV52()"><option value="">Todas as categorias</option></select></div>
+    <div><label>Série</label><select id="denSerieV52" onchange="updateDenunciaEquipeListaV52()"><option value="">Todas as séries</option></select></div>`;
+  row.insertAdjacentElement('afterend',div);
+}
+function denNormV52(v){return String(v||'').trim().toLowerCase()}
+function denCategoriaEquipeV52(t){return t?.categoria_genero||t?.categoria_nome||''}
+function denSerieEquipeV52(t){return t?.serie_nome||''}
+function denTimesBaseV52(){
+  const champ=document.getElementById('denCampeonato')?.value||'';
+  return (teams||[]).filter(t=>String(t.campeonato_id)===String(champ));
+}
+function updateDenunciaCategoriasV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const catSel=document.getElementById('denCategoriaV52');
+  const serSel=document.getElementById('denSerieV52');
+  if(!catSel||!serSel)return;
+  const arr=denTimesBaseV52();
+  const cats=[];
+  arr.forEach(t=>{const c=denCategoriaEquipeV52(t); if(c&&!cats.some(x=>denNormV52(x)===denNormV52(c)))cats.push(c)});
+  const old=catSel.value;
+  catSel.innerHTML='<option value="">Todas as categorias</option>'+cats.sort().map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('');
+  if(cats.some(c=>String(c)===String(old)))catSel.value=old;
+  updateDenunciaSeriesV52();
+}
+function updateDenunciaSeriesV52(){
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serSel=document.getElementById('denSerieV52');
+  if(!serSel)return;
+  const arr=denTimesBaseV52().filter(t=>!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat));
+  const series=[];
+  arr.forEach(t=>{const s=denSerieEquipeV52(t); if(s&&!series.some(x=>denNormV52(x)===denNormV52(s)))series.push(s)});
+  const old=serSel.value;
+  serSel.innerHTML='<option value="">Todas as séries</option>'+series.sort().map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  if(series.some(s=>String(s)===String(old)))serSel.value=old;
+}
+function updateDenunciaCategoriaSerieV52(){
+  updateDenunciaSeriesV52();
+  updateDenunciaEquipeListaV52();
+}
+function updateDenunciaEquipeListaV52(){
+  ensureDenunciaCategoriaSerieV52();
+  const den=document.getElementById('denDenunciada');
+  const part=document.getElementById('denPartida');
+  if(!den)return;
+  const cat=document.getElementById('denCategoriaV52')?.value||'';
+  const serie=document.getElementById('denSerieV52')?.value||'';
+  let arr=denTimesBaseV52().filter(t=>(!cat||denNormV52(denCategoriaEquipeV52(t))===denNormV52(cat))&&(!serie||denNormV52(denSerieEquipeV52(t))===denNormV52(serie)));
+  arr=arr.sort((a,b)=>(a.nome||'').localeCompare(b.nome||''));
+  den.innerHTML='<option value="">Selecione a equipe denunciada</option>'+arr.map(t=>`<option value="${esc(t.id)}">${esc(t.nome)}${denCategoriaEquipeV52(t)?' • '+esc(denCategoriaEquipeV52(t)):''}${denSerieEquipeV52(t)?' • '+esc(denSerieEquipeV52(t)):''}</option>`).join('');
+  if(part)part.innerHTML='<option value="">Selecione a equipe denunciada</option>';
+  const box=document.getElementById('denResumoPartida'); if(box){box.style.display='none';box.innerHTML=''}
+  if(typeof updateDenunciaAlvoV50==='function')updateDenunciaAlvoV50();
+}
+const updateDenunciaCampeonatoV50OriginalV52 = typeof updateDenunciaCampeonatoV50==='function' ? updateDenunciaCampeonatoV50 : null;
+updateDenunciaCampeonatoV50=function(){
+  ensureDenunciaCategoriaSerieV52();
+  updateDenunciaCategoriasV52();
+  updateDenunciaEquipeListaV52();
+};
+const collectDenunciaContextV50OriginalV52 = typeof collectDenunciaContextV50==='function' ? collectDenunciaContextV50 : null;
+collectDenunciaContextV50=async function(){
+  const base=collectDenunciaContextV50OriginalV52?await collectDenunciaContextV50OriginalV52():{descricao:document.getElementById('denDesc')?.value||''};
+  const categoria=document.getElementById('denCategoriaV52')?.value||'Não informada';
+  const serie=document.getElementById('denSerieV52')?.value||'Não informada';
+  base.descricao = `${base.descricao||''}\nCategoria: ${categoria}\nSérie: ${serie}`;
+  base.categoria_resumo=categoria;
+  base.serie_resumo=serie;
+  return base;
+};
+function extrairLinhaDenunciaV52(d,label){
+  const re=new RegExp(label+'\\s*:\\s*([^\\n]+)','i');
+  const m=String(d?.descricao||'').match(re);
+  return m&&m[1]?m[1].trim():'';
+}
+function aplicarPunicaoDaDenunciaV52(id){
+  const d=(complaints||[]).find(x=>String(x.id)===String(id));
+  if(!d)return alert('Denúncia não encontrada.');
+  if(document.getElementById('denunciaModalV51'))document.getElementById('denunciaModalV51').remove();
+  if(typeof goAdmin==='function')goAdmin('punicoesAdmin');
+  setTimeout(()=>{
+    const atleta=(typeof extrairAtletaDenunciaV51==='function'?extrairAtletaDenunciaV51(d):'')||extrairLinhaDenunciaV52(d,'Atleta denunciado');
+    const partida=extrairLinhaDenunciaV52(d,'Partida/Rodada')||d.atleta_citado||d.partida_rodada||'';
+    const categoria=extrairLinhaDenunciaV52(d,'Categoria');
+    const serie=extrairLinhaDenunciaV52(d,'Série|Serie');
+    if(document.getElementById('punAtleta'))document.getElementById('punAtleta').value=atleta||d.equipe_denunciada||'';
+    if(document.getElementById('punEquipe'))document.getElementById('punEquipe').value=d.equipe_denunciada||'';
+    if(document.getElementById('punTipo'))document.getElementById('punTipo').value='Punição aplicada por denúncia';
+    if(document.getElementById('punInicio')&&!document.getElementById('punInicio').value)document.getElementById('punInicio').value=new Date().toISOString().slice(0,10);
+    if(document.getElementById('punDesc'))document.getElementById('punDesc').value=`Origem: denúncia ${d.protocolo||''}\nEquipe reclamante: ${d.equipe_reclamante||''}\nEquipe denunciada: ${d.equipe_denunciada||''}\nCategoria: ${categoria||'-'}\nSérie: ${serie||'-'}\nPartida/Rodada: ${partida||'-'}\nAlvo: ${d.motivo||atleta||'-'}\n\nDescrição da denúncia:\n${d.descricao||''}`;
+    let aviso=document.getElementById('punFromDenunciaV52');
+    if(!aviso&&document.getElementById('punForm')){
+      document.getElementById('punForm').insertAdjacentHTML('beforebegin','<div id="punFromDenunciaV52" class="msg ok"><b>Punição iniciada a partir de denúncia.</b> Os dados disponíveis já foram preenchidos. Informe a pena, período/data final e salve.</div>');
+    }
+    document.getElementById('punForm')?.scrollIntoView({behavior:'smooth',block:'center'});
+  },300);
+}
+aplicarPunicaoDaDenunciaV51=aplicarPunicaoDaDenunciaV52;
+function botoesDenunciaV52(d){
+  return `<button class="btn small" onclick="abrirDenunciaAdminV51('${esc(d.id)}')">Abrir denúncia</button>
+  ${d.pdf_url?`<a class="btn small ghost" href="${esc(d.pdf_url)}" target="_blank">Abrir PDF</a>`:`<button class="btn small ghost" onclick='generateComplaintPdf(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>PDF</button>`}
+  <button class="btn small" onclick='openWhatsappComplaint(${safeJsonAttrV51? safeJsonAttrV51(d):JSON.stringify(d)})'>WhatsApp</button>
+  <button class="btn small green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button>
+  <button class="btn small red" onclick="deleteComplaint('${esc(d.id)}','${esc(d.protocolo||'')}')">🗑 Excluir denúncia</button>`;
+}
+function renderComplaintsAdminV52(){
+  const box=document.getElementById('complaintsAdminBox');
+  if(!box)return;
+  box.innerHTML=(complaints||[]).length?(complaints||[]).map(d=>`
+    <div class="game" id="complaint_${esc(d.protocolo||d.id)}">
+      <strong>${esc(d.protocolo||'Sem protocolo')}</strong>
+      <p class="muted">${esc(d.responsavel||d.nome||'')} • ${fmtDate(d.created_at)}</p>
+      <p><b>${esc(d.equipe_reclamante||'-')}</b> denunciou <b>${esc(d.equipe_denunciada||'-')}</b></p>
+      <p class="muted"><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')} ${d.motivo?`• <b>Alvo:</b> ${esc(d.motivo)}`:''}</p>
+      <div class="two-actions">${botoesDenunciaV52(d)}</div>
+      <div id="complaintDetail_${esc(d.id)}" class="hidden" style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px">
+        <h3>Denúncia completa</h3>
+        <p><b>Responsável:</b> ${esc(d.responsavel||d.nome||'-')} ${d.whatsapp?`• <b>WhatsApp:</b> ${esc(d.whatsapp)}`:''}</p>
+        <p><b>Equipe reclamante:</b> ${esc(d.equipe_reclamante||'-')}</p>
+        <p><b>Equipe denunciada:</b> ${esc(d.equipe_denunciada||'-')}</p>
+        <p><b>Partida/Rodada:</b> ${esc(d.atleta_citado||d.partida_rodada||'-')}</p>
+        <p><b>Alvo da denúncia:</b> ${esc(d.motivo||'-')}</p>
+        <p style="white-space:pre-wrap"><b>Descrição:</b><br>${esc(d.descricao||'')}</p>
+        <div>${([...(d.imagens_urls||[]),...(d.arquivos_denuncia||[]),...(d.imagens_denuncia||[])].filter(Boolean)).map(u=>`<img src="${esc(u)}" class="preview" style="width:120px;height:120px;margin:4px">`).join('')}</div>
+        <div class="two-actions" style="margin-top:12px"><button class="btn green" onclick="aplicarPunicaoDaDenunciaV52('${esc(d.id)}')">Aplicar punição</button></div>
+      </div>
+    </div>`).join(''):'<div class="empty">Nenhuma denúncia recebida.</div>';
+}
+renderComplaintsAdmin=renderComplaintsAdminV52;
+document.addEventListener('DOMContentLoaded',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},600));
+window.addEventListener('load',()=>setTimeout(()=>{ensureDenunciaCategoriaSerieV52();updateDenunciaCategoriasV52();},1200));
 
 </script>
 </body>
