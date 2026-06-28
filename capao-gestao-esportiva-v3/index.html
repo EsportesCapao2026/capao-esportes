@@ -272,7 +272,7 @@ input[type="file"]::file-selector-button{border:0;border-radius:10px;background:
 .cat-card-v32 h3{margin:0 0 8px;color:#fff}.cat-card-v32 .muted{color:#aebfd0}.cat-preview-v32{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.cat-chip-v32{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(45,212,191,.45);background:rgba(20,184,166,.14);color:#6ee7d8;border-radius:999px;padding:7px 11px;font-weight:900;font-size:12px}.cat-chip-v32.masc{border-color:rgba(59,130,246,.48);background:rgba(59,130,246,.14);color:#93c5fd}.cat-chip-v32.fem{border-color:rgba(244,114,182,.48);background:rgba(244,114,182,.14);color:#f9a8d4}.cat-mini-v32{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 9px;background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.35);color:#86efac;font-weight:900;font-size:12px;margin-left:8px}.cat-filter-v32{margin:10px 0 14px}.cat-choice-v32{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.cat-note-v32{font-size:13px;color:#93a4b7;line-height:1.45;margin-top:8px}.cat-icons-v32{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}.cat-icon-btn-v32{border:1px solid rgba(148,163,184,.28);background:rgba(15,23,42,.62);color:#e5f7ef;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:10px;font-weight:900;box-shadow:0 12px 30px rgba(0,0,0,.16)}.cat-icon-btn-v32.active{border-color:#34d399;background:linear-gradient(135deg,rgba(16,185,129,.25),rgba(20,184,166,.16));color:#fff}.cat-symbol-v32{width:34px;height:34px;display:grid;place-items:center;border-radius:13px;background:rgba(34,197,94,.18);font-size:18px}.cat-section-title-v32{margin:16px 0 6px;color:#fff}
 @media(max-width:900px){.cat-choice-v32{grid-template-columns:1fr}}
 
-</style>
+.cat-checkbox-grid-v33{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:8px 0 6px}.cat-checkbox-grid-v33 label{border:1px solid rgba(255,255,255,.16);border-radius:14px;padding:12px;background:rgba(255,255,255,.05);color:#fff;display:flex;gap:8px;align-items:center}.cat-group-v33{width:100%;border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px;margin:8px 0;background:rgba(0,0,0,.18)}.cat-group-v33 b{display:block;margin-bottom:8px;color:#fff}.cat-group-v33 .muted{display:block;margin-top:6px}</style>
 </head>
 <body>
 <div class="app app-premium">
@@ -312,51 +312,83 @@ input[type="file"]::file-selector-button{border:0;border-radius:10px;background:
 <section class="section" id="denuncia"><div class="card"><h2>Quero fazer uma denúncia</h2><p class="muted">A denúncia será salva no painel administrativo. O sistema gera PDF, salva na nuvem e abre o WhatsApp com uma mensagem pronta e link para a denúncia.</p><form class="form" id="complaintForm"><div class="row"><div><label>Seu nome</label><input id="denNome" required=""/></div><div><label>WhatsApp</label><input id="denWhats"/></div></div><div class="row"><div><label>Campeonato</label><select id="denCampeonato" required=""></select></div><div><label>Equipe reclamante</label><input id="denReclamante"/></div></div><div class="row"><div><label>Equipe denunciada</label><input id="denDenunciada"/></div><div><label>Partida ou rodada</label><input id="denPartida"/></div></div><label>Descrição da denúncia</label><textarea id="denDesc" placeholder="Escreva aqui o que aconteceu..." required=""></textarea><label>Imagens da denúncia</label><input accept="image/*" id="denImgs" multiple="" onchange="previewComplaintImages()" type="file"/><small class="muted">Você pode anexar até 3 imagens. Use fotos leves, de preferência até 3 MB cada.</small><div class="two-actions" id="denImgPreview"></div><div class="two-actions"><button class="btn green" type="submit">Enviar denúncia</button><button class="btn ghost" onclick="generateComplaintPdf(lastComplaint||null)" type="button">Gerar PDF da última denúncia</button></div></form><div id="denMsg"></div></div></section>
 <section class="section" id="admin"><div class="card" id="loginBox"><h2>Acesso administrativo</h2><p class="muted">Digite a senha administrativa para acessar o painel de controle.</p><div class="row"><input id="adminPass" placeholder="Senha do administrador" type="password"/><button class="btn" onclick="adminLogin()">Entrar como admin</button></div><div id="loginMsg"></div><hr/><h3>Login master</h3><p class="muted">Use este acesso para trocar a senha do administrador quando necessário.</p><div class="row"><input id="masterPass" placeholder="Senha master" type="password"/><button class="btn ghost" onclick="masterLogin()">Entrar como master</button></div><div id="masterMsg"></div></div><div class="hidden admin-layout" id="adminArea"><aside class="side no-print"><h2>Painel de controle</h2><button class="active" data-admin="inicio" onclick="goAdmin('inicio')">Início</button><button data-admin="campeonatosAdmin" onclick="goAdmin('campeonatosAdmin')">Campeonatos</button><button data-admin="inscricoesAdmin" onclick="goAdmin('inscricoesAdmin')">Inscrições pendentes</button><button data-admin="clubesAdmin" onclick="goAdmin('clubesAdmin')">Clubes e atletas</button><button data-admin="confrontosAdmin" onclick="goAdmin('confrontosAdmin')">Jogos e rodadas</button><button data-admin="resultadosAdmin" onclick="goAdmin('resultadosAdmin')">Resultados</button><button data-admin="artilhariaAdmin" onclick="goAdmin('artilhariaAdmin')">Artilheiros</button><button data-admin="denunciasAdmin" onclick="goAdmin('denunciasAdmin')">Denúncias</button><button data-admin="punicoesAdmin" onclick="goAdmin('punicoesAdmin')">Pendências e punições</button><button data-admin="regrasAdmin" onclick="goAdmin('regrasAdmin')">Regras dos campeonatos</button><button data-admin="configAdmin" onclick="goAdmin('configAdmin')">Configurações</button><button onclick="adminLogout()">Sair</button></aside><div>
 <div class="admin-panel active card" id="inicio"><h2>Bem-vindo ao painel administrativo</h2><p class="muted">Gerencie campeonatos, inscrições, clubes, confrontos, resultados, artilharia, denúncias e punições sem misturar as informações da parte pública.</p><div class="grid" id="adminStats"></div></div>
-<div class="admin-panel" id="campeonatosAdmin"><div class="card"><h2>Criar campeonato</h2><form class="form" id="champForm"><div class="row"><div><label>Nome</label><input id="cNome" placeholder="Municipal de Futsal" required=""/></div><div><label>Modalidade</label><select id="cModalidade"><option>Futsal</option><option>Futebol de Campo</option><option>Society</option><option>Outro</option></select></div></div><div class="row"><div><label>Tipo de campeonato</label><select id="cTipo"><option>Pontos corridos</option><option>Mata-mata</option><option>Fase de grupos + mata-mata</option><option>Triangular</option><option>Eliminatória ida e volta</option></select></div><div><label>Status</label><select id="cStatus"><option value="rascunho">Rascunho</option><option value="inscricoes_abertas">Inscrições abertas</option><option value="inscricoes_encerradas">Inscrições encerradas</option><option value="em_andamento">Em andamento</option><option value="finalizado">Finalizado</option></select></div></div><div class="row"><div><label>Início do campeonato</label><input id="cInicio" required="" type="date"/></div><div><label>Fim previsto</label><input id="cFim" required="" type="date"/></div></div><div class="row"><div><label>Início das inscrições</label><input id="cInsInicio" type="datetime-local"/></div><div><label>Fim das inscrições</label><input id="cInsFim" type="datetime-local"/></div></div><label>Descrição</label><textarea id="cDesc"></textarea><div class="cat-card-v32" id="cCategoriasPanelV32">
+<div class="admin-panel" id="campeonatosAdmin"><div class="card"><h2>Criar campeonato</h2><form class="form" id="champForm"><div class="row"><div><label>Nome</label><input id="cNome" placeholder="Municipal de Futsal" required=""/></div><div><label>Modalidade</label><select id="cModalidade"><option>Futsal</option><option>Futebol de Campo</option><option>Society</option><option>Outro</option></select></div></div><div class="row"><div><label>Tipo de campeonato</label><select id="cTipo" onchange="toggleTipoPersonalizadoV33()"><option>Pontos corridos</option><option>Mata-mata</option><option>Fase de grupos + mata-mata</option><option>Triangular</option><option>Quadrangular</option><option>Eliminatória ida e volta</option><option value="Personalizado">Personalizado</option></select><input id="cTipoPersonalizado" class="hidden" placeholder="Digite o tipo. Ex.: Hexagonal, Grupos regionais, Liga + mata-mata" style="margin-top:10px"/></div><div><label>Status</label><select id="cStatus"><option value="rascunho">Rascunho</option><option value="inscricoes_abertas">Inscrições abertas</option><option value="inscricoes_encerradas">Inscrições encerradas</option><option value="em_andamento">Em andamento</option><option value="finalizado">Finalizado</option></select></div></div><div class="row"><div><label>Início do campeonato</label><input id="cInicio" required="" type="date"/></div><div><label>Fim previsto</label><input id="cFim" required="" type="date"/></div></div><div class="row"><div><label>Início das inscrições</label><input id="cInsInicio" type="datetime-local"/></div><div><label>Fim das inscrições</label><input id="cInsFim" type="datetime-local"/></div></div><label>Descrição</label><textarea id="cDesc"></textarea><div class="cat-card-v32" id="cCategoriasPanelV32">
   <h3>Categorias e séries do campeonato</h3>
-  <p class="muted"><b>Categoria</b> é o gênero, como Masculino e Feminino. <b>Série</b> é a divisão dentro daquela categoria, como Série Ouro, Prata e Bronze. Você pode ter Masculino com séries e Ativar Feminino sem séries, ou configurar os dois do jeito que quiser.</p>
-  <div class="cat-choice-v32">
+  <p class="muted">Configure primeiro a <b>categoria</b> do campeonato. Depois, se necessário, ative as <b>séries</b> dentro dessas categorias.</p>
+
+  <div class="row">
     <div>
-      <label>Categoria Masculino</label>
-      <select id="cCatMascTipo" onchange="updateCategoriasPreviewV32()">
-        <option value="nao">Não terá masculino</option>
-        <option value="sim" selected>Ativar Masculino sem séries</option>
-        <option value="series">Ativar Masculino com Série Ouro, Prata e Bronze</option>
-        <option value="personalizado">Ativar Masculino com séries personalizadas</option>
+      <label>Categorias do campeonato</label>
+      <select id="cGenerosTipo" onchange="updateCategoriasPreviewV32()">
+        <option value="nenhuma">Sem categorias - campeonato único</option>
+        <option value="masculino">Somente masculino</option>
+        <option value="feminino">Somente feminino</option>
+        <option value="ambos">Masculino e feminino</option>
+        <option value="personalizado">Personalizado</option>
       </select>
-      <textarea id="cCatMascCustom" oninput="updateCategoriasPreviewV32()" placeholder="Séries masculinas personalizadas, uma por linha. Ex.: Sub-15
-Sub-17
-Veterano"></textarea>
+      <small class="muted">Categoria é a divisão principal, por exemplo: Masculino, Feminino, Sub-17 ou Veterano.</small>
     </div>
     <div>
-      <label>Categoria Feminino</label>
-      <select id="cCatFemTipo" onchange="updateCategoriasPreviewV32()">
-        <option value="nao">Não terá feminino</option>
-        <option value="sim">Ativar Feminino sem séries</option>
-        <option value="series">Ativar Feminino com Série Ouro, Prata e Bronze</option>
-        <option value="personalizado">Ativar Feminino com séries personalizadas</option>
-      </select>
-      <textarea id="cCatFemCustom" oninput="updateCategoriasPreviewV32()" placeholder="Séries femininas personalizadas, uma por linha. Ex.: Livre
-Veterano"></textarea>
+      <label>Categorias personalizadas</label>
+      <textarea id="cCategoriasCustom" oninput="updateCategoriasPreviewV32()" placeholder="Uma por linha. Ex.:\nSub-15\nVeterano\nLivre"></textarea>
+      <small class="muted">Use este campo somente se escolher Personalizado ou quiser adicionar categorias extras.</small>
     </div>
   </div>
-  <div class="row" style="margin-top:12px">
+
+  <div class="row">
     <div>
-      <label>Categorias extras/opcionais</label>
-      <textarea id="cCatExtras" oninput="updateCategoriasPreviewV32()" placeholder="Uma por linha. Ex.: Sub-20
-Veterano
-Misto"></textarea>
+      <label>Ativar modo séries?</label>
+      <select id="cSeriesAtivas" onchange="updateCategoriasPreviewV32()">
+        <option value="false">Não, sem séries</option>
+        <option value="true">Sim, usar séries dentro das categorias</option>
+      </select>
+      <small class="muted">Séries são divisões internas, como Série Ouro, Série Prata e Série Bronze.</small>
     </div>
+    <div>
+      <label>Aplicar as séries em qual categoria?</label>
+      <select id="cSeriesAplicar" onchange="updateCategoriasPreviewV32()">
+        <option value="ambos">Masculino e feminino</option>
+        <option value="masculino">Somente masculino</option>
+        <option value="feminino">Somente feminino</option>
+        <option value="todas">Todas as categorias selecionadas</option>
+        <option value="personalizado">Escolher manualmente</option>
+      </select>
+      <small class="muted">Ex.: Masculino com Ouro/Prata/Bronze e Feminino com série única.</small>
+    </div>
+  </div>
+
+  <div id="cSeriesBoxV33">
+    <label>Séries disponíveis</label>
+    <div class="cat-checkbox-grid-v33">
+      <label><input type="checkbox" class="seriePadraoV33" value="Série Ouro" checked onchange="updateCategoriasPreviewV32()"> Série Ouro</label>
+      <label><input type="checkbox" class="seriePadraoV33" value="Série Prata" checked onchange="updateCategoriasPreviewV32()"> Série Prata</label>
+      <label><input type="checkbox" class="seriePadraoV33" value="Série Bronze" checked onchange="updateCategoriasPreviewV32()"> Série Bronze</label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <div>
+        <label>Séries personalizadas</label>
+        <textarea id="cSeriesCustom" oninput="updateCategoriasPreviewV32()" placeholder="Uma por linha. Ex.:\nSérie A\nSérie B\nSérie C"></textarea>
+      </div>
+      <div id="cSeriesAplicarCustomWrap">
+        <label>Categorias que receberão séries</label>
+        <textarea id="cSeriesAplicarCustom" oninput="updateCategoriasPreviewV32()" placeholder="Uma por linha. Ex.:\nMasculino\nFeminino"></textarea>
+        <small class="muted">Use apenas quando selecionar “Escolher manualmente”.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
     <div>
       <label>Atualização automática futura?</label>
       <select id="cCategoriasAuto">
-        <option value="false" selected>Não, administrador define manualmente</option>
-        <option value="true">Sim, sugerir acesso/rebaixamento com aprovação</option>
+        <option value="false">Não, administrador define manualmente</option>
+        <option value="true">Sim, sistema sugere acesso/rebaixamento</option>
       </select>
-      <div class="cat-note-v32">A sugestão automática nunca confirma sozinha. O administrador/master sempre aprova antes de mudar série.</div>
+      <small class="muted">O sistema apenas sugere. A confirmação final sempre fica com o administrador.</small>
     </div>
   </div>
-  <div class="cat-note-v32"><b>Prévia:</b> cada item abaixo terá tabela, jogos e artilharia próprios dentro do mesmo campeonato.</div>
+
+  <h4>Prévia das divisões que serão criadas:</h4>
   <div id="cCategoriasPreviewV32" class="cat-preview-v32"></div>
 </div><button class="btn green" type="submit">Criar campeonato</button></form></div><div class="card" style="margin-top:16px"><h2>Campeonatos cadastrados</h2><div id="adminChampsList"></div></div></div>
 <div class="admin-panel card" id="inscricoesAdmin"><h2>Inscrições pendentes</h2><p class="muted">Solicitações enviadas pela parte pública. Ao aceitar, o clube entra no campeonato.</p><div id="pendingBox"></div></div>
@@ -386,11 +418,15 @@ function onlyDate(v){if(!v)return '-';return new Date(v+'T00:00:00').toLocaleDat
 function esc(s){return String(s||'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]))}
 
 function splitCustomCategoriasV32(v){return String(v||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)}
-function defaultSeriesV32(){return ['Série Ouro','Série Prata','Série Bronze']}
-function composeGenderSeriesV32(genero,tipo,custom){if(tipo==='nao')return [];if(tipo==='sim')return [genero];let series=tipo==='series'?defaultSeriesV32():splitCustomCategoriasV32(custom);return series.map(s=>genero+' - '+s)}
-function composeCategoriasFromFormV32(){let lista=[...composeGenderSeriesV32('Masculino',$('cCatMascTipo')?.value||'nao',$('cCatMascCustom')?.value||''),...composeGenderSeriesV32('Feminino',$('cCatFemTipo')?.value||'nao',$('cCatFemCustom')?.value||''),...splitCustomCategoriasV32($('cCatExtras')?.value||'')];return [...new Set(lista.map(x=>x.trim()).filter(Boolean))]}
-function updateCategoriasPreviewV32(){let box=$('cCategoriasPreviewV32');if(!box)return;let lista=composeCategoriasFromFormV32();box.innerHTML=lista.length?lista.map(c=>`<span class="cat-chip-v32 ${c.toLowerCase().includes('masculino')?'masc':c.toLowerCase().includes('feminino')?'fem':''}">${esc(c)}</span>`).join(''):'<span class="muted">Nenhuma categoria selecionada. O campeonato ficará único.</span>'}
-function getChampCategoryPayloadV32(){let lista=composeCategoriasFromFormV32();return {categorias_ativas:lista.length>0,categorias_tipo:'genero_series',categorias_lista:lista,categorias_config:{masculino:{tipo:$('cCatMascTipo')?.value||'nao',series:splitCustomCategoriasV32($('cCatMascCustom')?.value||'')},feminino:{tipo:$('cCatFemTipo')?.value||'nao',series:splitCustomCategoriasV32($('cCatFemCustom')?.value||'')},extras:splitCustomCategoriasV32($('cCatExtras')?.value||'')},categorias_auto:$('cCategoriasAuto')?.value==='true'}}
+function uniqV33(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))]}
+function getTipoCampeonatoV33(){let tipo=$('cTipo')?.value||'';if(tipo==='Personalizado'){let custom=($('cTipoPersonalizado')?.value||'').trim();return custom||'Personalizado'}return tipo}
+function toggleTipoPersonalizadoV33(){let input=$('cTipoPersonalizado');if(!input)return;input.classList.toggle('hidden',($('cTipo')?.value||'')!=='Personalizado')}
+function categoriasBaseV33(){let tipo=$('cGenerosTipo')?.value||'nenhuma';let extras=splitCustomCategoriasV32($('cCategoriasCustom')?.value||'');let base=[];if(tipo==='masculino')base=['Masculino'];else if(tipo==='feminino')base=['Feminino'];else if(tipo==='ambos')base=['Masculino','Feminino'];else if(tipo==='personalizado')base=[];base.push(...extras);return uniqV33(base)}
+function seriesSelecionadasV33(){let padrao=[...document.querySelectorAll('.seriePadraoV33:checked')].map(i=>i.value);let custom=splitCustomCategoriasV32($('cSeriesCustom')?.value||'');return uniqV33([...padrao,...custom])}
+function categoriasQueRecebemSeriesV33(base){let aplicar=$('cSeriesAplicar')?.value||'ambos';base=base||categoriasBaseV33();if(aplicar==='todas')return base;if(aplicar==='masculino')return base.filter(c=>c.toLowerCase()==='masculino');if(aplicar==='feminino')return base.filter(c=>c.toLowerCase()==='feminino');if(aplicar==='ambos')return base.filter(c=>['masculino','feminino'].includes(c.toLowerCase()));if(aplicar==='personalizado'){let escolhidas=splitCustomCategoriasV32($('cSeriesAplicarCustom')?.value||'').map(x=>x.toLowerCase());return base.filter(c=>escolhidas.includes(c.toLowerCase()))}return []}
+function composeCategoriasFromFormV32(){let base=categoriasBaseV33();let seriesAtivas=($('cSeriesAtivas')?.value||'false')==='true';let series=seriesSelecionadasV33();if(!base.length)return [];if(!seriesAtivas||!series.length)return base;let receber=categoriasQueRecebemSeriesV33(base).map(x=>x.toLowerCase());let final=[];base.forEach(cat=>{if(receber.includes(cat.toLowerCase()))series.forEach(s=>final.push(cat+' - '+s));else final.push(cat)});return uniqV33(final)}
+function updateCategoriasPreviewV32(){toggleTipoPersonalizadoV33();let seriesBox=$('cSeriesBoxV33');let customApply=$('cSeriesAplicarCustomWrap');let active=($('cSeriesAtivas')?.value||'false')==='true';if(seriesBox)seriesBox.style.display=active?'block':'none';if(customApply)customApply.style.display=(($('cSeriesAplicar')?.value||'')==='personalizado'&&active)?'block':'none';let box=$('cCategoriasPreviewV32');if(!box)return;let base=categoriasBaseV33();let series=seriesSelecionadasV33();let final=composeCategoriasFromFormV32();if(!base.length){box.innerHTML='<span class="muted">Nenhuma categoria selecionada. O campeonato ficará único.</span>';return}let html=base.map(cat=>{let filhos=final.filter(x=>x===cat||x.startsWith(cat+' - '));let semSeries=filhos.length===1&&filhos[0]===cat;return `<div class="cat-group-v33"><b>${esc(cat)}</b>${semSeries?'<span class="muted">Série única / sem divisão por séries</span>':filhos.map(f=>`<span class="cat-chip-v32 ${cat.toLowerCase().includes('masculino')?'masc':cat.toLowerCase().includes('feminino')?'fem':''}">${esc(f.replace(cat+' - ',''))}</span>`).join('')}</div>`}).join('');box.innerHTML=html}
+function getChampCategoryPayloadV32(){let base=categoriasBaseV33();let series=seriesSelecionadasV33();let lista=composeCategoriasFromFormV32();return {categorias_ativas:lista.length>0,categorias_tipo:lista.length?'categorias_series_separadas':'nenhuma',categorias_lista:lista,categorias_config:{categorias:base,series_ativas:($('cSeriesAtivas')?.value||'false')==='true',series:series,series_aplicar:$('cSeriesAplicar')?.value||'ambos',series_aplicar_custom:splitCustomCategoriasV32($('cSeriesAplicarCustom')?.value||''),observacao:'Categoria e serie sao conceitos separados. Ex.: Masculino - Serie Ouro.'},categorias_auto:$('cCategoriasAuto')?.value==='true'}}
 function parseCategoriasListaV32(v){if(Array.isArray(v))return v.map(String).filter(Boolean);if(!v)return [];try{let j=JSON.parse(v);return Array.isArray(j)?j.map(String).filter(Boolean):[]}catch(e){return []}}
 function categoriasDoCampeonatoV32(c){if(!c)return [];let ativo=c.categorias_ativas===true||c.categorias_ativas==='true';let lista=parseCategoriasListaV32(c.categorias_lista);return ativo?lista:[]}
 function campeonatoPorIdV32(id){return (championships||[]).find(c=>c.id===id)||null}
@@ -467,7 +503,7 @@ function adminLogin(){const senha=(config.admin_senha||SENHA_ADMIN_PADRAO);if($(
 function masterLogin(){const senha=(config.master_senha||SENHA_MASTER_PADRAO);if($('masterPass').value===senha){$('masterPass').value='';enterAdminArea(true)}else $('masterMsg').innerHTML='<div class="msg err">Senha master incorreta.</div>'}
 function adminLogout(){isMaster=false;$('adminArea').classList.add('hidden');$('loginBox').classList.remove('hidden');if($('masterOnlyBox'))$('masterOnlyBox').classList.add('hidden')}
 function goAdmin(id){document.querySelectorAll('.admin-panel').forEach(s=>s.classList.remove('active'));$(id).classList.add('active');document.querySelectorAll('.side button[data-admin]').forEach(b=>b.classList.toggle('active',b.dataset.admin===id));renderAll()}
-$('champForm').addEventListener('submit',async e=>{e.preventDefault();let payload={nome:$('cNome').value,modalidade:$('cModalidade').value,tipo:$('cTipo').value,status:$('cStatus').value,inicio:$('cInicio').value,fim:$('cFim').value,inscricao_inicio:$('cInsInicio').value||null,inscricao_fim:$('cInsFim').value||null,inscricoes_abertas:$('cStatus').value==='inscricoes_abertas',descricao:$('cDesc').value,...getChampCategoryPayloadV32()};let {error}=await db.from('campeonatos').insert(payload);if(error)return alert(error.message);e.target.reset();updateCategoriasPreviewV32();await loadAll();alert('Campeonato criado.')})
+$('champForm').addEventListener('submit',async e=>{e.preventDefault();let payload={nome:$('cNome').value,modalidade:$('cModalidade').value,tipo:getTipoCampeonatoV33(),status:$('cStatus').value,inicio:$('cInicio').value,fim:$('cFim').value,inscricao_inicio:$('cInsInicio').value||null,inscricao_fim:$('cInsFim').value||null,inscricoes_abertas:$('cStatus').value==='inscricoes_abertas',descricao:$('cDesc').value,...getChampCategoryPayloadV32()};let {error}=await db.from('campeonatos').insert(payload);if(error)return alert(error.message);e.target.reset();updateCategoriasPreviewV32();await loadAll();alert('Campeonato criado.')})
 function renderAdminStats(){let s=[['Campeonatos',championships.length],['Inscrições pendentes',requests.filter(r=>r.status==='pendente').length],['Clubes aprovados',teams.length],['Denúncias',complaints.length],['Punições',punishments.length],['Jogos',games.length]];$('adminStats').innerHTML=s.map(x=>`<div class="card"><h3>${x[1]}</h3><p class="muted">${x[0]}</p></div>`).join('')}
 function renderAdminChamps(){$('adminChampsList').innerHTML=championships.length?championships.map(c=>`<div class="game"><strong>${esc(c.nome)}</strong><span class="tag">${esc(c.tipo)}</span> <span class="tag ${registrationStatus(c).cls}">${registrationStatus(c).label}</span><p class="muted">${esc(c.modalidade)} • ${onlyDate(c.inicio)} até ${onlyDate(c.fim)}</p>${categoriasDoCampeonatoV32(c).length?`<p>${categoriasDoCampeonatoV32(c).map(cat=>`<span class="cat-mini-v32">${esc(cat)}</span>`).join('')}</p>`:''}<button class="btn small red" onclick="deleteChamp('${c.id}')">Excluir</button></div>`).join(''):'<div class="empty">Nenhum campeonato.</div>'}
 async function deleteChamp(id){if(!confirm('Excluir campeonato e dados relacionados?'))return;await db.from('campeonatos').delete().eq('id',id);await loadAll()}
