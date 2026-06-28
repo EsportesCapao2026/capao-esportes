@@ -735,23 +735,131 @@ function openTeamReportV34(id){
   modal.classList.add('active');
 }
 function closeTeamReportV34(){const m=$('teamReportModalV34');if(m)m.classList.remove('active')}
-function gerarPdfEquipeV34(id){
-  const t=teams.find(x=>x.id===id); if(!t)return;
-  const c=championships.find(x=>x.id===t.campeonato_id)||{};
-  const atletas=t.atletas||[];
+function dataHojeBRV45(){
+  try{return new Date().toLocaleDateString('pt-BR')}catch(e){return ''}
+}
+function safePdfTextV45(v){return String(v==null||v===''?'-':v)}
+function splitCategoriaSerieV45(obj){
+  const genero=(obj.categoria_genero||'').trim();
+  const serie=(obj.serie_nome||'').trim();
+  const cat=(obj.categoria_nome||'').trim();
+  if(genero||serie)return {categoria:genero||cat||'Sem categoria',serie:serie||'Sem série'};
+  if(cat.includes(' - ')){let parts=cat.split(' - ');return {categoria:parts[0]||'Sem categoria',serie:parts.slice(1).join(' - ')||'Sem série'}}
+  return {categoria:cat||'Sem categoria',serie:'Sem série'};
+}
+function prefeituraLogoDataV45(){
+  const img=document.querySelector('.sidebar-logo-img');
+  return img&&img.src?img.src:'';
+}
+function gerarPdfEquipePadraoV45(obj,tipo){
+  if(!obj)return;
+  const isReq=tipo==='request';
+  const c=championships.find(x=>x.id===obj.campeonato_id)||{};
+  const nome=isReq?(obj.nome_time||'Equipe'):(obj.nome||'Equipe');
+  const responsavel=isReq?(obj.responsavel_nome||'-'):(obj.responsavel||'-');
+  const cpf=isReq?(obj.responsavel_cpf||'-'):(obj.responsavel_cpf||obj.cpf||'-');
+  const whats=isReq?(obj.responsavel_whatsapp||'-'):(obj.whatsapp||obj.responsavel_whatsapp||'-');
+  const email=isReq?(obj.responsavel_email||'-'):(obj.email||obj.responsavel_email||'-');
+  const tecnico=obj.tecnico_nome||'-';
+  const div=splitCategoriaSerieV45(obj);
+  const atletas=Array.isArray(obj.atletas)?obj.atletas:[];
   try{
     const {jsPDF}=window.jspdf||{}; if(!jsPDF)throw new Error('PDF indisponível');
-    const doc=new jsPDF({unit:'pt',format:'a4'}); let y=44;
-    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Súmula / Relação de Atletas',44,y);y+=22;
-    doc.setFontSize(12);doc.text('Secretaria de Esportes de Capão da Canoa',44,y);y+=26;
-    doc.setFont('helvetica','normal');doc.text(`Campeonato: ${c.nome||'-'}`,44,y);y+=18;doc.text(`Time: ${t.nome||'-'}`,44,y);y+=18;doc.text(`Categoria/Série: ${t.categoria_nome||'Sem divisão'}`,44,y);y+=18;doc.text(`Responsável: ${t.responsavel||'-'}  WhatsApp: ${t.whatsapp||'-'}`,44,y);y+=18;doc.text(`Técnico: ${t.tecnico_nome||'-'}`,44,y);y+=26;
-    doc.setFont('helvetica','bold');doc.text('Nº',44,y);doc.text('Atleta',88,y);doc.text('Documento',300,y);doc.text('C',500,y);y+=14;doc.setFont('helvetica','normal');
-    atletas.forEach((a,i)=>{if(y>760){doc.addPage();y=44;}doc.text(String(a.numero||'-'),44,y);doc.text(String(a.nome||'-'),88,y);doc.text(String(a.documento||'-'),300,y);doc.text(a.capitao?'C':'',500,y);y+=18;});
-    doc.save(`sumula-${(t.nome||'time').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.pdf`);
+    const doc=new jsPDF({unit:'pt',format:'a4'});
+    const pageW=doc.internal.pageSize.getWidth();
+    const pageH=doc.internal.pageSize.getHeight();
+    const margin=42;
+    const azul=[15,55,110];
+    const verde=[22,118,73];
+    const cinza=[90,102,120];
+    function addHeader(){
+      doc.setFillColor(245,248,252);doc.rect(0,0,pageW,118,'F');
+      doc.setDrawColor(215,224,235);doc.line(margin,118,pageW-margin,118);
+      const logo=prefeituraLogoDataV45();
+      try{if(logo)doc.addImage(logo,'PNG',margin,20,92,42)}catch(e){}
+      doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(...azul);
+      doc.text('Prefeitura Municipal de Capão da Canoa',150,36);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...cinza);
+      doc.text('Secretaria de Cultura, Desporto e Lazer',150,53);
+      doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(20,20,20);
+      doc.text('Ficha de Inscrição / Relação de Atletas',150,78);
+      doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(...cinza);
+      doc.text(`Emitido em ${dataHojeBRV45()}`,150,94);
+    }
+    function addFooter(){
+      doc.setDrawColor(220,226,235);doc.line(margin,pageH-38,pageW-margin,pageH-38);
+      doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...cinza);
+      doc.text('Prefeitura Municipal de Capão da Canoa • Secretaria de Cultura, Desporto e Lazer',margin,pageH-22);
+      doc.text('Sistema de Campeonatos Municipais',pageW-margin,pageH-22,{align:'right'});
+    }
+    function field(label,value,x,y,w){
+      doc.setFont('helvetica','bold');doc.setFontSize(8);doc.setTextColor(...cinza);doc.text(label,x,y);
+      doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(30,41,59);
+      const lines=doc.splitTextToSize(safePdfTextV45(value),w||170);doc.text(lines,x,y+14);
+    }
+    function newPage(){doc.addPage();addHeader();addFooter();return 142;}
+    addHeader();addFooter();
+    let y=142;
+    doc.setFillColor(255,255,255);doc.setDrawColor(220,226,235);doc.roundedRect(margin,y,pageW-margin*2,104,10,10,'S');
+    if(obj.logo_data){try{doc.addImage(obj.logo_data,'PNG',margin+14,y+18,60,60)}catch(e){try{doc.addImage(obj.logo_data,'JPEG',margin+14,y+18,60,60)}catch(e2){}}}
+    else{doc.setFillColor(238,242,247);doc.roundedRect(margin+14,y+18,60,60,8,8,'F');doc.setFont('helvetica','bold');doc.setFontSize(16);doc.setTextColor(...azul);doc.text(iniciaisTime(nome),margin+44,y+55,{align:'center'});}
+    doc.setFont('helvetica','bold');doc.setFontSize(18);doc.setTextColor(...azul);doc.text(safePdfTextV45(nome),margin+88,y+32);
+    doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...cinza);doc.text(safePdfTextV45(c.nome||'Campeonato não informado'),margin+88,y+50);
+    field('Categoria',div.categoria,margin+88,y+73,110);
+    field('Série',div.serie,margin+215,y+73,110);
+    field('Técnico',tecnico,margin+340,y+73,150);
+    y+=126;
+    doc.setFillColor(248,250,252);doc.setDrawColor(220,226,235);doc.roundedRect(margin,y,pageW-margin*2,82,10,10,'S');
+    field('Responsável',responsavel,margin+16,y+23,160);
+    field('CPF/documento',cpf,margin+195,y+23,105);
+    field('WhatsApp',whats,margin+320,y+23,100);
+    field('E-mail',email,margin+438,y+23,105);
+    y+=106;
+    doc.setFont('helvetica','bold');doc.setFontSize(13);doc.setTextColor(...azul);doc.text('Atletas inscritos',margin,y);y+=16;
+    const col=[margin,82,285,405,500];
+    function tableHeader(){
+      doc.setFillColor(...azul);doc.roundedRect(margin,y,pageW-margin*2,24,6,6,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255,255,255);
+      doc.text('Nº',col[0]+8,y+16);doc.text('Atleta',col[1]+8,y+16);doc.text('Documento',col[2]+8,y+16);doc.text('Capitão',col[3]+8,y+16);doc.text('Obs.',col[4]+8,y+16);
+      y+=24;
+    }
+    tableHeader();
+    if(!atletas.length){
+      doc.setDrawColor(226,232,240);doc.rect(margin,y,pageW-margin*2,28);doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(...cinza);doc.text('Nenhum atleta salvo.',margin+10,y+18);y+=28;
+    }else{
+      atletas.forEach((a,i)=>{
+        if(y>pageH-76){y=newPage();tableHeader();}
+        const h=28;
+        if(i%2===0){doc.setFillColor(250,252,255);doc.rect(margin,y,pageW-margin*2,h,'F');}
+        doc.setDrawColor(226,232,240);doc.rect(margin,y,pageW-margin*2,h);
+        doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(30,41,59);
+        doc.text(safePdfTextV45(a.numero),col[0]+8,y+18);
+        doc.text(doc.splitTextToSize(safePdfTextV45(a.nome),190),col[1]+8,y+18);
+        doc.text(doc.splitTextToSize(safePdfTextV45(a.documento),105),col[2]+8,y+18);
+        doc.text(a.capitao?'Sim':'-',col[3]+8,y+18);
+        doc.text(doc.splitTextToSize(safePdfTextV45(a.observacao||''),58),col[4]+8,y+18);
+        y+=h;
+      });
+    }
+    if(y>pageH-112)y=newPage();
+    y+=24;
+    doc.setDrawColor(190,200,215);doc.line(margin,y,pageW/2-20,y);doc.line(pageW/2+20,y,pageW-margin,y);
+    doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(...cinza);
+    doc.text('Assinatura do responsável',margin,y+13);
+    doc.text('Assinatura da organização',pageW/2+20,y+13);
+    doc.save(`ficha-${String(nome||'time').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.pdf`);
   }catch(e){
     let w=window.open('','_blank');
-    w.document.write(`<title>Súmula ${esc(t.nome)}</title><body style="font-family:Arial;padding:30px"><h1>Súmula / Relação de Atletas</h1><p><b>Campeonato:</b> ${esc(c.nome||'-')}</p><p><b>Time:</b> ${esc(t.nome||'-')}</p><p><b>Categoria/Série:</b> ${esc(t.categoria_nome||'Sem divisão')}</p><p><b>Responsável:</b> ${esc(t.responsavel||'-')}</p><p><b>Técnico:</b> ${esc(t.tecnico_nome||'-')}</p><table border="1" cellspacing="0" cellpadding="8"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Capitão</th></tr>${atletas.map(a=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'-')}</td><td>${esc(a.documento||'-')}</td><td>${a.capitao?'C':''}</td></tr>`).join('')}</table><script>print()<\/script></body>`);w.document.close();
+    w.document.write(`<title>Ficha ${esc(nome)}</title><body style="font-family:Arial;padding:30px"><h1>Ficha de Inscrição / Relação de Atletas</h1><h2>${esc(nome)}</h2><p><b>Secretaria:</b> Cultura, Desporto e Lazer</p><p><b>Campeonato:</b> ${esc(c.nome||'-')}</p><p><b>Categoria:</b> ${esc(div.categoria)} <b>Série:</b> ${esc(div.serie)}</p><p><b>Responsável:</b> ${esc(responsavel)} - <b>CPF/documento:</b> ${esc(cpf)}</p><p><b>Técnico:</b> ${esc(tecnico)}</p><table border="1" cellspacing="0" cellpadding="8" style="border-collapse:collapse;width:100%"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Capitão</th></tr>${atletas.map(a=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'-')}</td><td>${esc(a.documento||'-')}</td><td>${a.capitao?'Sim':'-'}</td></tr>`).join('')}</table><script>print()<\/script></body>`);w.document.close();
   }
+}
+function gerarPdfEquipeV34(id){
+  const t=(teams||[]).find(x=>x.id===id); if(!t)return;
+  gerarPdfEquipePadraoV45(t,'team');
+}
+function gerarPdfInscricaoV45(id){
+  const r=(requests||[]).find(x=>x.id===id); if(!r)return;
+  gerarPdfEquipePadraoV45(r,'request');
 }
 async function deleteTeam(id){let t=teams.find(x=>x.id===id);if(!t)return;if(!confirm(`Você tem certeza que deseja excluir esse time?\n\nTime: ${t.nome}\n\nEssa ação remove o clube da competição.`))return;let removeGames=confirm('Deseja também remover os confrontos/jogos deste time neste campeonato?');await db.from('equipes').delete().eq('id',id);if(removeGames){await db.from('jogos').delete().eq('campeonato_id',t.campeonato_id).eq('time_a',t.nome);await db.from('jogos').delete().eq('campeonato_id',t.campeonato_id).eq('time_b',t.nome)}await loadAll();alert('Time excluído da competição.')}
 function showManualGame(){$('manualGameBox').classList.toggle('hidden')}
@@ -1211,7 +1319,7 @@ function cardDetalhesEquipeV44(obj,tipo){
   const cat=categoriaRecordLabelV35(obj)||obj.categoria_nome||'Sem divisão';
   const rows=atletasRowsHtmlV44(obj.atletas||[]);
   const selectDiv=(!isReq && categoriasDoCampeonatoV32(c).length)?`<div class="row" style="margin:12px 0"><div><label>Alterar categoria/série do time</label><select id="teamReportDivisaoV37">${optionsDivisaoParaCampeonatoV37(obj.campeonato_id,categoriaRecordLabelV35(obj),true)}</select></div><div style="display:flex;align-items:end"><button class="btn ghost" onclick="alterarDivisaoTimeV37('${obj.id}')">Salvar divisão</button></div></div>`:'';
-  const acoes=isReq?`<button class="btn green" onclick="approveRequest('${obj.id}')">Aceitar inscrição</button><button class="btn red" onclick="rejectRequest('${obj.id}')">Recusar</button>`:`<button class="btn green" onclick="gerarPdfEquipeV34('${obj.id}')">Gerar PDF / Súmula</button>`;
+  const acoes=isReq?`<button class="btn green" onclick="approveRequest('${obj.id}')">Aceitar inscrição</button><button class="btn red" onclick="rejectRequest('${obj.id}')">Recusar</button><button class="btn ghost" onclick="gerarPdfInscricaoV45('${obj.id}')">Gerar PDF do time</button>`:`<button class="btn green" onclick="gerarPdfEquipeV34('${obj.id}')">Gerar PDF do time</button>`;
   return `<div class="card" style="border:1px solid rgba(255,255,255,.14)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:0">${isReq?'Detalhes da inscrição':'Relação de atletas'}</h2><p class="muted" style="margin:6px 0 0">${esc(nome)} • ${esc(c.nome||'-')} • ${esc(cat)}</p></div><button class="btn ghost" onclick="${isReq?'renderPending()':'renderTeams()'}">Voltar para a lista</button></div><div class="team-report-meta-v34"><div><b>Campeonato</b><br>${esc(c.nome||'-')}</div><div><b>Responsável</b><br>${esc(responsavel)}<br><span class="muted">${esc(whats)}</span></div><div><b>Técnico</b><br>${esc(tecnico)}</div><div><b>Categoria/Série</b><br>${esc(cat)}</div></div><div class="team-report-actions-v34">${acoes}</div>${selectDiv}<table class="team-report-table-v34"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Observação</th></tr>${rows}</table></div>`;
 }
 viewRequest=function(id){
