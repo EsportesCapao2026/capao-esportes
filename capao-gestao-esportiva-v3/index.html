@@ -750,7 +750,104 @@ function gerarPdfEquipeV34(id){
     doc.save(`sumula-${(t.nome||'time').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.pdf`);
   }catch(e){
     let w=window.open('','_blank');
-    w.document.write(`<title>Súmula ${esc(t.nome)}</title><body style="font-family:Arial;padding:30px"><h1>Súmula / Relação de Atletas</h1><p><b>Campeonato:</b> ${esc(c.nome||'-')}</p><p><b>Time:</b> ${esc(t.nome||'-')}</p><p><b>Categoria/Série:</b> ${esc(t.categoria_nome||'Sem divisão')}</p><p><b>Responsável:</b> ${esc(t.responsavel||'-')}</p><p><b>Técnico:</b> ${esc(t.tecnico_nome||'-')}</p><table border="1" cellspacing="0" cellpadding="8"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Capitão</th></tr>${atletas.map(a=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'-')}</td><td>${esc(a.documento||'-')}</td><td>${a.capitao?'C':''}</td></tr>`).join('')}</table><script>print()<\/script></body>`);w.document.close();
+    w.document.write(`<title>Súmula ${esc(t.nome)}</title><body style="font-family:Arial;padding:30px"><h1>Súmula / Relação de Atletas</h1><p><b>Campeonato:</b> ${esc(c.nome||'-')}</p><p><b>Time:</b> ${esc(t.nome||'-')}</p><p><b>Categoria/Série:</b> ${esc(t.categoria_nome||'Sem divisão')}</p><p><b>Responsável:</b> ${esc(t.responsavel||'-')}</p><p><b>Técnico:</b> ${esc(t.tecnico_nome||'-')}</p><table border="1" cellspacing="0" cellpadding="8"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Capitão</th></tr>${atletas.map(a=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'-')}</td><td>${esc(a.documento||'-')}</td><td>${a.capitao?'C':''}</td></tr>`).join('')}</table><script>print()<\/script>
+<script>
+/* V40 - CORRECAO DEFINITIVA DO FILTRO DE CLUBES POR CATEGORIA/SERIE */
+(function(){
+  function el(id){return document.getElementById(id)}
+  function esc2(s){
+    try{ if(typeof esc==='function') return esc(s); }catch(e){}
+    return String(s||'').replace(/[&<>\"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})
+  }
+  function norm(s){
+    return String(s||'')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function iniciais(nome){
+    try{ if(typeof iniciaisTime==='function') return iniciaisTime(nome); }catch(e){}
+    return String(nome||'T').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase() || 'T';
+  }
+  function splitRegistro(t){
+    const raw=[t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' ');
+    const n=norm(raw);
+    let genero='';
+    if(n.includes('masculino')) genero='Masculino';
+    if(n.includes('feminino')) genero='Feminino';
+    let serie='';
+    if(n.includes('ouro')) serie='Série Ouro';
+    else if(n.includes('prata')) serie='Série Prata';
+    else if(n.includes('bronze')) serie='Série Bronze';
+    else if(t.serie_nome) serie=String(t.serie_nome);
+    if(t.categoria_genero) genero=String(t.categoria_genero);
+    return {genero, serie, raw:String(raw||'')};
+  }
+  function categoriasDoCamp(c){
+    let arr=[];
+    try{
+      if(typeof categoriasBaseDoCampeonatoV36==='function') arr=categoriasBaseDoCampeonatoV36(c)||[];
+    }catch(e){}
+    if(!arr.length){
+      try{ arr=(categoriasDoCampeonatoV32(c)||[]).map(x=>splitRegistro({categoria_nome:x}).genero||x); }catch(e){}
+    }
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{const g=splitRegistro(t).genero;if(g)arr.push(g)});
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  function seriesDoCamp(c,genero){
+    let arr=[];
+    try{ if(typeof seriesDoCampeonatoV36==='function') arr=seriesDoCampeonatoV36(c,genero)||[]; }catch(e){}
+    const gn=norm(genero);
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{
+      const p=splitRegistro(t);
+      if((!gn || norm(p.genero)===gn) && p.serie) arr.push(p.serie);
+    });
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  window.teamMatchesFilterV36=function(t,champ,genero,serie){
+    if(champ && t.campeonato_id!==champ) return false;
+    const p=splitRegistro(t);
+    const g=norm(genero), s=norm(serie);
+    const all=norm([t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' '));
+    if(g){
+      if(p.genero){
+        if(norm(p.genero)!==g && !all.includes(g)) return false;
+      } else {
+        // legado: time antigo sem categoria salva. Mostra no filtro do campeonato para o admin poder editar depois.
+        return true;
+      }
+    }
+    if(s){
+      if(p.serie){
+        if(norm(p.serie)!==s && !all.includes(s)) return false;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  };
+  window.renderTeams=function(){
+    const champ=el('teamFilterChampV36')?.value || el('manualChamp')?.value || '';
+    const c=(window.championships||[]).find(x=>x.id===champ)||{};
+    const genero=el('teamFilterGeneroV36')?.value || '';
+    const serie=el('teamFilterSerieV36')?.value || '';
+    const generos=categoriasDoCamp(c);
+    const series=seriesDoCamp(c,genero);
+    const arr=(window.teams||[]).filter(t=>window.teamMatchesFilterV36(t,champ,genero,serie));
+    const filterHtml=`<div class="team-filter-bar-v36"><div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()">${(window.championships||[]).map(cc=>`<option value="${cc.id}" ${cc.id===champ?'selected':''}>${esc2(cc.nome)}</option>`).join('')}</select></div><div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc2(g)}" ${g===genero?'selected':''}>${esc2(g)}</option>`).join('')}</select></div><div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(sv=>`<option value="${esc2(sv)}" ${sv===serie?'selected':''}>${esc2(sv)}</option>`).join('')}</select></div><button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button></div>`;
+    const html=arr.length?`<div class="team-compact-list-v36 v39-mini-team-list">${arr.map(t=>{const p=splitRegistro(t);return `<div class="team-compact-row-v36"><div class="team-compact-main-v36">${t.logo_data?`<img src="${esc2(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc2(t.nome)}">`:`<div class="team-logo-ph-v36">${esc2(iniciais(t.nome))}</div>`}<div><strong>${esc2(t.nome)}</strong><div class="team-badges-v36">${p.genero?`<span class="cat-mini-v32">${esc2(p.genero)}</span>`:''}${p.serie?`<span class="cat-mini-v32 serie-v36">${esc2(p.serie)}</span>`:''}${(!p.genero&&!p.serie)?`<span class="cat-mini-v32">Sem categoria</span>`:''}</div></div></div><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button></div>`}).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro. Dica: use “Todas” para ver times antigos e depois abra “Ver time” para definir categoria/série.</div>';
+    const box=el('teamsBox'); if(box) box.innerHTML=filterHtml+html;
+  };
+  window.limparFiltroTimesV36=function(){
+    if(el('teamFilterGeneroV36')) el('teamFilterGeneroV36').value='';
+    if(el('teamFilterSerieV36')) el('teamFilterSerieV36').value='';
+    window.renderTeams();
+  };
+})();
+</script>
+
+</body>`);w.document.close();
   }
 }
 async function deleteTeam(id){let t=teams.find(x=>x.id===id);if(!t)return;if(!confirm(`Você tem certeza que deseja excluir esse time?\n\nTime: ${t.nome}\n\nEssa ação remove o clube da competição.`))return;let removeGames=confirm('Deseja também remover os confrontos/jogos deste time neste campeonato?');await db.from('equipes').delete().eq('id',id);if(removeGames){await db.from('jogos').delete().eq('campeonato_id',t.campeonato_id).eq('time_a',t.nome);await db.from('jogos').delete().eq('campeonato_id',t.campeonato_id).eq('time_b',t.nome)}await loadAll();alert('Time excluído da competição.')}
@@ -1143,7 +1240,104 @@ async function deleteComplaint(id,protocolo){
 }
 async function savePunishment(showPdf){let payload={atleta_nome:$('punAtleta').value,documento:$('punDoc').value,equipe:$('punEquipe').value,tipo_punicao:$('punTipo').value,data_inicio:$('punInicio').value,data_fim:$('punFim').value,descricao:$('punDesc').value,visivel_publico:true};lastPunishmentDraft=payload;let {error}=await db.from('pendencias_atletas').insert(payload);if(error)return alert(error.message);if(showPdf)generatePunishmentPdf(payload);$('punForm').reset();await loadAll();alert('Punição salva.')}
 async function savePunAndPdf(){await savePunishment(true)}
-function generatePunishmentPdf(p){p=p||lastPunishmentDraft||{atleta_nome:$('punAtleta')?.value,documento:$('punDoc')?.value,equipe:$('punEquipe')?.value,tipo_punicao:$('punTipo')?.value,data_inicio:$('punInicio')?.value,data_fim:$('punFim')?.value,descricao:$('punDesc')?.value};if(!p.atleta_nome)return alert('Preencha os dados da punição primeiro.');let w=window.open('','_blank');w.document.write(`<title>Punição ${esc(p.atleta_nome)}</title><body style="font-family:Arial;padding:30px"><h1>Comunicado de Punição</h1><h2>Secretaria de Esportes de Capão da Canoa</h2><p><b>Atleta:</b> ${esc(p.atleta_nome)}</p><p><b>Documento:</b> ${esc(p.documento)}</p><p><b>Equipe:</b> ${esc(p.equipe)}</p><p><b>Tipo de punição:</b> ${esc(p.tipo_punicao)}</p><p><b>Período:</b> ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><h3>Descrição</h3><p>${esc(p.descricao)}</p><br><p>____________________________________</p><p>Comissão/Responsável</p><script>print()<\/script></body>`);w.document.close()}
+function generatePunishmentPdf(p){p=p||lastPunishmentDraft||{atleta_nome:$('punAtleta')?.value,documento:$('punDoc')?.value,equipe:$('punEquipe')?.value,tipo_punicao:$('punTipo')?.value,data_inicio:$('punInicio')?.value,data_fim:$('punFim')?.value,descricao:$('punDesc')?.value};if(!p.atleta_nome)return alert('Preencha os dados da punição primeiro.');let w=window.open('','_blank');w.document.write(`<title>Punição ${esc(p.atleta_nome)}</title><body style="font-family:Arial;padding:30px"><h1>Comunicado de Punição</h1><h2>Secretaria de Esportes de Capão da Canoa</h2><p><b>Atleta:</b> ${esc(p.atleta_nome)}</p><p><b>Documento:</b> ${esc(p.documento)}</p><p><b>Equipe:</b> ${esc(p.equipe)}</p><p><b>Tipo de punição:</b> ${esc(p.tipo_punicao)}</p><p><b>Período:</b> ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><h3>Descrição</h3><p>${esc(p.descricao)}</p><br><p>____________________________________</p><p>Comissão/Responsável</p><script>print()<\/script>
+<script>
+/* V40 - CORRECAO DEFINITIVA DO FILTRO DE CLUBES POR CATEGORIA/SERIE */
+(function(){
+  function el(id){return document.getElementById(id)}
+  function esc2(s){
+    try{ if(typeof esc==='function') return esc(s); }catch(e){}
+    return String(s||'').replace(/[&<>\"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})
+  }
+  function norm(s){
+    return String(s||'')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function iniciais(nome){
+    try{ if(typeof iniciaisTime==='function') return iniciaisTime(nome); }catch(e){}
+    return String(nome||'T').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase() || 'T';
+  }
+  function splitRegistro(t){
+    const raw=[t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' ');
+    const n=norm(raw);
+    let genero='';
+    if(n.includes('masculino')) genero='Masculino';
+    if(n.includes('feminino')) genero='Feminino';
+    let serie='';
+    if(n.includes('ouro')) serie='Série Ouro';
+    else if(n.includes('prata')) serie='Série Prata';
+    else if(n.includes('bronze')) serie='Série Bronze';
+    else if(t.serie_nome) serie=String(t.serie_nome);
+    if(t.categoria_genero) genero=String(t.categoria_genero);
+    return {genero, serie, raw:String(raw||'')};
+  }
+  function categoriasDoCamp(c){
+    let arr=[];
+    try{
+      if(typeof categoriasBaseDoCampeonatoV36==='function') arr=categoriasBaseDoCampeonatoV36(c)||[];
+    }catch(e){}
+    if(!arr.length){
+      try{ arr=(categoriasDoCampeonatoV32(c)||[]).map(x=>splitRegistro({categoria_nome:x}).genero||x); }catch(e){}
+    }
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{const g=splitRegistro(t).genero;if(g)arr.push(g)});
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  function seriesDoCamp(c,genero){
+    let arr=[];
+    try{ if(typeof seriesDoCampeonatoV36==='function') arr=seriesDoCampeonatoV36(c,genero)||[]; }catch(e){}
+    const gn=norm(genero);
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{
+      const p=splitRegistro(t);
+      if((!gn || norm(p.genero)===gn) && p.serie) arr.push(p.serie);
+    });
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  window.teamMatchesFilterV36=function(t,champ,genero,serie){
+    if(champ && t.campeonato_id!==champ) return false;
+    const p=splitRegistro(t);
+    const g=norm(genero), s=norm(serie);
+    const all=norm([t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' '));
+    if(g){
+      if(p.genero){
+        if(norm(p.genero)!==g && !all.includes(g)) return false;
+      } else {
+        // legado: time antigo sem categoria salva. Mostra no filtro do campeonato para o admin poder editar depois.
+        return true;
+      }
+    }
+    if(s){
+      if(p.serie){
+        if(norm(p.serie)!==s && !all.includes(s)) return false;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  };
+  window.renderTeams=function(){
+    const champ=el('teamFilterChampV36')?.value || el('manualChamp')?.value || '';
+    const c=(window.championships||[]).find(x=>x.id===champ)||{};
+    const genero=el('teamFilterGeneroV36')?.value || '';
+    const serie=el('teamFilterSerieV36')?.value || '';
+    const generos=categoriasDoCamp(c);
+    const series=seriesDoCamp(c,genero);
+    const arr=(window.teams||[]).filter(t=>window.teamMatchesFilterV36(t,champ,genero,serie));
+    const filterHtml=`<div class="team-filter-bar-v36"><div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()">${(window.championships||[]).map(cc=>`<option value="${cc.id}" ${cc.id===champ?'selected':''}>${esc2(cc.nome)}</option>`).join('')}</select></div><div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc2(g)}" ${g===genero?'selected':''}>${esc2(g)}</option>`).join('')}</select></div><div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(sv=>`<option value="${esc2(sv)}" ${sv===serie?'selected':''}>${esc2(sv)}</option>`).join('')}</select></div><button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button></div>`;
+    const html=arr.length?`<div class="team-compact-list-v36 v39-mini-team-list">${arr.map(t=>{const p=splitRegistro(t);return `<div class="team-compact-row-v36"><div class="team-compact-main-v36">${t.logo_data?`<img src="${esc2(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc2(t.nome)}">`:`<div class="team-logo-ph-v36">${esc2(iniciais(t.nome))}</div>`}<div><strong>${esc2(t.nome)}</strong><div class="team-badges-v36">${p.genero?`<span class="cat-mini-v32">${esc2(p.genero)}</span>`:''}${p.serie?`<span class="cat-mini-v32 serie-v36">${esc2(p.serie)}</span>`:''}${(!p.genero&&!p.serie)?`<span class="cat-mini-v32">Sem categoria</span>`:''}</div></div></div><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button></div>`}).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro. Dica: use “Todas” para ver times antigos e depois abra “Ver time” para definir categoria/série.</div>';
+    const box=el('teamsBox'); if(box) box.innerHTML=filterHtml+html;
+  };
+  window.limparFiltroTimesV36=function(){
+    if(el('teamFilterGeneroV36')) el('teamFilterGeneroV36').value='';
+    if(el('teamFilterSerieV36')) el('teamFilterSerieV36').value='';
+    window.renderTeams();
+  };
+})();
+</script>
+
+</body>`);w.document.close()}
 function renderPunishments(){let arr=punishments;$('punBox').innerHTML=arr.length?arr.map(p=>`<div class="game"><strong>${esc(p.atleta_nome)}</strong><p>${esc(p.equipe||'')} • ${esc(p.tipo_punicao)}<br>Suspenso de ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><button class="btn small ghost" onclick='generatePunishmentPdf(${JSON.stringify(p)})'>Gerar PDF</button></div>`).join(''):'<div class="empty">Nenhuma punição cadastrada.</div>'}
 function renderPunPublic(){let now=new Date();let arr=punishments.filter(p=>p.visivel_publico!==false && new Date(p.data_fim+'T23:59:59')>=now);$('punPublicBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Motivo</th><th>Suspenso até</th></tr>'+arr.map(p=>`<tr><td>${esc(p.atleta_nome)}</td><td>${esc(p.equipe||'-')}</td><td>${esc(p.tipo_punicao)}</td><td>${onlyDate(p.data_fim)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma punição vigente cadastrada.</div>'}
 async function saveConfig(){
@@ -1306,6 +1500,103 @@ document.addEventListener('change',function(e){
     let html=arr.length?`<div class="team-compact-list-v36 v39-mini-team-list">${arr.map(t=>`<div class="team-compact-row-v36"><div class="team-compact-main-v36">${t.logo_data?`<img src="${esc(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc(t.nome)}">`:`<div class="team-logo-ph-v36">${esc(iniciaisTime(t.nome))}</div>`}<div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgeDivisaoTimeV36(t)}</div><div class="v39-team-extra">${esc(((championships||[]).find(c=>c.id===t.campeonato_id)||{}).nome||'')}</div></div></div><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button></div>`).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro. Se o time foi cadastrado antes das categorias, use "Todas" ou edite o time para definir categoria/série.</div>';
     const box=document.getElementById('teamsBox'); if(box)box.innerHTML=filterHtml+html;
   }
+})();
+</script>
+
+
+<script>
+/* V40 - CORRECAO DEFINITIVA DO FILTRO DE CLUBES POR CATEGORIA/SERIE */
+(function(){
+  function el(id){return document.getElementById(id)}
+  function esc2(s){
+    try{ if(typeof esc==='function') return esc(s); }catch(e){}
+    return String(s||'').replace(/[&<>\"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})
+  }
+  function norm(s){
+    return String(s||'')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+  }
+  function iniciais(nome){
+    try{ if(typeof iniciaisTime==='function') return iniciaisTime(nome); }catch(e){}
+    return String(nome||'T').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase() || 'T';
+  }
+  function splitRegistro(t){
+    const raw=[t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' ');
+    const n=norm(raw);
+    let genero='';
+    if(n.includes('masculino')) genero='Masculino';
+    if(n.includes('feminino')) genero='Feminino';
+    let serie='';
+    if(n.includes('ouro')) serie='Série Ouro';
+    else if(n.includes('prata')) serie='Série Prata';
+    else if(n.includes('bronze')) serie='Série Bronze';
+    else if(t.serie_nome) serie=String(t.serie_nome);
+    if(t.categoria_genero) genero=String(t.categoria_genero);
+    return {genero, serie, raw:String(raw||'')};
+  }
+  function categoriasDoCamp(c){
+    let arr=[];
+    try{
+      if(typeof categoriasBaseDoCampeonatoV36==='function') arr=categoriasBaseDoCampeonatoV36(c)||[];
+    }catch(e){}
+    if(!arr.length){
+      try{ arr=(categoriasDoCampeonatoV32(c)||[]).map(x=>splitRegistro({categoria_nome:x}).genero||x); }catch(e){}
+    }
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{const g=splitRegistro(t).genero;if(g)arr.push(g)});
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  function seriesDoCamp(c,genero){
+    let arr=[];
+    try{ if(typeof seriesDoCampeonatoV36==='function') arr=seriesDoCampeonatoV36(c,genero)||[]; }catch(e){}
+    const gn=norm(genero);
+    (window.teams||[]).filter(t=>!c?.id||t.campeonato_id===c.id).forEach(t=>{
+      const p=splitRegistro(t);
+      if((!gn || norm(p.genero)===gn) && p.serie) arr.push(p.serie);
+    });
+    arr=[...new Set(arr.map(String).filter(Boolean))];
+    return arr;
+  }
+  window.teamMatchesFilterV36=function(t,champ,genero,serie){
+    if(champ && t.campeonato_id!==champ) return false;
+    const p=splitRegistro(t);
+    const g=norm(genero), s=norm(serie);
+    const all=norm([t.categoria_genero,t.categoria_nome,t.serie_nome].filter(Boolean).join(' '));
+    if(g){
+      if(p.genero){
+        if(norm(p.genero)!==g && !all.includes(g)) return false;
+      } else {
+        // legado: time antigo sem categoria salva. Mostra no filtro do campeonato para o admin poder editar depois.
+        return true;
+      }
+    }
+    if(s){
+      if(p.serie){
+        if(norm(p.serie)!==s && !all.includes(s)) return false;
+      } else {
+        return false;
+      }
+    }
+    return true;
+  };
+  window.renderTeams=function(){
+    const champ=el('teamFilterChampV36')?.value || el('manualChamp')?.value || '';
+    const c=(window.championships||[]).find(x=>x.id===champ)||{};
+    const genero=el('teamFilterGeneroV36')?.value || '';
+    const serie=el('teamFilterSerieV36')?.value || '';
+    const generos=categoriasDoCamp(c);
+    const series=seriesDoCamp(c,genero);
+    const arr=(window.teams||[]).filter(t=>window.teamMatchesFilterV36(t,champ,genero,serie));
+    const filterHtml=`<div class="team-filter-bar-v36"><div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()">${(window.championships||[]).map(cc=>`<option value="${cc.id}" ${cc.id===champ?'selected':''}>${esc2(cc.nome)}</option>`).join('')}</select></div><div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc2(g)}" ${g===genero?'selected':''}>${esc2(g)}</option>`).join('')}</select></div><div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(sv=>`<option value="${esc2(sv)}" ${sv===serie?'selected':''}>${esc2(sv)}</option>`).join('')}</select></div><button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button></div>`;
+    const html=arr.length?`<div class="team-compact-list-v36 v39-mini-team-list">${arr.map(t=>{const p=splitRegistro(t);return `<div class="team-compact-row-v36"><div class="team-compact-main-v36">${t.logo_data?`<img src="${esc2(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc2(t.nome)}">`:`<div class="team-logo-ph-v36">${esc2(iniciais(t.nome))}</div>`}<div><strong>${esc2(t.nome)}</strong><div class="team-badges-v36">${p.genero?`<span class="cat-mini-v32">${esc2(p.genero)}</span>`:''}${p.serie?`<span class="cat-mini-v32 serie-v36">${esc2(p.serie)}</span>`:''}${(!p.genero&&!p.serie)?`<span class="cat-mini-v32">Sem categoria</span>`:''}</div></div></div><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button></div>`}).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro. Dica: use “Todas” para ver times antigos e depois abra “Ver time” para definir categoria/série.</div>';
+    const box=el('teamsBox'); if(box) box.innerHTML=filterHtml+html;
+  };
+  window.limparFiltroTimesV36=function(){
+    if(el('teamFilterGeneroV36')) el('teamFilterGeneroV36').value='';
+    if(el('teamFilterSerieV36')) el('teamFilterSerieV36').value='';
+    window.renderTeams();
+  };
 })();
 </script>
 
