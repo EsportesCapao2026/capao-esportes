@@ -825,192 +825,277 @@ window.addEventListener('load',()=>{const params=new URLSearchParams(location.se
 </script>
 
 <style>
-/* V30 - Categorias e séries visíveis e funcionais */
-.categoria-admin-v30{border:1px solid rgba(20,255,170,.26)!important;background:rgba(8,22,19,.88)!important;margin:16px 0!important;box-shadow:none!important}
-.categoria-admin-v30 h3{margin:0 0 8px;color:#fff}.categoria-admin-v30 .msg{background:rgba(20,255,170,.08)!important;border-color:rgba(20,255,170,.20)!important;color:#dffef4!important}
-.categoria-wrap-v30{margin:10px 0}.categoria-wrap-v30 select,.categoria-wrap-v30 input{background:rgba(255,255,255,.06)!important;color:#fff!important;border-color:rgba(20,255,170,.28)!important}.categoria-wrap-v30 small{display:block;margin-top:6px;color:#9fb2ad!important}
-.category-pill-v30{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(20,255,170,.25);background:rgba(20,255,170,.10);color:#20f0aa;border-radius:999px;padding:6px 10px;font-weight:800;font-size:12px;margin:2px 4px 2px 0}.tag.green{background:rgba(20,255,170,.13)!important;color:#21f0aa!important}.table td,.table th{color:#f8fafc!important}.table td{background:rgba(255,255,255,.045)!important;border-color:rgba(255,255,255,.12)!important}
+/* V30 corrigida - categorias/series, sem quebrar o site */
+.category-panel-v30{border:1px solid rgba(16,185,129,.35);background:linear-gradient(135deg,rgba(6,95,70,.18),rgba(8,145,178,.10));border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 18px 40px rgba(0,0,0,.16)}
+.category-panel-v30 h3{margin:0 0 8px;color:#fff}.category-panel-v30 .muted{color:#b7c3d0}.category-preview-v30{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.category-chip-v30{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.45);color:#34d399;font-weight:900;font-size:12px}.category-row-v30{margin:10px 0}.category-hint-v30{font-size:13px;color:#9ca3af;margin-top:6px}.category-badge-v30{display:inline-flex;padding:4px 9px;border-radius:999px;background:rgba(20,184,166,.14);border:1px solid rgba(20,184,166,.35);color:#5eead4;font-size:12px;font-weight:900;margin-left:8px}.select-cat-v30{margin-top:10px}.v30-hidden{display:none!important}
 </style>
 <script>
-/* V30 - CATEGORIAS/SERIES POR CAMPEONATO - CORRECAO COMPLETA */
+/* V30 corrigida - categorias e series por campeonato. Feita como camada segura sobre a v28 estável. */
 (function(){
-  if(window.__capaoCategoriasV30)return;
-  window.__capaoCategoriasV30=true;
+  if(window.__capaoCategoriasV30Corrigida)return;
+  window.__capaoCategoriasV30Corrigida=true;
 
   function byId(id){return document.getElementById(id)}
-  function safeJson(v, fallback){try{if(Array.isArray(v))return v;if(!v)return fallback;if(typeof v==='string')return JSON.parse(v);return v;}catch(e){return fallback;}}
-  function uniq(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
-  function norm(s){return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();}
-  function esc2(s){return (typeof esc==='function')?esc(s):String(s||'').replace(/[&<>\"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));}
-
-  window.categoriasDoCampeonato=function(c){
-    if(!c || !(c.categorias_ativas===true || c.categorias_ativas==='true')) return [];
-    const tipo=String(c.categorias_tipo||'personalizado');
-    let lista=uniq(safeJson(c.categorias_lista,[]));
-    if(lista.length)return lista;
+  function safeEsc(v){return (typeof esc==='function')?esc(v):String(v||'').replace(/[&<>\"]/g,function(m){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]})}
+  function parseJsonList(v){
+    if(Array.isArray(v))return v.filter(Boolean).map(String);
+    if(!v)return [];
+    try{const parsed=JSON.parse(v);return Array.isArray(parsed)?parsed.filter(Boolean).map(String):[]}catch(e){return []}
+  }
+  function splitCustomList(v){return String(v||'').split(/[\n,;]+/).map(s=>s.trim()).filter(Boolean)}
+  function categoriasPadrao(tipo,custom){
     if(tipo==='series')return ['Série Ouro','Série Prata','Série Bronze'];
     if(tipo==='genero')return ['Masculino','Feminino'];
-    if(tipo==='series_genero')return ['Série Ouro','Série Prata','Série Bronze','Feminino'];
+    if(tipo==='series_feminino')return ['Série Ouro','Série Prata','Série Bronze','Feminino'];
+    if(tipo==='personalizado')return splitCustomList(custom);
     return [];
-  };
-  function campeonatoPorSelect(id){return (typeof championships!=='undefined'?championships:[]).find(c=>c.id===byId(id)?.value)||null;}
-  function makeCatOptions(c, allLabel){
-    const cats=window.categoriasDoCampeonato(c);
-    if(!cats.length)return '<option value="">Sem categoria</option>';
-    let html=allLabel?'<option value="">'+esc2(allLabel)+'</option>':'';
-    return html+cats.map(x=>'<option value="'+esc2(x)+'">'+esc2(x)+'</option>').join('');
   }
-  function categoriaDoTime(nome, champId){
-    const alvo=norm(nome);
-    const t=(typeof teams!=='undefined'?teams:[]).find(t=>(!champId||t.campeonato_id===champId)&&norm(t.nome)===alvo);
-    return t?.categoria_nome||'';
+  function getCategoriasCampeonato(c){
+    if(!c)return [];
+    const ativo=(c.categorias_ativas===true||c.categorias_ativas==='true');
+    if(!ativo)return [];
+    const lista=parseJsonList(c.categorias_lista);
+    if(lista.length)return lista;
+    return categoriasPadrao(c.categorias_tipo||'nenhuma','');
   }
-  function categoriaJogo(g){return g?.categoria_nome || categoriaDoTime(g?.time_a,g?.campeonato_id) || categoriaDoTime(g?.time_b,g?.campeonato_id) || '';}
-  window.categoriaJogo=categoriaJogo;
+  function getChamp(id){return (window.championships||[]).find(c=>c.id===id) || null}
+  function needsCategory(champId){return getCategoriasCampeonato(getChamp(champId)).length>0}
+  function selectOptionsCategorias(champId,allLabel,required){
+    const cats=getCategoriasCampeonato(getChamp(champId));
+    if(!cats.length)return required?'<option value="">Sem categoria</option>':'<option value="">Todas</option>';
+    let html=required?'':`<option value="">${safeEsc(allLabel||'Todas as categorias')}</option>`;
+    html+=cats.map(c=>`<option value="${safeEsc(c)}">${safeEsc(c)}</option>`).join('');
+    return html;
+  }
+  function setSelectOptions(id,champId,allLabel,required){const el=byId(id);if(el)el.innerHTML=selectOptionsCategorias(champId,allLabel,required)}
+  function selectedCategory(id){const el=byId(id);return el?String(el.value||''):''}
+  function catEqual(a,b){return String(a||'')===String(b||'')}
+  function teamCategory(t){return String(t?.categoria_nome||'')}
+  function gameCategory(g){return String(g?.categoria_nome||'')}
+  function goalCategory(g){return String(g?.categoria_nome||'')}
 
-  function categoriaAtivaCampo(champId, fieldId){
-    const c=(typeof championships!=='undefined'?championships:[]).find(x=>x.id===champId);
-    const cats=window.categoriasDoCampeonato(c);
-    if(!cats.length)return '';
-    return byId(fieldId)?.value || cats[0] || '';
-  }
-  function updateCatSelect(champSelectId, catSelectId, allLabel){
-    const sel=byId(catSelectId); if(!sel)return;
-    const c=campeonatoPorSelect(champSelectId);
-    const prev=sel.value;
-    sel.innerHTML=makeCatOptions(c, allLabel);
-    if([...sel.options].some(o=>o.value===prev))sel.value=prev;
-    const wrap=sel.closest('.categoria-wrap-v30');
-    if(wrap)wrap.style.display=window.categoriasDoCampeonato(c).length?'block':'none';
-  }
-  function installAfterSelect(champSelectId, catSelectId, label, allLabel){
-    const champ=byId(champSelectId); if(!champ)return;
-    if(!byId(catSelectId)){
-      const div=document.createElement('div');
-      div.className='categoria-wrap-v30';
-      div.innerHTML='<label>'+label+'</label><select id="'+catSelectId+'"></select><small class="muted">Separação definida pelo administrador no cadastro do campeonato.</small>';
-      const parent=champ.closest('div')||champ.parentElement;
-      parent.insertAdjacentElement('afterend',div);
-      byId(catSelectId).addEventListener('change',()=>{try{renderStandings()}catch(e){}try{renderScorers()}catch(e){}try{renderGamesPublic()}catch(e){}try{renderGamesAdmin()}catch(e){}try{renderAdminScorers()}catch(e){}});
-    }
-    champ.addEventListener('change',()=>{updateCatSelect(champSelectId,catSelectId,allLabel);try{renderStandings()}catch(e){}try{renderScorers()}catch(e){}try{renderGamesPublic()}catch(e){}try{renderGamesAdmin()}catch(e){}try{renderAdminScorers()}catch(e){}});
-    updateCatSelect(champSelectId,catSelectId,allLabel);
-  }
-
-  function installChampCategoryFields(){
-    const form=byId('champForm'); if(!form || byId('cCategoriasAtivas'))return;
-    const submit=form.querySelector('button[type="submit"]');
-    const holder=document.createElement('div');
-    holder.className='card categoria-admin-v30';
-    holder.innerHTML=`
-      <h3>Divisão por categorias/séries</h3>
-      <p class="muted">Use quando o mesmo campeonato tiver Série Ouro, Prata, Bronze, Masculino, Feminino ou outras divisões.</p>
-      <div class="row3">
-        <div><label>Este campeonato terá divisão?</label><select id="cCategoriasAtivas"><option value="false">Não</option><option value="true">Sim</option></select></div>
-        <div><label>Tipo de divisão</label><select id="cCategoriasTipo"><option value="series">Séries padrão: Ouro, Prata e Bronze</option><option value="genero">Masculino/Feminino</option><option value="series_genero">Séries + Feminino</option><option value="personalizado">Personalizado</option></select></div>
-        <div><label>Atualização automática futura?</label><select id="cCategoriasAuto"><option value="false">Não, manual</option><option value="true">Sim, sugerir acessos/rebaixamentos</option></select></div>
+  function injectCategoriasCriarCampeonato(){
+    const form=byId('champForm'); if(!form||byId('categoriasPanelV30'))return;
+    const desc=byId('cDesc'); if(!desc)return;
+    const panel=document.createElement('div');
+    panel.id='categoriasPanelV30';
+    panel.className='category-panel-v30';
+    panel.innerHTML=`
+      <h3>Categorias e séries do campeonato</h3>
+      <p class="muted">Use esta área quando o mesmo campeonato tiver divisões, como Série Ouro, Série Prata, Série Bronze, Masculino ou Feminino.</p>
+      <div class="row">
+        <div><label>Este campeonato terá divisão?</label><select id="cCategoriasAtivas"><option value="false">Não, campeonato único</option><option value="true">Sim, dividir por categorias/séries</option></select></div>
+        <div><label>Tipo de divisão</label><select id="cCategoriasTipo"><option value="series">Séries padrão: Ouro, Prata e Bronze</option><option value="genero">Masculino/Feminino</option><option value="series_feminino">Ouro, Prata, Bronze e Feminino</option><option value="personalizado">Personalizado</option></select></div>
       </div>
-      <label>Categorias personalizadas</label>
-      <input id="cCategoriasLista" placeholder="Ex.: Série Ouro, Série Prata, Série Bronze, Feminino">
-      <small class="muted">Separe por vírgula. Se deixar vazio, o sistema usa o padrão escolhido acima.</small>
-      <div id="catPreviewV30" class="msg"><b>Prévia:</b> sem divisão por categoria.</div>
-      <div class="msg"><b>Importante:</b> a atualização automática será apenas uma sugestão para aprovação do administrador.</div>`;
-    form.insertBefore(holder,submit);
-    ['cCategoriasAtivas','cCategoriasTipo','cCategoriasLista'].forEach(id=>byId(id)?.addEventListener('input',previewCategorias));
-    ['cCategoriasAtivas','cCategoriasTipo','cCategoriasLista'].forEach(id=>byId(id)?.addEventListener('change',previewCategorias));
-    previewCategorias();
+      <div class="row">
+        <div><label>Atualização automática futura?</label><select id="cCategoriasAuto"><option value="false">Não, administrador define manualmente</option><option value="true">Sim, sugerir acesso/rebaixamento com aprovação</option></select><div class="category-hint-v30">O sistema apenas sugere. A confirmação final sempre fica com o administrador.</div></div>
+        <div><label>Categorias personalizadas</label><textarea id="cCategoriasCustom" placeholder="Uma por linha. Ex.: Sub-15\nSub-17\nVeterano"></textarea></div>
+      </div>
+      <div><b>Prévia das categorias:</b><div id="categoriasPreviewV30" class="category-preview-v30"></div></div>
+    `;
+    desc.closest('label')?.before(panel);
+    if(!panel.parentNode)desc.before(panel);
+    ['cCategoriasAtivas','cCategoriasTipo','cCategoriasCustom'].forEach(id=>{const el=byId(id);if(el)el.addEventListener('input',updateCategoriasPreviewV30)});
+    updateCategoriasPreviewV30();
   }
-  function categoriasPayloadFromForm(){
-    const ativa=byId('cCategoriasAtivas')?.value==='true';
-    const tipo=byId('cCategoriasTipo')?.value||'personalizado';
-    let lista=uniq((byId('cCategoriasLista')?.value||'').split(','));
-    if(ativa && !lista.length){
-      if(tipo==='series')lista=['Série Ouro','Série Prata','Série Bronze'];
-      if(tipo==='genero')lista=['Masculino','Feminino'];
-      if(tipo==='series_genero')lista=['Série Ouro','Série Prata','Série Bronze','Feminino'];
+  window.updateCategoriasPreviewV30=function(){
+    const ativo=byId('cCategoriasAtivas')?.value==='true';
+    const tipo=byId('cCategoriasTipo')?.value||'series';
+    const custom=byId('cCategoriasCustom')?.value||'';
+    const box=byId('categoriasPreviewV30'); if(!box)return;
+    const cats=ativo?categoriasPadrao(tipo,custom):[];
+    box.innerHTML=cats.length?cats.map(c=>`<span class="category-chip-v30">${safeEsc(c)}</span>`).join(''):'<span class="muted">Sem divisão. Todos os times ficam no mesmo campeonato.</span>';
+  }
+  function getFormCategoriasPayload(){
+    const ativo=byId('cCategoriasAtivas')?.value==='true';
+    const tipo=byId('cCategoriasTipo')?.value||'nenhuma';
+    const custom=byId('cCategoriasCustom')?.value||'';
+    const lista=ativo?categoriasPadrao(tipo,custom):[];
+    return {categorias_ativas:ativo,categorias_tipo:ativo?tipo:'nenhuma',categorias_lista:lista,categorias_auto:byId('cCategoriasAuto')?.value==='true'};
+  }
+
+  function injectCategoriaSelects(){
+    injectCategoriasCriarCampeonato();
+
+    const reqCampeonato=byId('reqCampeonato');
+    if(reqCampeonato&&!byId('reqCategoria')){
+      reqCampeonato.closest('div').insertAdjacentHTML('afterend',`<div id="reqCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="reqCategoria" required></select><div class="category-hint-v30">Escolha em qual categoria o time será inscrito.</div></div>`);
+      reqCampeonato.addEventListener('change',syncCategoriaSelectsV30);
     }
-    return {categorias_ativas:ativa,categorias_tipo:tipo,categorias_lista:lista,categorias_auto:byId('cCategoriasAuto')?.value==='true'};
+
+    const manualChamp=byId('manualChamp');
+    if(manualChamp&&!byId('manualCategoria')){
+      manualChamp.closest('div').insertAdjacentHTML('afterend',`<div id="manualCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="manualCategoria" required></select></div>`);
+      manualChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
+
+    const tableChamp=byId('tableChamp');
+    if(tableChamp&&!byId('tableCategoria')){
+      tableChamp.closest('div').insertAdjacentHTML('afterend',`<div id="tableCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="tableCategoria" onchange="renderStandings()"></select></div>`);
+      tableChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
+
+    const scorerChamp=byId('scorerChamp');
+    if(scorerChamp&&!byId('scorerCategoria')){
+      scorerChamp.closest('div').insertAdjacentHTML('afterend',`<div id="scorerCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="scorerCategoria" onchange="renderScorers()"></select></div>`);
+      scorerChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
+
+    const gamesChamp=byId('gamesChamp');
+    if(gamesChamp&&!byId('gamesCategoria')){
+      gamesChamp.closest('div').insertAdjacentHTML('afterend',`<div id="gamesCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="gamesCategoria" onchange="renderGamesPublic()"></select></div>`);
+      gamesChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
+
+    const adminGamesChamp=byId('adminGamesChamp');
+    if(adminGamesChamp&&!byId('adminGamesCategoria')){
+      adminGamesChamp.closest('.row')?.insertAdjacentHTML('afterend',`<div class="row category-row-v30" id="adminGamesCategoriaBox"><div><label>Categoria/Série dos jogos</label><select id="adminGamesCategoria" onchange="renderGamesAdmin()"></select><div class="category-hint-v30">O sorteio e os jogos manuais respeitam esta categoria.</div></div></div>`);
+      adminGamesChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
+
+    const goalChamp=byId('goalChamp');
+    if(goalChamp&&!byId('goalCategoria')){
+      goalChamp.closest('div').insertAdjacentHTML('afterend',`<div id="goalCategoriaBox" class="select-cat-v30"><label>Categoria/Série</label><select id="goalCategoria"></select></div>`);
+      goalChamp.addEventListener('change',syncCategoriaSelectsV30);
+    }
   }
-  function previewCategorias(){
-    const box=byId('catPreviewV30'); if(!box)return;
-    const p=categoriasPayloadFromForm();
-    if(!p.categorias_ativas){box.innerHTML='<b>Prévia:</b> este campeonato não terá divisão por categoria/série.';return;}
-    box.innerHTML='<b>Prévia das categorias:</b><br>'+p.categorias_lista.map(x=>'<span class="category-pill-v30">'+esc2(x)+'</span>').join('');
-  }
-  function reinstallChampSubmit(){
-    const old=byId('champForm'); if(!old || old.dataset.v30==='1')return;
-    installChampCategoryFields();
-    const form=old.cloneNode(true); old.parentNode.replaceChild(form,old); form.dataset.v30='1';
-    ['cCategoriasAtivas','cCategoriasTipo','cCategoriasLista'].forEach(id=>byId(id)?.addEventListener('input',previewCategorias));
-    ['cCategoriasAtivas','cCategoriasTipo','cCategoriasLista'].forEach(id=>byId(id)?.addEventListener('change',previewCategorias));
-    previewCategorias();
-    form.addEventListener('submit',async e=>{
-      e.preventDefault();
-      const payload={nome:byId('cNome').value,modalidade:byId('cModalidade').value,tipo:byId('cTipo').value,status:byId('cStatus').value,inicio:byId('cInicio').value,fim:byId('cFim').value,inscricao_inicio:byId('cInsInicio').value||null,inscricao_fim:byId('cInsFim').value||null,inscricoes_abertas:byId('cStatus').value==='inscricoes_abertas',descricao:byId('cDesc').value,...categoriasPayloadFromForm()};
-      const {error}=await db.from('campeonatos').insert(payload);
-      if(error)return alert('Erro ao criar campeonato. Confira se o SQL de categorias foi rodado no Supabase. '+error.message);
-      e.target.reset(); previewCategorias(); await loadAll(); alert('Campeonato criado.');
+
+  window.syncCategoriaSelectsV30=function(){
+    injectCategoriaSelects();
+    const pairs=[
+      ['reqCategoria','reqCampeonato','Selecione a categoria',true,'reqCategoriaBox'],
+      ['manualCategoria','manualChamp','Selecione a categoria',true,'manualCategoriaBox'],
+      ['tableCategoria','tableChamp','Todas as categorias',false,'tableCategoriaBox'],
+      ['scorerCategoria','scorerChamp','Todas as categorias',false,'scorerCategoriaBox'],
+      ['gamesCategoria','gamesChamp','Todas as categorias',false,'gamesCategoriaBox'],
+      ['adminGamesCategoria','adminGamesChamp','Todas as categorias',false,'adminGamesCategoriaBox'],
+      ['goalCategoria','goalChamp','Selecione a categoria',true,'goalCategoriaBox']
+    ];
+    pairs.forEach(([sel,champ,label,required,boxId])=>{
+      const champId=byId(champ)?.value||'';
+      setSelectOptions(sel,champId,label,required);
+      const box=byId(boxId); if(box)box.classList.toggle('v30-hidden',!needsCategory(champId));
     });
   }
-  function requiredCategory(champSelectId, catSelectId){
-    const c=campeonatoPorSelect(champSelectId); const cats=window.categoriasDoCampeonato(c);
-    if(!cats.length)return '';
-    const val=byId(catSelectId)?.value||'';
-    if(!val)throw new Error('Selecione a categoria/série.');
-    return val;
+
+  const oldFillSelects=window.fillSelects;
+  window.fillSelects=function(){ if(typeof oldFillSelects==='function')oldFillSelects(); injectCategoriaSelects(); syncCategoriaSelectsV30(); };
+
+  const oldSelectChampAndGo=window.selectChampAndGo;
+  window.selectChampAndGo=function(id,tab){
+    if(typeof oldSelectChampAndGo==='function')oldSelectChampAndGo(id,tab);
+    ['reqCampeonato','tableChamp','scorerChamp','gamesChamp','denCampeonato','rulesChamp','manualChamp','adminGamesChamp','goalChamp'].forEach(x=>{if(byId(x))byId(x).value=id});
+    syncCategoriaSelectsV30();
+  };
+
+  const oldCheckRegistrationWindow=window.checkRegistrationWindow;
+  window.checkRegistrationWindow=function(){ if(typeof oldCheckRegistrationWindow==='function')oldCheckRegistrationWindow(); syncCategoriaSelectsV30(); };
+
+  function addCaptureSubmit(id,handler){
+    const form=byId(id); if(!form)return;
+    form.addEventListener('submit',function(e){e.preventDefault();e.stopImmediatePropagation();handler(e);},true);
   }
-  function reinstallTeamForms(){
-    const tf=byId('teamRequestForm');
-    if(tf && tf.dataset.v30!=='1'){
-      const form=tf.cloneNode(true); tf.parentNode.replaceChild(form,tf); form.dataset.v30='1';
-      form.addEventListener('submit',async e=>{e.preventDefault();try{let c=championships.find(x=>x.id===byId('reqCampeonato').value),st=registrationStatus(c);if(!st.can)throw new Error(st.msg);let categoria=requiredCategory('reqCampeonato','reqCategoria');let logo=await fileToData(byId('reqLogo').files[0]);let atletas=await collectPlayers();let payload={campeonato_id:c.id,categoria_nome:categoria,nome_time:byId('reqTime').value,responsavel_nome:byId('reqResp').value,responsavel_cpf:byId('reqCpf').value,responsavel_whatsapp:byId('reqWhats').value,responsavel_email:byId('reqEmail').value,endereco:byId('reqEnd').value,cep:byId('reqCep').value,logo_data:logo,atletas,status:'pendente'};let {error}=await db.from('inscricoes_clubes').insert(payload);if(error)throw error;alert('Inscrição enviada para análise do administrador.');resetTeamForm();await loadAll()}catch(err){alert(err.message)}});
-    }
-    const mf=byId('manualTeamForm');
-    if(mf && mf.dataset.v30!=='1'){
-      const form=mf.cloneNode(true); mf.parentNode.replaceChild(form,mf); form.dataset.v30='1';
-      form.addEventListener('submit',async e=>{e.preventDefault();try{let categoria=requiredCategory('manualChamp','manualCategoria');let atletas=await collectManualPlayers();let logo=await fileToData(byId('manualLogo').files[0]);let {data,error}=await db.from('equipes').insert({campeonato_id:byId('manualChamp').value,categoria_nome:categoria,nome:byId('manualTeam').value,responsavel:byId('manualResp').value,whatsapp:byId('manualWhats').value,logo_data:logo,status:'ativo',atletas}).select().single();if(error)throw error;for(const a of atletas){let {data:at,error:atErr}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(atErr)throw atErr;if(at)await db.from('inscricoes').insert({campeonato_id:byId('manualChamp').value,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}resetManualTeamForm();await loadAll();alert('Clube e atletas adicionados manualmente.')}catch(err){alert(err.message)}});
-    }
+
+  document.addEventListener('DOMContentLoaded',function(){
+    injectCategoriaSelects();
+    syncCategoriaSelectsV30();
+
+    addCaptureSubmit('champForm',async function(e){
+      try{
+        const payload={nome:byId('cNome').value,modalidade:byId('cModalidade').value,tipo:byId('cTipo').value,status:byId('cStatus').value,inicio:byId('cInicio').value,fim:byId('cFim').value,inscricao_inicio:byId('cInsInicio').value||null,inscricao_fim:byId('cInsFim').value||null,inscricoes_abertas:byId('cStatus').value==='inscricoes_abertas',descricao:byId('cDesc').value,...getFormCategoriasPayload()};
+        const {error}=await db.from('campeonatos').insert(payload);
+        if(error)return alert('Erro ao criar campeonato. Confira se o SQL v29/v30 foi rodado no Supabase. '+error.message);
+        e.target.reset(); updateCategoriasPreviewV30(); await loadAll(); alert('Campeonato criado.');
+      }catch(err){alert(err.message||err)}
+    });
+
+    addCaptureSubmit('teamRequestForm',async function(e){
+      try{
+        let c=(championships||[]).find(x=>x.id===byId('reqCampeonato').value),st=registrationStatus(c);if(!st.can)throw new Error(st.msg);
+        const categoria=needsCategory(c.id)?selectedCategory('reqCategoria'):''; if(needsCategory(c.id)&&!categoria)throw new Error('Selecione a categoria/série do time.');
+        let logo=await fileToData(byId('reqLogo').files[0]);let atletas=await collectPlayers();
+        let payload={campeonato_id:c.id,categoria_nome:categoria,nome_time:byId('reqTime').value,responsavel_nome:byId('reqResp').value,responsavel_cpf:byId('reqCpf').value,responsavel_whatsapp:byId('reqWhats').value,responsavel_email:byId('reqEmail').value,endereco:byId('reqEnd').value,cep:byId('reqCep').value,logo_data:logo,atletas,status:'pendente'};
+        let {error}=await db.from('inscricoes_clubes').insert(payload);if(error)throw error;alert('Inscrição enviada para análise do administrador.');resetTeamForm();await loadAll();
+      }catch(err){alert('Erro ao enviar inscrição. Confira se o SQL v29/v30 foi rodado. '+(err.message||err))}
+    });
+
+    addCaptureSubmit('manualTeamForm',async function(e){
+      try{
+        const champId=byId('manualChamp').value; const categoria=needsCategory(champId)?selectedCategory('manualCategoria'):''; if(needsCategory(champId)&&!categoria)throw new Error('Selecione a categoria/série do clube.');
+        let atletas=await collectManualPlayers();let logo=await fileToData(byId('manualLogo').files[0]);
+        let {data,error}=await db.from('equipes').insert({campeonato_id:champId,categoria_nome:categoria,nome:byId('manualTeam').value,responsavel:byId('manualResp').value,whatsapp:byId('manualWhats').value,logo_data:logo,status:'ativo',atletas}).select().single();if(error)throw error;
+        for(const a of atletas){let {data:at,error:atErr}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(atErr)throw atErr;if(at)await db.from('inscricoes').insert({campeonato_id:champId,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}
+        resetManualTeamForm();await loadAll();alert('Clube e atletas adicionados manualmente.');
+      }catch(err){alert('Erro ao salvar clube. Confira se o SQL v29/v30 foi rodado. '+(err.message||err))}
+    });
+
+    addCaptureSubmit('goalForm',async function(e){
+      try{
+        const champId=byId('goalChamp').value; const categoria=needsCategory(champId)?selectedCategory('goalCategoria'):''; if(needsCategory(champId)&&!categoria)throw new Error('Selecione a categoria/série dos gols.');
+        let {error}=await db.from('gols').insert({campeonato_id:champId,categoria_nome:categoria,atleta_nome:byId('goalPlayer').value,equipe:byId('goalTeam').value,quantidade:Number(byId('goalQtd').value||1)});if(error)throw error;
+        e.target.reset();syncCategoriaSelectsV30();await loadAll();
+      }catch(err){alert('Erro ao adicionar gols. Confira se o SQL v29/v30 foi rodado. '+(err.message||err))}
+    });
+  });
+
+  window.approveRequest=async function(id){
+    let r=(requests||[]).find(x=>x.id===id);if(!r)return;
+    let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:r.categoria_nome||'',nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select().single();
+    if(error)return alert('Erro ao aceitar inscrição. Confira se o SQL v29/v30 foi rodado. '+error.message);
+    for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}
+    await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString()}).eq('id',id);await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');
   }
-  const oldApprove=window.approveRequest;
-  window.approveRequest=async function(id){let r=requests.find(x=>x.id===id);if(!r)return;let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:r.categoria_nome||'',nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select().single();if(error)return alert(error.message);for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString()}).eq('id',id);await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');}
-  window.renderPending=function(){let pend=requests.filter(r=>r.status==='pendente');byId('pendingBox').innerHTML=pend.length?pend.map(r=>`<div class="game"><strong>${esc2(r.nome_time)}</strong><p class="muted">Responsável: ${esc2(r.responsavel_nome)} • WhatsApp: ${esc2(r.responsavel_whatsapp)}<br>Campeonato: ${esc2((championships.find(c=>c.id===r.campeonato_id)||{}).nome)}${r.categoria_nome?` • Categoria: ${esc2(r.categoria_nome)}`:''}</p><p>Atletas: ${(r.atletas||[]).length}</p><div class="two-actions"><button class="btn small green" onclick="approveRequest('${r.id}')">Aceitar</button><button class="btn small red" onclick="rejectRequest('${r.id}')">Recusar</button><button class="btn small ghost" onclick="viewRequest('${r.id}')">Ver detalhes</button></div></div>`).join(''):'<div class="empty">Nenhuma inscrição pendente.</div>'};
 
-  function ensureCategoryControls(){
-    installAfterSelect('reqCampeonato','reqCategoria','Categoria/Série da equipe',null);
-    installAfterSelect('manualChamp','manualCategoria','Categoria/Série do clube',null);
-    installAfterSelect('tableChamp','tableCategoria','Categoria/Série da tabela','Todas as categorias');
-    installAfterSelect('scorerChamp','scorerCategoria','Categoria/Série da artilharia','Todas as categorias');
-    installAfterSelect('gamesChamp','gamesCategoria','Categoria/Série dos jogos','Todas as categorias');
-    installAfterSelect('adminGamesChamp','adminGamesCategoria','Categoria/Série dos jogos','Todas as categorias');
-    installAfterSelect('goalChamp','goalCategoria','Categoria/Série dos gols','Todas as categorias');
-    if(byId('manualGameBox') && !byId('manualCategoriaJogo')){const div=document.createElement('div');div.className='categoria-wrap-v30';div.innerHTML='<label>Categoria/Série do jogo</label><select id="manualCategoriaJogo"></select><small class="muted">Obrigatório quando o campeonato tiver categorias.</small>';byId('manualGameBox').insertBefore(div,byId('manualGameBox').firstChild);}
-    updateCatSelect('adminGamesChamp','manualCategoriaJogo',null);
+  const oldRenderPending=window.renderPending;
+  window.renderPending=function(){
+    if(typeof oldRenderPending==='function')oldRenderPending();
+    document.querySelectorAll('#pendingBox .game').forEach((el,i)=>{const pend=(requests||[]).filter(r=>r.status==='pendente')[i];if(pend&&pend.categoria_nome&&!el.querySelector('.category-badge-v30'))el.querySelector('strong')?.insertAdjacentHTML('afterend',`<span class="category-badge-v30">${safeEsc(pend.categoria_nome)}</span>`)});
   }
-  const oldFill=window.fillSelects;
-  window.fillSelects=function(){if(typeof oldFill==='function')oldFill();ensureCategoryControls();[['reqCampeonato','reqCategoria',null],['manualChamp','manualCategoria',null],['tableChamp','tableCategoria','Todas as categorias'],['scorerChamp','scorerCategoria','Todas as categorias'],['gamesChamp','gamesCategoria','Todas as categorias'],['adminGamesChamp','adminGamesCategoria','Todas as categorias'],['adminGamesChamp','manualCategoriaJogo',null],['goalChamp','goalCategoria','Todas as categorias']].forEach(x=>updateCatSelect(x[0],x[1],x[2]));}
 
-  const oldAddManualGame=window.addManualGame;
-  window.addManualGame=async function(){let c=byId('adminGamesChamp').value;if(!byId('manualA').value||!byId('manualB').value)return alert('Informe os dois times.');let categoria=categoriaAtivaCampo(c,'manualCategoriaJogo')||categoriaAtivaCampo(c,'adminGamesCategoria');await db.from('jogos').insert({campeonato_id:c,categoria_nome:categoria,rodada:Number(byId('gameRound').value||1),time_a:byId('manualA').value,time_b:byId('manualB').value,status:'Agendado'});byId('manualA').value='';byId('manualB').value='';await loadAll();}
-  window.drawGames=async function(){let c=byId('adminGamesChamp').value,round=Number(byId('gameRound').value||1),categoria=categoriaAtivaCampo(c,'adminGamesCategoria');let arr=teams.filter(t=>t.campeonato_id===c&&(!categoria||(t.categoria_nome||'')===categoria)).map(t=>t.nome).sort(()=>Math.random()-.5);if(arr.length<2)return alert('É preciso ter pelo menos 2 clubes aprovados nesta categoria/campeonato.');let inserts=[];for(let i=0;i<arr.length;i+=2){if(arr[i+1])inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:arr[i+1],status:'Agendado'});else inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:'BYE',status:'Agendado',vencedor:arr[i]})}await db.from('jogos').insert(inserts);await loadAll();alert('Confrontos sorteados para '+(categoria||'o campeonato')+'.');}
-  const oldEditGame=window.editGame;
-  window.editGame=async function(id){let payload={time_a:byId('ga'+id)?.value,time_b:byId('gb'+id)?.value};if(byId('gc'+id))payload.categoria_nome=byId('gc'+id).value;if(byId('gd'+id))payload.data_jogo=byId('gd'+id).value||null;if(byId('gh'+id))payload.horario_jogo=byId('gh'+id).value||null;if(byId('gl'+id))payload.local_jogo=byId('gl'+id).value||'';if(byId('ge'+id))payload.endereco_jogo=byId('ge'+id).value||'';if(byId('gm'+id))payload.link_maps=byId('gm'+id).value||'';await db.from('jogos').update(payload).eq('id',id);await loadAll();}
-  const oldRenderGamesPublic=window.renderGamesPublic;
-  window.renderGamesPublic=function(){let c=byId('gamesChamp')?.value,cat=byId('gamesCategoria')?.value||'';if(!cat){if(typeof oldRenderGamesPublic==='function')return oldRenderGamesPublic();}const original=games;try{games=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));if(typeof oldRenderGamesPublic==='function')oldRenderGamesPublic();}finally{games=original;}}
-  const oldRenderGamesAdmin=window.renderGamesAdmin;
-  window.renderGamesAdmin=function(){let c=byId('adminGamesChamp')?.value,cat=byId('adminGamesCategoria')?.value||'';const original=games;try{games=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));if(typeof oldRenderGamesAdmin==='function')oldRenderGamesAdmin();setTimeout(()=>{games.forEach(g=>{const card=[...document.querySelectorAll('#gamesAdminBox .game')].find(el=>el.textContent.includes(g.time_a)&&el.textContent.includes(g.time_b));if(card && !byId('gc'+g.id)){card.insertAdjacentHTML('afterbegin','<div class="row"><div><label>Categoria/Série</label><select id="gc'+g.id+'">'+makeCatOptions((championships||[]).find(c=>c.id===g.campeonato_id),'Sem categoria')+'</select></div></div>');byId('gc'+g.id).value=categoriaJogo(g)||'';}})},0);}finally{games=original;}}
+  const oldRenderAdminChamps=window.renderAdminChamps;
+  window.renderAdminChamps=function(){
+    if(typeof oldRenderAdminChamps==='function')oldRenderAdminChamps();
+    document.querySelectorAll('#adminChampsList .game').forEach((el,i)=>{const c=(championships||[])[i];const cats=getCategoriasCampeonato(c);if(cats.length&&!el.querySelector('.category-preview-v30'))el.insertAdjacentHTML('beforeend',`<div class="category-preview-v30">${cats.map(x=>`<span class="category-chip-v30">${safeEsc(x)}</span>`).join('')}</div>`)});
+  }
 
-  function calcStandingsCat(champId,cat){let map={};games.filter(g=>g.campeonato_id===champId&&(!cat||categoriaJogo(g)===cat)&&g.gols_a!=null&&g.gols_b!=null).forEach(g=>{[g.time_a,g.time_b].forEach(t=>{if(!map[t])map[t]={time:t,p:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0}});let A=map[g.time_a],B=map[g.time_b];A.j++;B.j++;A.gp+=g.gols_a;A.gc+=g.gols_b;B.gp+=g.gols_b;B.gc+=g.gols_a;if(g.gols_a>g.gols_b){A.v++;A.p+=3;B.d++}else if(g.gols_a<g.gols_b){B.v++;B.p+=3;A.d++}else{A.e++;B.e++;A.p++;B.p++}A.sg=A.gp-A.gc;B.sg=B.gp-B.gc});return Object.values(map).sort((a,b)=>b.p-a.p||b.v-a.v||b.sg-a.sg||b.gp-a.gp)}
-  window.calcStandings=function(champId){return calcStandingsCat(champId,'')}
-  window.renderStandings=function(){let c=byId('tableChamp')?.value,cat=byId('tableCategoria')?.value||'',arr=calcStandingsCat(c,cat);byId('standingsBox').innerHTML=arr.length?`${cat?`<div class="msg ok"><b>Categoria:</b> ${esc2(cat)}</div>`:''}<table class="table"><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr>`+arr.map(x=>`<tr><td>${esc2(x.time)}</td><td>${x.p}</td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.sg}</td></tr>`).join('')+'</table>':'<div class="empty">Sem resultados lançados para montar a tabela nesta categoria.</div>'}
-  function aggregateGoalsCat(champId,cat){let m={};goals.filter(g=>(!champId||g.campeonato_id===champId)&&(!cat||(g.categoria_nome||'')===cat)).forEach(g=>{let k=g.atleta_nome+'|'+g.equipe+'|'+(g.categoria_nome||'');if(!m[k])m[k]={nome:g.atleta_nome,equipe:g.equipe,gols:0,categoria:g.categoria_nome||''};m[k].gols+=Number(g.quantidade||1)});return Object.values(m).sort((a,b)=>b.gols-a.gols)}
-  window.aggregateGoals=function(champId){return aggregateGoalsCat(champId,'')}
-  window.renderScorers=function(){let arr=aggregateGoalsCat(byId('scorerChamp')?.value,byId('scorerCategoria')?.value||'');byId('scorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${esc2(x.nome)}</td><td>${esc2(x.equipe)}</td><td>${esc2(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum gol cadastrado nesta categoria.</div>'}
-  window.renderAdminScorers=function(){let arr=aggregateGoalsCat(byId('goalChamp')?.value,byId('goalCategoria')?.value||'');byId('adminScorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${esc2(x.nome)}</td><td>${esc2(x.equipe)}</td><td>${esc2(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum artilheiro nesta categoria.</div>'}
-  function reinstallGoalSubmit(){const gf=byId('goalForm');if(!gf||gf.dataset.v30==='1')return;const form=gf.cloneNode(true);gf.parentNode.replaceChild(form,gf);form.dataset.v30='1';form.addEventListener('submit',async e=>{e.preventDefault();let categoria=categoriaAtivaCampo(byId('goalChamp').value,'goalCategoria');let {error}=await db.from('gols').insert({campeonato_id:byId('goalChamp').value,categoria_nome:categoria,atleta_nome:byId('goalPlayer').value,equipe:byId('goalTeam').value,quantidade:Number(byId('goalQtd').value||1)});if(error)return alert('Erro ao salvar gol. Confira se o SQL de categorias foi rodado. '+error.message);e.target.reset();await loadAll()})}
+  window.addManualGame=async function(){
+    let c=byId('adminGamesChamp').value;if(!byId('manualA').value||!byId('manualB').value)return alert('Informe os dois times.');
+    const categoria=needsCategory(c)?selectedCategory('adminGamesCategoria'):'';
+    let payload={campeonato_id:c,categoria_nome:categoria,rodada:Number(byId('gameRound').value||1),time_a:byId('manualA').value,time_b:byId('manualB').value,status:'Agendado',data_jogo:byId('manualDataJogo')?.value||null,horario_jogo:byId('manualHorarioJogo')?.value||null,local_jogo:byId('manualLocalJogo')?.value||'',endereco_jogo:byId('manualEnderecoJogo')?.value||'',link_maps:byId('manualLinkMaps')?.value||''};
+    let {error}=await db.from('jogos').insert(payload);if(error)return alert('Erro ao salvar jogo. Confira se o SQL v21 e v29/v30 foram rodados no Supabase. '+error.message);
+    ['manualA','manualB','manualDataJogo','manualHorarioJogo','manualLocalJogo','manualEnderecoJogo','manualLinkMaps'].forEach(id=>{if(byId(id))byId(id).value=''});await loadAll();
+  }
+  window.drawGames=async function(){
+    let c=byId('adminGamesChamp').value,round=Number(byId('gameRound').value||1),cat=selectedCategory('adminGamesCategoria');
+    let arr=(teams||[]).filter(t=>t.campeonato_id===c&&(!cat||teamCategory(t)===cat)).map(t=>t.nome).sort(()=>Math.random()-.5);
+    if(arr.length<2)return alert('É preciso ter pelo menos 2 clubes aprovados nesta categoria.');
+    let inserts=[];for(let i=0;i<arr.length;i+=2){if(arr[i+1])inserts.push({campeonato_id:c,categoria_nome:cat,rodada:round,time_a:arr[i],time_b:arr[i+1],status:'Agendado'});else inserts.push({campeonato_id:c,categoria_nome:cat,rodada:round,time_a:arr[i],time_b:'BYE',status:'Agendado',vencedor:arr[i]})}
+    const {error}=await db.from('jogos').insert(inserts); if(error)return alert('Erro ao sortear. Confira se o SQL v29/v30 foi rodado. '+error.message); await loadAll(); alert('Confrontos sorteados.');
+  }
 
-  function initV30(){installChampCategoryFields();reinstallChampSubmit();ensureCategoryControls();reinstallTeamForms();reinstallGoalSubmit();try{fillSelects()}catch(e){};try{renderStandings()}catch(e){};try{renderScorers()}catch(e){};try{renderGamesPublic()}catch(e){};try{renderGamesAdmin()}catch(e){};}
-  setTimeout(initV30,150);document.addEventListener('DOMContentLoaded',()=>setTimeout(initV30,250));window.addEventListener('load',()=>setTimeout(initV30,500));
-  const oldRenderAll=window.renderAll;window.renderAll=function(){if(typeof oldRenderAll==='function')oldRenderAll();setTimeout(initV30,50);}
+  window.renderGamesAdmin=function(){
+    let c=byId('adminGamesChamp')?.value,cat=selectedCategory('adminGamesCategoria');let list=(games||[]).filter(g=>(!c||g.campeonato_id===c)&&(!cat||gameCategory(g)===cat));const box=byId('gamesAdminBox');if(!box)return;
+    box.innerHTML=list.length?list.map(g=>`<div class="game"><strong>Rodada ${g.rodada||1}: ${safeEsc(g.time_a)} x ${safeEsc(g.time_b)}</strong>${g.categoria_nome?`<span class="category-badge-v30">${safeEsc(g.categoria_nome)}</span>`:''}<p class="muted">Status: ${safeEsc(g.status)} ${g.gols_a!=null?`• Placar: ${g.gols_a} x ${g.gols_b}`:''}</p><div class="row"><div><label>Time A</label><input id="ga${g.id}" placeholder="Time A" value="${safeEsc(g.time_a)}"></div><div><label>Time B</label><input id="gb${g.id}" placeholder="Time B" value="${safeEsc(g.time_b)}"></div></div><div class="row3"><div><label>Data</label><input id="gd${g.id}" type="date" value="${safeEsc(g.data_jogo||'')}"></div><div><label>Horário</label><input id="gh${g.id}" type="time" value="${safeEsc((g.horario_jogo||'').slice(0,5))}"></div><div><label>Local</label><input id="gl${g.id}" placeholder="Local do jogo" value="${safeEsc(g.local_jogo||'')}"></div></div><label>Endereço completo</label><input id="ge${g.id}" placeholder="Rua, número, bairro, Capão da Canoa - RS" value="${safeEsc(g.endereco_jogo||'')}"><label>Link do Google Maps (opcional)</label><input id="gm${g.id}" placeholder="Link do Google Maps" value="${safeEsc(g.link_maps||'')}"><div class="two-actions"><button class="btn small" onclick="editGame('${g.id}')">Salvar alterações</button>${mapsUrl(g)?`<a class="btn small ghost" href="${safeEsc(mapsUrl(g))}" target="_blank">Testar mapa</a>`:''}</div></div>`).join(''):'<div class="empty">Nenhum confronto nesta categoria.</div>';
+  }
+
+  window.renderGamesPublic=function(){
+    let c=byId('gamesChamp')?.value,cat=selectedCategory('gamesCategoria');let list=(games||[]).filter(g=>(!c||g.campeonato_id===c)&&(!cat||gameCategory(g)===cat));const box=byId('gamesPublicBox');if(!box)return;if(!list.length){box.innerHTML='<div class="empty">Nenhum jogo cadastrado nesta categoria.</div>';return;}
+    box.innerHTML=`<div class="match-grid-v23">${list.map(g=>{let placar=(g.gols_a!=null&&g.gols_b!=null)?`${g.gols_a} x ${g.gols_b}`:'x';return `<button type="button" class="match-card-v23" onclick="abrirDetalhesJogo('${g.id}')"><div class="match-card-v23-top"><span class="round-pill">Rodada ${g.rodada||1}</span><span class="champ-pill">${nomeCampeonatoJogo(g)}</span>${g.categoria_nome?`<span class="category-badge-v30">${safeEsc(g.categoria_nome)}</span>`:''}</div><div class="match-card-v23-main"><div class="match-side-v23">${logoTimeHtmlV23(g.time_a,g.campeonato_id)}<span class="match-name-v23">${safeEsc(g.time_a)}</span></div><div class="match-x-v23">${safeEsc(placar)}</div><div class="match-side-v23 right"><span class="match-name-v23">${safeEsc(g.time_b)}</span>${logoTimeHtmlV23(g.time_b,g.campeonato_id)}</div></div><div class="match-card-v23-info"><span>🕒 ${safeEsc(resumoDataHoraJogo(g))}</span><span>📍 ${safeEsc(g.local_jogo||'Local a definir')}</span></div><div class="match-click-v23">Clique para ver endereço, mapa e rota</div></button>`}).join('')}</div><div id="matchModalV23" class="match-modal-v23" onclick="fecharDetalhesJogoFora(event)"><div id="matchModalCardV23" class="match-modal-card-v23"></div></div>`;
+  }
+
+  const oldAbrirDetalhesJogo=window.abrirDetalhesJogo;
+  window.abrirDetalhesJogo=function(id){ if(typeof oldAbrirDetalhesJogo==='function')oldAbrirDetalhesJogo(id); const g=(games||[]).find(x=>x.id===id); if(g&&g.categoria_nome){const card=byId('matchModalCardV23'); if(card&&!card.querySelector('.category-badge-v30'))card.querySelector('.muted')?.insertAdjacentHTML('beforeend',`<span class="category-badge-v30">${safeEsc(g.categoria_nome)}</span>`);} };
+
+  window.calcStandings=function(champId){let cat=selectedCategory('tableCategoria');let map={};(games||[]).filter(g=>g.campeonato_id===champId&&(!cat||gameCategory(g)===cat)&&g.gols_a!=null&&g.gols_b!=null).forEach(g=>{[g.time_a,g.time_b].forEach(t=>{if(!map[t])map[t]={time:t,p:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0}});let A=map[g.time_a],B=map[g.time_b];A.j++;B.j++;A.gp+=g.gols_a;A.gc+=g.gols_b;B.gp+=g.gols_b;B.gc+=g.gols_a;if(g.gols_a>g.gols_b){A.v++;A.p+=3;B.d++}else if(g.gols_a<g.gols_b){B.v++;B.p+=3;A.d++}else{A.e++;B.e++;A.p++;B.p++}A.sg=A.gp-A.gc;B.sg=B.gp-B.gc});return Object.values(map).sort((a,b)=>b.p-a.p||b.v-a.v||b.sg-a.sg||b.gp-a.gp)}
+  window.renderStandings=function(){let c=byId('tableChamp')?.value,arr=calcStandings(c);const box=byId('standingsBox');if(!box)return;box.innerHTML=arr.length?'<table class="table"><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr>'+arr.map(x=>`<tr><td>${safeEsc(x.time)}</td><td>${x.p}</td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.sg}</td></tr>`).join('')+'</table>':'<div class="empty">Sem resultados lançados para montar a tabela desta categoria.</div>'}
+
+  window.aggregateGoals=function(champId){let cat=selectedCategory('scorerCategoria')||selectedCategory('goalCategoria');let m={};(goals||[]).filter(g=>(!champId||g.campeonato_id===champId)&&(!cat||goalCategory(g)===cat)).forEach(g=>{let k=g.atleta_nome+'|'+g.equipe+'|'+goalCategory(g);if(!m[k])m[k]={nome:g.atleta_nome,equipe:g.equipe,categoria:goalCategory(g),gols:0};m[k].gols+=Number(g.quantidade||1)});return Object.values(m).sort((a,b)=>b.gols-a.gols)}
+  window.renderScorers=function(){let arr=aggregateGoals(byId('scorerChamp')?.value);const box=byId('scorersBox');if(!box)return;box.innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${safeEsc(x.nome)}</td><td>${safeEsc(x.equipe)}</td><td>${safeEsc(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum gol cadastrado nesta categoria.</div>'}
+  window.renderAdminScorers=function(){let champ=byId('goalChamp')?.value;let arr=aggregateGoals(champ);const box=byId('adminScorersBox');if(!box)return;box.innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${safeEsc(x.nome)}</td><td>${safeEsc(x.equipe)}</td><td>${safeEsc(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum artilheiro nesta categoria.</div>'}
+
+  const oldRenderTeams=window.renderTeams;
+  window.renderTeams=function(){if(typeof oldRenderTeams==='function')oldRenderTeams();document.querySelectorAll('#teamsBox tr').forEach((tr,i)=>{if(i===0)return;const t=(teams||[])[i-1];if(t&&t.categoria_nome&&!tr.querySelector('.category-badge-v30'))tr.cells?.[1]?.insertAdjacentHTML('beforeend',`<br><span class="category-badge-v30">${safeEsc(t.categoria_nome)}</span>`)})}
+
 })();
 </script>
 
