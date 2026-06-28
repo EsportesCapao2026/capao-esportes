@@ -681,44 +681,88 @@ function seriesDoCampeonatoV36(c,genero){
   });
   return uniqV33(series);
 }
+function normFiltroTimeV46(v){
+  return String(v||'')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9]+/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+function idFiltroTimeV46(v){return String(v||'').trim();}
+function campoTimeV46(t){
+  const nome=String(t?.categoria_nome||'').trim();
+  const genero=String(t?.categoria_genero||'').trim();
+  const serie=String(t?.serie_nome||'').trim();
+  const partes=divisaoPartsV32(nome||'');
+  return {
+    genero: genero || partes.categoria_genero || nome,
+    serie: serie || partes.serie_nome || '',
+    completo: nome || divisaoLabelV32(genero||partes.categoria_genero, serie||partes.serie_nome)
+  };
+}
 function teamMatchesFilterV36(t,champ,genero,serie){
-  if(champ&&t.campeonato_id!==champ)return false;
-  const recGenero=normalizeCategoriaV35(t.categoria_genero||divisaoPartsV32(t.categoria_nome||'').categoria_genero||t.categoria_nome||'');
-  const recSerie=normalizeCategoriaV35(t.serie_nome||divisaoPartsV32(t.categoria_nome||'').serie_nome||'');
-  if(genero && recGenero!==normalizeCategoriaV35(genero))return false;
-  if(serie && recSerie!==normalizeCategoriaV35(serie))return false;
+  const champSel=idFiltroTimeV46(champ);
+  if(champSel && idFiltroTimeV46(t?.campeonato_id)!==champSel)return false;
+
+  const f=campoTimeV46(t);
+  const gSel=normFiltroTimeV46(genero);
+  const sSel=normFiltroTimeV46(serie);
+  const gRec=normFiltroTimeV46(f.genero);
+  const sRec=normFiltroTimeV46(f.serie);
+  const cRec=normFiltroTimeV46(f.completo);
+
+  if(gSel){
+    const okGenero = gRec===gSel || cRec===gSel || cRec.startsWith(gSel+' ') || cRec.includes(' '+gSel+' ');
+    if(!okGenero)return false;
+  }
+  if(sSel){
+    const okSerie = sRec===sSel || cRec===sSel || cRec.includes(sSel);
+    if(!okSerie)return false;
+  }
   return true;
 }
 function badgeDivisaoTimeV36(t){
-  const genero=t.categoria_genero||divisaoPartsV32(t.categoria_nome||'').categoria_genero||'';
-  const serie=t.serie_nome||divisaoPartsV32(t.categoria_nome||'').serie_nome||'';
-  return `${genero?`<span class="cat-mini-v32">${esc(genero)}</span>`:''}${serie?`<span class="cat-mini-v32 serie-v36">${esc(serie)}</span>`:''}`;
+  const f=campoTimeV46(t);
+  return `${f.genero?`<span class="cat-mini-v32">${esc(f.genero)}</span>`:''}${f.serie?`<span class="cat-mini-v32 serie-v36">${esc(f.serie)}</span>`:''}`;
 }
 function renderTeams(){
-  const champ=$('teamFilterChampV36')?.value || $('manualChamp')?.value || '';
-  const c=championships.find(x=>x.id===champ)||{};
+  const currentChamp=$('teamFilterChampV36')?.value || window.__teamFiltroChampV46 || $('manualChamp')?.value || (championships[0]?.id||'');
+  const champ=String(currentChamp||'');
+  const c=championships.find(x=>String(x.id)===champ)||{};
   const generos=categoriasBaseDoCampeonatoV36(c);
-  const genero=$('teamFilterGeneroV36')?.value || '';
+  const genero=$('teamFilterGeneroV36')?.value || window.__teamFiltroGeneroV46 || '';
   const series=seriesDoCampeonatoV36(c,genero);
-  const serie=$('teamFilterSerieV36')?.value || '';
+  const serie=$('teamFilterSerieV36')?.value || window.__teamFiltroSerieV46 || '';
+
   let arr=(teams||[]).filter(t=>teamMatchesFilterV36(t,champ,genero,serie));
+  const todosDoCampeonato=(teams||[]).filter(t=>!champ || idFiltroTimeV46(t?.campeonato_id)===idFiltroTimeV46(champ));
+  const fallbackAtivo=(!arr.length && todosDoCampeonato.length && (genero || serie));
+  if(fallbackAtivo){ arr=todosDoCampeonato; }
+
   let filterHtml=`<div class="team-filter-bar-v36">
-    <div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="renderTeams()">${championships.map(c=>`<option value="${c.id}" ${c.id===champ?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
-    <div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc(g)}" ${g===genero?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
-    <div><label>Série</label><select id="teamFilterSerieV36" onchange="renderTeams()"><option value="">Todas / sem série</option>${series.map(s=>`<option value="${esc(s)}" ${s===serie?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
+    <div><label>Filtrar campeonato</label><select id="teamFilterChampV36" onchange="window.__teamFiltroChampV46=this.value;window.__teamFiltroGeneroV46='';window.__teamFiltroSerieV46='';renderTeams()">${championships.map(c=>`<option value="${esc(c.id)}" ${String(c.id)===champ?'selected':''}>${esc(c.nome)}</option>`).join('')}</select></div>
+    <div><label>Categoria</label><select id="teamFilterGeneroV36" onchange="window.__teamFiltroGeneroV46=this.value;window.__teamFiltroSerieV46='';renderTeams()"><option value="">Todas</option>${generos.map(g=>`<option value="${esc(g)}" ${String(g)===String(genero)?'selected':''}>${esc(g)}</option>`).join('')}</select></div>
+    <div><label>Série</label><select id="teamFilterSerieV36" onchange="window.__teamFiltroSerieV46=this.value;renderTeams()"><option value="">Todas / sem série</option>${series.map(s=>`<option value="${esc(s)}" ${String(s)===String(serie)?'selected':''}>${esc(s)}</option>`).join('')}</select></div>
     <button class="btn ghost" onclick="limparFiltroTimesV36()">Limpar filtro</button>
   </div>`;
-  let html=arr.length?`<div class="team-compact-list-v36">${arr.map(t=>`
+
+  const aviso=fallbackAtivo?`<div class="msg warn"><b>Atenção:</b> não encontrei clubes exatamente nessa categoria/série, então estou mostrando todos os clubes aprovados deste campeonato para você não ficar sem acesso aos times.</div>`:'';
+  let html=arr.length?`${aviso}<div class="team-compact-list-v36">${arr.map(t=>`
     <div class="team-compact-row-v36">
       <div class="team-compact-main-v36">
         ${t.logo_data?`<img src="${esc(t.logo_data)}" class="team-logo-v36" alt="Escudo ${esc(t.nome)}">`:`<div class="team-logo-ph-v36">${esc(iniciaisTime(t.nome))}</div>`}
-        <div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgeDivisaoTimeV36(t)}</div></div>
+        <div><strong>${esc(t.nome)}</strong><div class="team-badges-v36">${badgeDivisaoTimeV36(t)}</div><small class="muted">${esc((championships.find(c=>String(c.id)===String(t.campeonato_id))||{}).nome||'Campeonato')}</small></div>
       </div>
-      <button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver time</button>
-    </div>`).join('')}</div>`:'<div class="empty">Nenhum clube aprovado para este filtro.</div>';
+      <button class="btn small ghost" onclick="viewTeamPlayers('${esc(t.id)}')">Ver time</button>
+    </div>`).join('')}</div>`:`<div class="empty">Nenhum clube aprovado encontrado. Neste campeonato não há nenhum registro na tabela equipes, ou o clube ainda está apenas como inscrição pendente.</div>`;
   $('teamsBox').innerHTML=filterHtml+html;
 }
 function limparFiltroTimesV36(){
+  window.__teamFiltroGeneroV46='';
+  window.__teamFiltroSerieV46='';
   if($('teamFilterGeneroV36'))$('teamFilterGeneroV36').value='';
   if($('teamFilterSerieV36'))$('teamFilterSerieV36').value='';
   renderTeams();
