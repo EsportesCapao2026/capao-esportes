@@ -631,11 +631,70 @@ function renderPending(){
   }).join('');
 }
 function viewRequest(id){
-  let r=requests.find(x=>x.id===id); if(!r)return;
+  openRequestReportV41(id);
+}
+function openRequestReportV41(id){
+  const r=requests.find(x=>x.id===id); if(!r)return;
+  let modal=$('requestReportModalV41');
+  if(!modal){
+    document.body.insertAdjacentHTML('beforeend','<div id="requestReportModalV41" class="team-report-modal-v34" onclick="if(event.target.id===\'requestReportModalV41\')closeRequestReportV41()"><div id="requestReportCardV41" class="team-report-card-v34"></div></div>');
+    modal=$('requestReportModalV41');
+  }
   const c=championships.find(x=>x.id===r.campeonato_id)||{};
   const cat=categoriaRecordLabelV35(r)||'Sem divisão';
-  const listaAtletas=(r.atletas||[]).map((a,i)=>`${i+1}. ${a.numero?('#'+a.numero+' - '):''}${a.nome} - ${a.documento}${a.capitao?' (C)':''} ${a.observacao?'- '+a.observacao:''}`).join('\n');
-  alert(`Time: ${r.nome_time}\nCampeonato: ${c.nome||'-'}\nCategoria/Série: ${cat}\nResponsável: ${r.responsavel_nome}\nTécnico: ${r.tecnico_nome||'-'}\n\nAtletas:\n${listaAtletas}`);
+  const atletas=r.atletas||[];
+  const rows=atletas.length?atletas.map((a,i)=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'')}${a.capitao?'<span class="captain-badge-v34">C</span>':''}</td><td>${esc(a.documento||'-')}</td><td>${esc(a.observacao||'-')}</td></tr>`).join(''):'<tr><td colspan="4">Nenhum atleta informado.</td></tr>';
+  const cats=categoriasDoCampeonatoV32(c);
+  const selectDiv=cats.length?`<div class="row" style="margin:12px 0"><div><label>Categoria/série para aprovação</label><select id="requestReportDivisaoV41">${optionsDivisaoParaCampeonatoV37(r.campeonato_id,cat,true)}</select><small class="muted">O administrador pode corrigir a categoria/série antes de aceitar.</small></div></div>`:'';
+  $('requestReportCardV41').innerHTML=`
+    <div class="team-report-head-v34">
+      <div><h2 style="margin:0">Inscrição do clube</h2><p class="muted" style="margin:4px 0 0">${esc(r.nome_time)} • ${esc(c.nome||'-')}</p></div>
+      <button class="btn small ghost" onclick="closeRequestReportV41()">Fechar</button>
+    </div>
+    <div class="team-report-body-v34">
+      <div class="team-report-meta-v34">
+        <div><b>Time</b><br>${esc(r.nome_time||'-')}</div>
+        <div><b>Campeonato</b><br>${esc(c.nome||'-')}</div>
+        <div><b>Categoria/Série</b><br>${esc(cat)}</div>
+        <div><b>Responsável</b><br>${esc(r.responsavel_nome||'-')}<br><span class="muted">${esc(r.responsavel_whatsapp||'')}</span></div>
+        <div><b>Técnico</b><br>${esc(r.tecnico_nome||'-')}</div>
+      </div>
+      ${selectDiv}
+      <div class="team-report-actions-v34" style="display:flex;gap:10px;flex-wrap:wrap;margin:14px 0">
+        <button class="btn green" onclick="approveRequestFromReportV41('${r.id}')">Aceitar inscrição</button>
+        <button class="btn red" onclick="rejectRequestFromReportV41('${r.id}')">Recusar</button>
+        <button class="btn ghost" onclick="gerarPdfInscricaoV41('${r.id}')">Gerar PDF / Súmula</button>
+      </div>
+      <table class="team-report-table-v34"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Observação</th></tr>${rows}</table>
+    </div>`;
+  modal.classList.add('active');
+}
+function closeRequestReportV41(){const m=$('requestReportModalV41');if(m)m.classList.remove('active')}
+async function approveRequestFromReportV41(id){
+  const sel=$('requestReportDivisaoV41');
+  if(sel){const pend=$('pendCat_'+id); if(pend)pend.value=sel.value;}
+  await approveRequest(id);
+  closeRequestReportV41();
+}
+async function rejectRequestFromReportV41(id){
+  await rejectRequest(id);
+  closeRequestReportV41();
+}
+function gerarPdfInscricaoV41(id){
+  const r=requests.find(x=>x.id===id); if(!r)return;
+  const c=championships.find(x=>x.id===r.campeonato_id)||{};
+  const cat=categoriaRecordLabelV35(r)||'Sem divisão';
+  const atletas=r.atletas||[];
+  try{
+    const {jsPDF}=window.jspdf||{}; if(!jsPDF)throw new Error('PDF indisponível');
+    const doc=new jsPDF({unit:'pt',format:'a4'}); let y=44;
+    doc.setFont('helvetica','bold');doc.setFontSize(16);doc.text('Ficha de Inscrição / Relação de Atletas',44,y);y+=24;
+    doc.setFont('helvetica','normal');doc.setFontSize(11);
+    [`Campeonato: ${c.nome||'-'}`,`Time: ${r.nome_time||'-'}`,`Categoria/Série: ${cat}`,`Responsável: ${r.responsavel_nome||'-'}  WhatsApp: ${r.responsavel_whatsapp||'-'}`,`Técnico: ${r.tecnico_nome||'-'}`].forEach(line=>{doc.text(line,44,y);y+=18;});
+    y+=10;doc.setFont('helvetica','bold');doc.text('Nº',44,y);doc.text('Atleta',88,y);doc.text('Documento',300,y);doc.text('C',500,y);y+=16;doc.setFont('helvetica','normal');
+    atletas.forEach(a=>{if(y>760){doc.addPage();y=44;}doc.text(String(a.numero||'-'),44,y);doc.text(String(a.nome||'-'),88,y);doc.text(String(a.documento||'-'),300,y);doc.text(a.capitao?'C':'',500,y);y+=18;});
+    doc.save(`inscricao-${(r.nome_time||'time').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.pdf`);
+  }catch(e){alert('Não foi possível gerar o PDF neste navegador.');}
 }
 async function approveRequest(id){
   let r=requests.find(x=>x.id===id);if(!r)return;
