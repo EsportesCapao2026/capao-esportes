@@ -1193,6 +1193,40 @@ window.addEventListener('load',()=>{const params=new URLSearchParams(location.se
 document.addEventListener('change',function(e){
   if(e.target&&['manualChamp','manualCategoria'].includes(e.target.id)){setTimeout(renderTeams,0)}
 });
+
+
+/* V44 EMERGENCIA - remove popups de detalhes sem mexer no restante do sistema */
+function atletasRowsHtmlV44(atletas){
+  atletas=atletas||[];
+  if(!atletas.length)return '<tr><td colspan="4">Nenhum atleta salvo.</td></tr>';
+  return atletas.map((a,i)=>`<tr><td>${esc(a.numero||'-')}</td><td>${esc(a.nome||'')}${a.capitao?'<span class="captain-badge-v34">C</span>':''}</td><td>${esc(a.documento||'-')}</td><td>${esc(a.observacao||'-')}</td></tr>`).join('');
+}
+function cardDetalhesEquipeV44(obj,tipo){
+  const isReq=tipo==='request';
+  const c=championships.find(x=>x.id===obj.campeonato_id)||{};
+  const nome=isReq?(obj.nome_time||'Equipe'):(obj.nome||'Equipe');
+  const responsavel=isReq?(obj.responsavel_nome||'-'):(obj.responsavel||'-');
+  const whats=isReq?(obj.responsavel_whatsapp||'-'):(obj.whatsapp||'-');
+  const tecnico=obj.tecnico_nome||'-';
+  const cat=categoriaRecordLabelV35(obj)||obj.categoria_nome||'Sem divisão';
+  const rows=atletasRowsHtmlV44(obj.atletas||[]);
+  const selectDiv=(!isReq && categoriasDoCampeonatoV32(c).length)?`<div class="row" style="margin:12px 0"><div><label>Alterar categoria/série do time</label><select id="teamReportDivisaoV37">${optionsDivisaoParaCampeonatoV37(obj.campeonato_id,categoriaRecordLabelV35(obj),true)}</select></div><div style="display:flex;align-items:end"><button class="btn ghost" onclick="alterarDivisaoTimeV37('${obj.id}')">Salvar divisão</button></div></div>`:'';
+  const acoes=isReq?`<button class="btn green" onclick="approveRequest('${obj.id}')">Aceitar inscrição</button><button class="btn red" onclick="rejectRequest('${obj.id}')">Recusar</button>`:`<button class="btn green" onclick="gerarPdfEquipeV34('${obj.id}')">Gerar PDF / Súmula</button>`;
+  return `<div class="card" style="border:1px solid rgba(255,255,255,.14)"><div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap"><div><h2 style="margin:0">${isReq?'Detalhes da inscrição':'Relação de atletas'}</h2><p class="muted" style="margin:6px 0 0">${esc(nome)} • ${esc(c.nome||'-')} • ${esc(cat)}</p></div><button class="btn ghost" onclick="${isReq?'renderPending()':'renderTeams()'}">Voltar para a lista</button></div><div class="team-report-meta-v34"><div><b>Campeonato</b><br>${esc(c.nome||'-')}</div><div><b>Responsável</b><br>${esc(responsavel)}<br><span class="muted">${esc(whats)}</span></div><div><b>Técnico</b><br>${esc(tecnico)}</div><div><b>Categoria/Série</b><br>${esc(cat)}</div></div><div class="team-report-actions-v34">${acoes}</div>${selectDiv}<table class="team-report-table-v34"><tr><th>Nº</th><th>Atleta</th><th>Documento</th><th>Observação</th></tr>${rows}</table></div>`;
+}
+viewRequest=function(id){
+  const r=(requests||[]).find(x=>x.id===id); if(!r)return;
+  $('pendingBox').innerHTML=cardDetalhesEquipeV44(r,'request');
+  $('pendingBox').scrollIntoView({behavior:'smooth',block:'start'});
+};
+openTeamReportV34=function(id){
+  const t=(teams||[]).find(x=>x.id===id); if(!t)return;
+  $('teamsBox').innerHTML=cardDetalhesEquipeV44(t,'team');
+  $('teamsBox').scrollIntoView({behavior:'smooth',block:'start'});
+};
+viewTeamPlayers=function(id){openTeamReportV34(id)};
+closeTeamReportV34=function(){renderTeams()};
+
 </script>
 </body>
 </html>
