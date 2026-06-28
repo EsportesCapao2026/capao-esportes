@@ -234,6 +234,38 @@ body{background:#020605!important;overflow-x:hidden!important;}
 .premium-landing{margin-top:0!important;padding:32px 44px 34px!important;min-height:350px!important;}
 .premium-landing h2{font-size:clamp(34px,4.7vw,68px)!important;max-width:900px!important;}
 @media(max-width:1100px){.app-premium{padding-left:0!important;}#publicTabs.premium-sidebar{position:relative!important;width:100%!important;height:auto!important;min-height:auto!important;flex-direction:row!important;flex-wrap:nowrap!important;overflow-x:auto!important;overflow-y:hidden!important;padding:10px 12px!important;border-right:0!important;border-bottom:1px solid rgba(255,255,255,.10)!important;}#publicTabs.premium-sidebar .sidebar-logo-box,#publicTabs.premium-sidebar .sidebar-official-card{display:none!important;}#publicTabs.premium-sidebar .tab{width:auto!important;}.premium-topbar{position:relative!important;justify-content:flex-end!important;}.premium-wrap{padding:16px!important;}}
+
+
+/* v28 - home mais limpa e correcoes de contraste */
+.premium-dashboard-clean{grid-template-columns:.85fr 1.55fr 1.35fr!important;gap:16px!important;align-items:stretch!important;margin-top:18px!important}
+.premium-dashboard-clean .premium-stat-card{min-height:190px!important}
+.premium-mini-table-card{grid-column:auto!important}
+.premium-mini-table{width:100%;border-collapse:separate;border-spacing:0 8px;margin-top:8px}
+.premium-mini-table th{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#93a4b7;text-align:left;padding:0 8px}
+.premium-mini-table td{padding:10px 8px;background:rgba(255,255,255,.045);border-top:1px solid rgba(255,255,255,.08);border-bottom:1px solid rgba(255,255,255,.08);color:#f8fafc;font-weight:750}
+.premium-mini-table td:first-child{border-left:1px solid rgba(255,255,255,.08);border-radius:12px 0 0 12px}
+.premium-mini-table td:last-child{border-right:1px solid rgba(255,255,255,.08);border-radius:0 12px 12px 0;text-align:center;color:#19f5a8}
+.section .card,.admin-panel.card,#loginBox{background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.025))!important;border:1px solid rgba(255,255,255,.12)!important;color:#f8fafc!important;box-shadow:0 22px 70px rgba(0,0,0,.25)!important}
+.section .card h2,.section .card h3,.admin-panel h2,.admin-panel h3{color:#fff!important}
+.muted,small.muted{color:#a9b4c2!important}
+.player,.game,.empty{background:rgba(2,8,7,.72)!important;border:1px solid rgba(255,255,255,.12)!important;color:#f8fafc!important}
+input,select,textarea{background:rgba(255,255,255,.055)!important;border:1px solid rgba(255,255,255,.16)!important;color:#f8fafc!important;box-shadow:none!important}
+input::placeholder,textarea::placeholder{color:#8d99a8!important}
+label{color:#e5e7eb!important}
+input[type="file"]{color:#dbeafe!important;background:rgba(255,255,255,.055)!important}
+input[type="file"]::file-selector-button{border:0;border-radius:10px;background:#13d891;color:#052018;font-weight:900;padding:8px 12px;margin-right:10px;cursor:pointer}
+.msg{background:rgba(0,194,168,.10)!important;border-color:rgba(0,224,154,.24)!important;color:#e5fdf6!important}
+.msg.ok{background:rgba(17,163,106,.14)!important;border-color:rgba(17,163,106,.35)!important;color:#d1fae5!important}
+.msg.err{background:rgba(239,68,68,.14)!important;border-color:rgba(239,68,68,.38)!important;color:#fecaca!important}
+.cbjd-page{background:rgba(2,8,7,.80)!important;border:1px solid rgba(255,255,255,.12)!important;color:#f8fafc!important}
+.cbjd-page summary{background:rgba(255,255,255,.035)!important;color:#19f5a8!important}
+.cbjd-page pre{color:#e5e7eb!important;background:transparent!important}
+.table td{background:rgba(255,255,255,.045)!important;color:#f8fafc!important;border-color:rgba(255,255,255,.10)!important}
+.table th{color:#93a4b7!important}
+.tag{background:rgba(0,224,154,.13)!important;color:#19f5a8!important}
+.preview{background:rgba(255,255,255,.08)!important;border-color:rgba(255,255,255,.18)!important}
+@media(max-width:1100px){.premium-dashboard-clean{grid-template-columns:1fr!important}.premium-mini-table-card,.premium-next-games{grid-column:auto!important}}
+
 </style>
 </head>
 <body>
@@ -257,13 +289,10 @@ body{background:#020605!important;overflow-x:hidden!important;}
 <button class="btn ghost premium-outline" onclick="goPublic('admin')">👤 Entrar no painel</button>
 </div>
 </div>
-<div class="premium-dashboard-grid">
-<div class="premium-stat-card premium-stat-main"><span>Campeonatos ativos</span><strong id="premiumStatChamps">0</strong><small>competições cadastradas</small><button onclick="goPublic('campeonatos')">Ver todos os campeonatos →</button></div>
+<div class="premium-dashboard-grid premium-dashboard-clean">
+<div class="premium-stat-card premium-stat-main"><span>Campeonatos ativos</span><strong id="premiumStatChamps">0</strong><small>competições cadastradas no sistema</small><button onclick="goPublic('campeonatos')">Ver campeonatos →</button></div>
+<div class="premium-stat-card premium-mini-table-card"><div class="stat-head"><span>Tabela do campeonato atual</span><button onclick="goPublic('tabelas')">Ver tabela completa →</button></div><div id="premiumMiniTableBox"><small>Carregando classificação...</small></div></div>
 <div class="premium-stat-card premium-next-games"><div class="stat-head"><span>Próximos jogos</span><button onclick="goPublic('confrontos')">Ver todos →</button></div><div id="premiumNextGamesBox"><small>Carregando jogos...</small></div></div>
-<div class="premium-stat-card accent-yellow"><span>Últimas denúncias</span><strong id="premiumStatDenuncias">0</strong><small>denúncias registradas</small><button onclick="goPublic('denuncia')">Ver denúncias →</button></div>
-<div class="premium-stat-card accent-teal"><span>Artilheiros</span><strong id="premiumStatGols">0</strong><small>gols marcados</small><button onclick="goPublic('artilheiros')">Ver artilheiros →</button></div>
-<div class="premium-stat-card accent-blue"><span>Regras públicas</span><strong>CBJD</strong><small>regras municipais + CBJD</small><button onclick="goPublic('regrasPublicas')">Ver regras →</button></div>
-<div class="premium-stat-card accent-green"><span>Transparência e Fair Play</span><strong>✓</strong><small>Compromisso com o esporte limpo, seguro e inclusivo.</small><button onclick="goPublic('punicoesPublicas')">Saiba mais →</button></div>
 </div>
 <div class="premium-official-strip">🛡️ <div><b>Sistema oficial e auditado pela Prefeitura Municipal de Capão da Canoa</b><br/><span>Gestão 2025–2028 • Transparência, Trabalho e Reconstrução</span></div></div>
 <div class="champ-title"><div><h2>Campeonatos Municipais</h2><p class="muted">Escolha um campeonato para consultar informações, jogos, classificação e artilharia.</p></div></div><div class="grid premium-champ-grid" id="championshipCards"></div>
@@ -317,8 +346,7 @@ async function loadCbjdPages(){try{const {data,error}=await db.from('cbjd_pagina
 function updatePremiumHome(){
   try{
     const stChamps=$('premiumStatChamps'); if(stChamps)stChamps.textContent=championships.length||0;
-    const stDen=$('premiumStatDenuncias'); if(stDen)stDen.textContent=complaints.length||0;
-    const stGols=$('premiumStatGols'); if(stGols)stGols.textContent=(goals||[]).reduce((s,g)=>s+Number(g.quantidade||0),0)||0;
+
     const box=$('premiumNextGamesBox'); if(box){
       const proximos=(games||[]).filter(g=>String(g.status||'').toLowerCase()!=='finalizado').slice(0,2);
       if(!proximos.length){box.innerHTML='<small>Nenhum jogo agendado ainda.</small>';}
@@ -328,6 +356,19 @@ function updatePremiumHome(){
         const logoB=lb&&lb.logo_data?`<img class="premium-next-logo" src="${esc(lb.logo_data)}">`:`<div class="premium-next-logo" style="display:grid;place-items:center;color:#03110e;font-weight:900">${esc(iniciaisTime(g.time_b))}</div>`;
         return `<div class="premium-next-row">${logoA}<div class="premium-next-team">${esc(g.time_a)}</div><div class="premium-next-time">${fmtGameTime(g.horario_jogo)}</div><div class="premium-next-team" style="text-align:right">${esc(g.time_b)}</div>${logoB}<div class="premium-next-meta">${fmtGameDate(g.data_jogo)} • Rodada ${g.rodada||1} • ${esc(g.local_jogo||'Local a definir')}</div></div>`;
       }).join('')}
+    }
+
+    const mini=$('premiumMiniTableBox'); if(mini){
+      const atual=(championships||[]).find(c=>c.status==='em_andamento') || (championships||[]).find(c=>c.status==='inscricoes_abertas') || (championships||[])[0];
+      if(!atual){mini.innerHTML='<small>Nenhum campeonato cadastrado ainda.</small>';}
+      else{
+        const arr=calcStandings(atual.id).slice(0,5);
+        if(!arr.length){
+          mini.innerHTML=`<small><b>${esc(atual.nome)}</b><br>A classificação aparecerá aqui após o lançamento dos primeiros resultados.</small>`;
+        }else{
+          mini.innerHTML=`<small style="display:block;margin-bottom:8px;color:#a9b4c2">${esc(atual.nome)}</small><table class="premium-mini-table"><tr><th>Time</th><th>P</th></tr>${arr.map((x,i)=>`<tr><td>${i+1}. ${esc(x.time)}</td><td>${x.p}</td></tr>`).join('')}</table>`;
+        }
+      }
     }
   }catch(e){console.warn('premium home',e)}
 }
