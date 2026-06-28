@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Sistema Inteligente | Secretaria de Esportes de Capao da Canoa | v18 CBJD completo</title>
+<title>Sistema Inteligente | Secretaria de Esportes de Capao da Canoa | v20 Regras Municipais + CBJD</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
@@ -16,7 +16,7 @@
 </head>
 <body>
 <div class="app">
-  <div class="top no-print"><div class="hero"><div class="brand"><div class="logo">⚽</div><div><h1>Sistema Inteligente</h1><p class="sub">Secretaria de Esportes de Capão da Canoa • v18 CBJD completo</p></div></div><div class="hero-actions"><button class="btn secondary" onclick="goPublic('campeonatos')">Campeonatos</button><button class="btn secondary" onclick="goPublic('denuncia')">Quero fazer uma denúncia</button><button class="btn green" onclick="goPublic('admin')">Painel administrativo</button></div></div></div>
+  <div class="top no-print"><div class="hero"><div class="brand"><div class="logo">⚽</div><div><h1>Sistema Inteligente</h1><p class="sub">Secretaria de Esportes de Capão da Canoa • v20 Regras Municipais + CBJD</p></div></div><div class="hero-actions"><button class="btn secondary" onclick="goPublic('campeonatos')">Campeonatos</button><button class="btn secondary" onclick="goPublic('denuncia')">Quero fazer uma denúncia</button><button class="btn green" onclick="goPublic('admin')">Painel administrativo</button></div></div></div>
   <main class="wrap">
     <div class="tabs no-print" id="publicTabs">
       <button class="tab active" data-tab="campeonatos" onclick="goPublic('campeonatos')">Campeonatos</button>
@@ -134,41 +134,171 @@ async function deleteScorer(nome,equipe){let champ=$('goalChamp').value;if(!conf
 async function setScorerGoals(nome,equipe){let champ=$('goalChamp').value;let qtd=Number($(scorerInputId(nome,equipe)).value||0);await db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(qtd>0)await db.from('gols').insert({campeonato_id:champ,atleta_nome:nome,equipe:equipe,quantidade:qtd});await loadAll()}
 
 
-const CBJD_RESUMO = [
-  {tema:'Texto integral anexado',texto:'O sistema agora carrega o texto consolidado da CBJD a partir do PDF enviado, organizado por páginas para consulta dentro de cada campeonato.'},
-  {tema:'Aplicação subsidiária',texto:'Quando ativada pelo administrador, a CBJD será usada quando o regulamento municipal for omisso, insuficiente ou não atender ao critério necessário para o caso.'},
-  {tema:'Consulta oficial',texto:'Para decisão formal, a comissão deve conferir o texto integral e registrar a fundamentação da decisão no processo do campeonato.'}
-];
-function renderCbjdPages(prefix){
-  const box=$(prefix+'CbjdPages'); if(!box)return;
-  const q=($(prefix+'CbjdSearch')?.value||'').toLowerCase().trim();
-  let arr=cbjdPages||[];
-  if(q)arr=arr.filter(p=>(p.texto||'').toLowerCase().includes(q)||String(p.pagina).includes(q));
-  if(!arr.length){box.innerHTML='<div class="empty">Nenhum texto da CBJD encontrado. Confirme se o SQL V18 foi rodado no Supabase.</div>';return;}
-  box.innerHTML=arr.map((p,i)=>`<details class="cbjd-page" ${q||i<2?'open':''}><summary>CBJD - página ${p.pagina}</summary><pre>${esc(p.texto||'')}</pre></details>`).join('');
+let currentRulesBook='municipais';
+let selectedRulesChampId='';
+let cbjdArticlesCache=null;
+
+function cleanCbjdText(texto){
+  return String(texto||'')
+    .replace(/\uFFFE/g,'')
+    .replace(/￾/g,'')
+    .replace(/(\w)-\s+(\w)/g,'$1$2')
+    .replace(/[ \t]+/g,' ')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
 }
-function cbjdHtml(prefix='pub'){
-  setTimeout(()=>renderCbjdPages(prefix),0);
-  return `<div class="card" style="background:#f8fbff"><h3>CBJD - texto consolidado completo</h3><p class="muted">Texto carregado a partir do PDF da CBJD enviado. Use a busca para localizar artigos, termos, infrações, recursos, sanções e procedimentos.</p>${CBJD_RESUMO.map(r=>`<div class="msg"><b>${esc(r.tema)}:</b> ${esc(r.texto)}</div>`).join('')}<div class="cbjd-tools"><input id="${prefix}CbjdSearch" oninput="renderCbjdPages('${prefix}')" placeholder="Buscar na CBJD: ex. Art. 214, agressão, suspensão, denúncia, prova..."><button class="btn ghost" onclick="renderCbjdPages('${prefix}')">Buscar</button></div><div class="cbjd-note">Dica: pesquise por número do artigo ou palavra-chave. Ex.: 214, suspensão, agressão, recurso, prova.</div><div id="${prefix}CbjdPages"></div></div>`
+
+function formatCbjdArticle(texto){
+  return cleanCbjdText(texto)
+    .replace(/(PENA:)/g,'\n\n$1')
+    .replace(/(Parágrafo único\.?)/g,'\n\n$1')
+    .replace(/(§ ?\d+[º°]?)/g,'\n\n$1')
+    .replace(/(\bI —)/g,'\n\n$1')
+    .replace(/(\bII —)/g,'\n$1')
+    .replace(/(\bIII —)/g,'\n$1')
+    .replace(/(\bIV —)/g,'\n$1')
+    .replace(/(\bV —)/g,'\n$1')
+    .replace(/(\bVI —)/g,'\n$1')
+    .replace(/(\bVII —)/g,'\n$1')
+    .replace(/(\bVIII —)/g,'\n$1')
+    .replace(/(\bIX —)/g,'\n$1')
+    .replace(/(\bX —)/g,'\n$1')
+    .replace(/(\bXI —)/g,'\n$1')
+    .replace(/\n{3,}/g,'\n\n')
+    .trim();
 }
-function renderRulesPublic(){
-  const sel=$('rulesChamp'); const box=$('rulesPublicBox'); if(!sel||!box)return;
-  const c=championships.find(x=>x.id===sel.value) || championships[0];
+
+function buildCbjdArticles(){
+  if(cbjdArticlesCache)return cbjdArticlesCache;
+  const paginas=(cbjdPages||[]).slice().sort((a,b)=>Number(a.pagina)-Number(b.pagina));
+  const textoCompleto=paginas.map(p=>`\n\n[[PAGINA:${p.pagina}]]\n${p.texto||''}`).join('\n\n');
+  const texto=cleanCbjdText(textoCompleto);
+  const matches=[...texto.matchAll(/Art\. ?\d+[A-Z]?\.?/g)];
+  const artigos=[];
+  for(let i=0;i<matches.length;i++){
+    const inicio=matches[i].index;
+    const fim=i+1<matches.length?matches[i+1].index:texto.length;
+    const bloco=texto.slice(inicio,fim).trim();
+    const numero=(bloco.match(/^Art\. ?(\d+[A-Z]?)/)||[])[1]||'';
+    const antes=texto.slice(Math.max(0,inicio-600),inicio);
+    const pags=antes.match(/\[\[PAGINA:(\d+)\]\]/g);
+    const pagina=pags&&pags.length?pags[pags.length-1].replace(/\D/g,''):'';
+    artigos.push({numero,pagina,texto:formatCbjdArticle(bloco.replace(/\[\[PAGINA:\d+\]\]/g,''))});
+  }
+  cbjdArticlesCache=artigos;
+  return artigos;
+}
+
+function filterCbjdArticles(termo){
+  const busca=String(termo||'').trim().toLowerCase();
+  const artigos=buildCbjdArticles();
+  if(!busca)return artigos;
+  const buscaNum=busca.replace(/[^\d]/g,'');
+  return artigos.filter(a=>{
+    const n=String(a.numero||'').toLowerCase();
+    const t=String(a.texto||'').toLowerCase();
+    return n===busca || (buscaNum && n.replace(/[^\d]/g,'')===buscaNum) || t.includes(busca);
+  });
+}
+
+function renderMunicipalRulesContent(){
+  const box=$('rulesBookContent'); if(!box)return;
+  const champId=$('rulesChampSelect')?.value || selectedRulesChampId || championships[0]?.id || '';
+  selectedRulesChampId=champId;
+  const c=championships.find(x=>x.id===champId);
   if(!c){box.innerHTML='<div class="empty">Nenhum campeonato cadastrado.</div>';return;}
-  const ativo = c.cbjd_ativo===true || c.cbjd_ativo==='true';
-  const regras = c.regras_municipais || 'As regras específicas deste campeonato ainda não foram cadastradas pelo administrador.';
-  box.innerHTML=`<div class="msg ${ativo?'ok':'err'}"><b>CBJD subsidiária:</b> ${ativo?'Ativada neste campeonato. Quando a regra municipal não atender o critério, a CBJD será usada de forma subsidiária.':'Desativada neste campeonato. Valerão apenas as regras municipais cadastradas e demais normas definidas pela organização.'}</div><h3>${esc(c.nome)}</h3><div class="card" style="box-shadow:none;background:#f8fbff"><h3>Regras municipais</h3><pre style="white-space:pre-wrap;font-family:inherit">${esc(regras)}</pre></div>${ativo?cbjdHtml('pub'):''}`;
+  const regras=(c.regras_municipais||'').trim();
+  const cbjdAtivo=c.cbjd_ativo===true || c.cbjd_ativo==='true';
+  box.innerHTML=`
+    <div class="msg ${cbjdAtivo?'ok':'err'}">
+      <b>Regra subsidiária do CBJD:</b> ${cbjdAtivo?'Ativada neste campeonato. Se a regra municipal for omissa, será aplicado o CBJD.':'Desativada neste campeonato pelo administrador.'}
+    </div>
+    <h3>${esc(c.nome)}</h3>
+    <div class="card" style="box-shadow:none;background:#f8fbff">
+      <h3>Regras municipais</h3>
+      ${regras?`<pre style="white-space:pre-wrap;font-family:inherit;line-height:1.55">${esc(regras)}</pre>`:`<div class="empty">As regras municipais deste campeonato ainda não foram cadastradas pelo administrador.</div>`}
+    </div>`;
 }
+
+function renderCbjdRulesContent(){
+  const box=$('rulesBookContent'); if(!box)return;
+  const termo=$('cbjdSearchInput')?.value||'';
+  const encontrados=filterCbjdArticles(termo);
+  if(!(cbjdPages||[]).length){box.innerHTML='<div class="empty">Nenhum texto da CBJD encontrado. Confirme se o SQL do CBJD foi rodado no Supabase.</div>';return;}
+  if(!encontrados.length){box.innerHTML='<div class="empty">Nenhum artigo encontrado. Tente pesquisar apenas o número, por exemplo: 214.</div>';return;}
+  box.innerHTML=encontrados.map((a,i)=>`
+    <details class="cbjd-page" ${termo||i<3?'open':''}>
+      <summary><strong>Art. ${esc(a.numero)} - CBJD</strong>${a.pagina?` <span style="font-size:12px;color:#64748b;margin-left:8px;">pág. ${esc(a.pagina)}</span>`:''}</summary>
+      <pre>${esc(a.texto)}</pre>
+    </details>`).join('');
+}
+
+function switchRulesBook(book){
+  currentRulesBook=book;
+  const header=$('rulesBookHeader');
+  const controls=$('rulesBookControls');
+  document.querySelectorAll('[data-rules-book]').forEach(b=>b.classList.toggle('secondary',b.dataset.rulesBook!==book));
+  if(!header||!controls)return;
+  if(book==='municipais'){
+    header.textContent='Livro de Regras Municipais';
+    controls.innerHTML=`<div class="row"><div><label>Escolha o campeonato</label><select id="rulesChampSelect" onchange="renderMunicipalRulesContent()">${championships.map(c=>`<option value="${c.id}" ${c.id===selectedRulesChampId?'selected':''}>${esc(c.nome)}</option>`).join('')||'<option value="">Nenhum campeonato</option>'}</select></div></div>`;
+    if($('rulesChampSelect')&&!$('rulesChampSelect').value&&championships[0])$('rulesChampSelect').value=championships[0].id;
+    renderMunicipalRulesContent();
+  }else{
+    header.textContent='Livro de Regras do CBJD';
+    controls.innerHTML=`<div class="cbjd-tools"><input id="cbjdSearchInput" oninput="renderCbjdRulesContent()" placeholder="Pesquisar artigo ou palavra-chave. Ex.: 214, atleta irregular, agressão..."><button class="btn ghost" onclick="$('cbjdSearchInput').value='';renderCbjdRulesContent()">Limpar</button></div><div class="cbjd-note">Dica: pesquise pelo número do artigo ou por uma palavra-chave. Ex.: 214, suspensão, agressão, recurso.</div>`;
+    renderCbjdRulesContent();
+  }
+}
+
+function renderRulesPublic(){
+  const secao=$('regrasPublicas'); if(!secao)return;
+  const oldSel=$('rulesChampSelect')?.value || $('rulesChamp')?.value || selectedRulesChampId;
+  if(oldSel)selectedRulesChampId=oldSel;
+  if(!selectedRulesChampId&&championships[0])selectedRulesChampId=championships[0].id;
+  secao.innerHTML=`
+    <div class="card">
+      <h2>Regras do Campeonato</h2>
+      <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:16px;margin:12px 0;">
+        <p style="font-size:16px;line-height:1.6;margin:0;color:#0f172a;">As regras dos campeonatos seguem o <b>Livro de Regras de Esportes do Município de Capão da Canoa</b>.</p>
+        <p style="font-size:15px;line-height:1.6;margin:12px 0 0;color:#1e3a8a;font-weight:800;">Caso a regra municipal não trate de determinada situação, será aplicado de forma subsidiária o Código Brasileiro de Justiça Desportiva, o CBJD.</p>
+        <p style="font-size:14px;line-height:1.5;margin:10px 0 0;color:#475569;">Portanto, primeiro devem ser observadas as regras municipais. Na ausência de previsão específica, prevalecem as regras do CBJD.</p>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0;">
+        <button class="btn" data-rules-book="municipais" onclick="switchRulesBook('municipais')" style="padding:14px;border-radius:14px;font-weight:900;">Regras Municipais</button>
+        <button class="btn secondary" data-rules-book="cbjd" onclick="switchRulesBook('cbjd')" style="padding:14px;border-radius:14px;font-weight:900;">Regras do CBJD</button>
+      </div>
+      <h3 id="rulesBookHeader" style="margin-top:18px;">Livro de Regras Municipais</h3>
+      <div id="rulesBookControls"></div>
+      <div id="rulesBookContent"><div class="empty">Carregando regras...</div></div>
+    </div>`;
+  switchRulesBook(currentRulesBook||'municipais');
+}
+
+function cbjdHtml(prefix='admin'){
+  setTimeout(()=>{
+    const input=$(prefix+'CbjdSearch');
+    const box=$(prefix+'CbjdPages');
+    if(!box)return;
+    const termo=input?.value||'';
+    const arr=filterCbjdArticles(termo);
+    box.innerHTML=arr.length?arr.map((a,i)=>`<details class="cbjd-page" ${termo||i<3?'open':''}><summary><strong>Art. ${esc(a.numero)} - CBJD</strong>${a.pagina?` <span style="font-size:12px;color:#64748b;margin-left:8px;">pág. ${esc(a.pagina)}</span>`:''}</summary><pre>${esc(a.texto)}</pre></details>`).join(''):'<div class="empty">Nenhum artigo encontrado.</div>';
+  },0);
+  return `<div class="card" style="background:#f8fbff"><h3>CBJD - texto por artigo completo</h3><p class="muted">Texto carregado a partir do PDF da CBJD enviado e organizado por artigo completo, com pena e parágrafos juntos.</p><div class="cbjd-tools"><input id="${prefix}CbjdSearch" oninput="document.getElementById('${prefix}CbjdRefresh').click()" placeholder="Buscar na CBJD: ex. Art. 214, agressão, suspensão..."><button id="${prefix}CbjdRefresh" class="btn ghost" onclick="const input=document.getElementById('${prefix}CbjdSearch'); const box=document.getElementById('${prefix}CbjdPages'); const arr=filterCbjdArticles(input?input.value:''); box.innerHTML=arr.length?arr.map((a,i)=>'<details class=&quot;cbjd-page&quot; '+((input&&input.value)||i<3?'open':'')+'><summary><strong>Art. '+esc(a.numero)+' - CBJD</strong>'+(a.pagina?' <span style=&quot;font-size:12px;color:#64748b;margin-left:8px;&quot;>pág. '+esc(a.pagina)+'</span>':'')+'</summary><pre>'+esc(a.texto)+'</pre></details>').join(''):'<div class=&quot;empty&quot;>Nenhum artigo encontrado.</div>'">Buscar</button></div><div id="${prefix}CbjdPages"></div></div>`;
+}
+
 function renderRulesAdmin(){
   const box=$('cbjdBaseBox'); if(box)box.innerHTML=cbjdHtml('admin');
   if($('adminRulesChamp') && championships.length && !$('adminRulesChamp').value){$('adminRulesChamp').value=championships[0].id;loadRulesEditor();}
 }
+
 function loadRulesEditor(){
   const c=championships.find(x=>x.id===$('adminRulesChamp')?.value);
   if(!c)return;
   $('adminCbjdAtivo').value=(c.cbjd_ativo===true||c.cbjd_ativo==='true')?'true':'false';
   $('adminRegrasMunicipais').value=c.regras_municipais||'';
 }
+
 async function saveChampRules(){
   const id=$('adminRulesChamp')?.value;
   if(!id)return alert('Selecione um campeonato.');
@@ -334,218 +464,6 @@ async function saveConfig(){
   await loadConfig();
 }
 window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();loadAll()});
-</script>
-<script>
-/* CORRECAO CBJD - EXIBIR POR ARTIGO COMPLETO, NAO POR PAGINA */
-(function () {
-  if (window.__cbjdArtigosCorrigido) return;
-  window.__cbjdArtigosCorrigido = true;
-
-  const CBJD_SUPABASE_URL = 'https://ugqoqecxbeqnyekezlec.supabase.co';
-  const CBJD_SUPABASE_KEY = 'sb_publishable_f-apeDU5xqGuxSimTVn2gQ_AUdV5uBb';
-
-  const cbjdClient = window.supabase.createClient(CBJD_SUPABASE_URL, CBJD_SUPABASE_KEY);
-
-  let cbjdArtigosCache = [];
-
-  function limparTextoCBJD(texto) {
-    return String(texto || '')
-      .replace(/\uFFFE/g, '')
-      .replace(/￾/g, '')
-      .replace(/(\w)-\s+(\w)/g, '$1$2')
-      .replace(/[ \t]+/g, ' ')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
-
-  function formatarArtigo(texto) {
-    return limparTextoCBJD(texto)
-      .replace(/(PENA:)/g, '\n\n$1')
-      .replace(/(Parágrafo único\.?)/g, '\n\n$1')
-      .replace(/(§ ?\d+[º°]?)/g, '\n\n$1')
-      .replace(/(\bI —)/g, '\n\n$1')
-      .replace(/(\bII —)/g, '\n$1')
-      .replace(/(\bIII —)/g, '\n$1')
-      .replace(/(\bIV —)/g, '\n$1')
-      .replace(/(\bV —)/g, '\n$1')
-      .replace(/(\bVI —)/g, '\n$1')
-      .replace(/(\bVII —)/g, '\n$1')
-      .replace(/(\bVIII —)/g, '\n$1')
-      .replace(/(\bIX —)/g, '\n$1')
-      .replace(/(\bX —)/g, '\n$1')
-      .replace(/(\bXI —)/g, '\n$1')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-  }
-
-  function montarArtigosCBJD(paginas) {
-    const textoCompleto = paginas
-      .sort((a, b) => Number(a.pagina) - Number(b.pagina))
-      .map(p => `\n\n[[PAGINA:${p.pagina}]]\n${p.texto}`)
-      .join('\n\n');
-
-    const texto = limparTextoCBJD(textoCompleto);
-
-    const regexArtigos = /Art\. ?\d+[A-Z]?\.?/g;
-    const encontrados = [...texto.matchAll(regexArtigos)];
-
-    const artigos = [];
-
-    for (let i = 0; i < encontrados.length; i++) {
-      const inicio = encontrados[i].index;
-      const fim = i + 1 < encontrados.length ? encontrados[i + 1].index : texto.length;
-      const blocoOriginal = texto.slice(inicio, fim).trim();
-
-      const numeroMatch = blocoOriginal.match(/^Art\. ?(\d+[A-Z]?)/);
-      const numero = numeroMatch ? numeroMatch[1] : '';
-
-      const paginasAntes = texto.slice(Math.max(0, inicio - 500), inicio);
-      const paginaMatch = paginasAntes.match(/\[\[PAGINA:(\d+)\]\]/g);
-      const paginaInicial = paginaMatch && paginaMatch.length
-        ? paginaMatch[paginaMatch.length - 1].replace(/\D/g, '')
-        : '';
-
-      artigos.push({
-        numero,
-        pagina: paginaInicial,
-        texto: formatarArtigo(blocoOriginal.replace(/\[\[PAGINA:\d+\]\]/g, ''))
-      });
-    }
-
-    return artigos;
-  }
-
-  async function carregarArtigosCBJD() {
-    if (cbjdArtigosCache.length) return cbjdArtigosCache;
-
-    const { data, error } = await cbjdClient
-      .from('cbjd_paginas')
-      .select('pagina,texto')
-      .order('pagina', { ascending: true });
-
-    if (error) {
-      console.error('Erro ao carregar CBJD:', error);
-      return [];
-    }
-
-    cbjdArtigosCache = montarArtigosCBJD(data || []);
-    return cbjdArtigosCache;
-  }
-
-  function buscarArtigos(artigos, termo) {
-    const busca = String(termo || '').trim().toLowerCase();
-
-    if (!busca) {
-      return artigos;
-    }
-
-    return artigos.filter(artigo => {
-      const numero = artigo.numero.toLowerCase();
-      const texto = artigo.texto.toLowerCase();
-
-      return (
-        numero === busca ||
-        numero.replace(/[^\d]/g, '') === busca.replace(/[^\d]/g, '') ||
-        texto.includes(busca)
-      );
-    });
-  }
-
-  function renderizarResultadoCBJD(artigos, termo = '') {
-    const box = document.getElementById('cbjdResultadosCorrigidos');
-    if (!box) return;
-
-    const encontrados = buscarArtigos(artigos, termo);
-
-    if (!encontrados.length) {
-      box.innerHTML = `
-        <div class="card">
-          <b>Nenhum artigo encontrado.</b>
-          <p>Tente pesquisar apenas o número, por exemplo: <b>214</b>.</p>
-        </div>
-      `;
-      return;
-    }
-
-    box.innerHTML = encontrados.map(artigo => `
-      <details class="cbjd-page" open>
-        <summary>
-          <strong>Art. ${artigo.numero} - CBJD</strong>
-          ${artigo.pagina ? `<span style="font-size:12px;color:#64748b;margin-left:8px;">pág. ${artigo.pagina}</span>` : ''}
-        </summary>
-        <pre>${artigo.texto}</pre>
-      </details>
-    `).join('');
-  }
-
-  async function carregarTelaCBJDCorrigida() {
-    const secao = document.getElementById('regrasPublicas');
-    if (!secao) return;
-
-    secao.innerHTML = `
-      <div class="card">
-        <h2>Regras do CBJD</h2>
-        <p style="color:#475569;margin-top:4px;">
-          Leitura organizada por artigo completo. Ao pesquisar, o sistema mostra o artigo junto com suas penas e parágrafos.
-        </p>
-
-        <div class="cbjd-tools" style="display:grid;grid-template-columns:1fr auto;gap:10px;margin:12px 0;">
-          <input 
-            id="buscaCBJDCorrigida" 
-            placeholder="Pesquisar artigo ou palavra-chave. Exemplo: 214, atleta irregular, agressão..." 
-            style="padding:12px;border:1px solid #cbd5e1;border-radius:12px;font-size:15px;width:100%;"
-          />
-          <button 
-            id="btnLimparCBJDCorrigido"
-            class="btn"
-            style="padding:12px 16px;border-radius:12px;"
-          >
-            Limpar
-          </button>
-        </div>
-
-        <div id="cbjdResultadosCorrigidos">
-          <div class="card">Carregando regras do CBJD...</div>
-        </div>
-      </div>
-    `;
-
-    const artigos = await carregarArtigosCBJD();
-
-    const input = document.getElementById('buscaCBJDCorrigida');
-    const btnLimpar = document.getElementById('btnLimparCBJDCorrigido');
-
-    renderizarResultadoCBJD(artigos, '');
-
-    input.addEventListener('input', () => {
-      renderizarResultadoCBJD(artigos, input.value);
-    });
-
-    btnLimpar.addEventListener('click', () => {
-      input.value = '';
-      renderizarResultadoCBJD(artigos, '');
-      input.focus();
-    });
-  }
-
-  window.carregarTelaCBJDCorrigida = carregarTelaCBJDCorrigida;
-
-  document.addEventListener('click', function (e) {
-    const botao = e.target.closest('[data-tab="regrasPublicas"]');
-    if (botao) {
-      setTimeout(carregarTelaCBJDCorrigida, 100);
-    }
-  });
-
-  document.addEventListener('DOMContentLoaded', function () {
-    setTimeout(function () {
-      const secao = document.getElementById('regrasPublicas');
-      if (secao && secao.classList.contains('active')) {
-        carregarTelaCBJDCorrigida();
-      }
-    }, 300);
-  });
-})();
 </script>
 </body>
 </html>
