@@ -795,7 +795,236 @@ async function deleteComplaint(id,protocolo){
 }
 async function savePunishment(showPdf){let payload={atleta_nome:$('punAtleta').value,documento:$('punDoc').value,equipe:$('punEquipe').value,tipo_punicao:$('punTipo').value,data_inicio:$('punInicio').value,data_fim:$('punFim').value,descricao:$('punDesc').value,visivel_publico:true};lastPunishmentDraft=payload;let {error}=await db.from('pendencias_atletas').insert(payload);if(error)return alert(error.message);if(showPdf)generatePunishmentPdf(payload);$('punForm').reset();await loadAll();alert('Punição salva.')}
 async function savePunAndPdf(){await savePunishment(true)}
-function generatePunishmentPdf(p){p=p||lastPunishmentDraft||{atleta_nome:$('punAtleta')?.value,documento:$('punDoc')?.value,equipe:$('punEquipe')?.value,tipo_punicao:$('punTipo')?.value,data_inicio:$('punInicio')?.value,data_fim:$('punFim')?.value,descricao:$('punDesc')?.value};if(!p.atleta_nome)return alert('Preencha os dados da punição primeiro.');let w=window.open('','_blank');w.document.write(`<title>Punição ${esc(p.atleta_nome)}</title><body style="font-family:Arial;padding:30px"><h1>Comunicado de Punição</h1><h2>Secretaria de Esportes de Capão da Canoa</h2><p><b>Atleta:</b> ${esc(p.atleta_nome)}</p><p><b>Documento:</b> ${esc(p.documento)}</p><p><b>Equipe:</b> ${esc(p.equipe)}</p><p><b>Tipo de punição:</b> ${esc(p.tipo_punicao)}</p><p><b>Período:</b> ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><h3>Descrição</h3><p>${esc(p.descricao)}</p><br><p>____________________________________</p><p>Comissão/Responsável</p><script>print()<\/script></body>`);w.document.close()}
+function generatePunishmentPdf(p){p=p||lastPunishmentDraft||{atleta_nome:$('punAtleta')?.value,documento:$('punDoc')?.value,equipe:$('punEquipe')?.value,tipo_punicao:$('punTipo')?.value,data_inicio:$('punInicio')?.value,data_fim:$('punFim')?.value,descricao:$('punDesc')?.value};if(!p.atleta_nome)return alert('Preencha os dados da punição primeiro.');let w=window.open('','_blank');w.document.write(`<title>Punição ${esc(p.atleta_nome)}</title><body style="font-family:Arial;padding:30px"><h1>Comunicado de Punição</h1><h2>Secretaria de Esportes de Capão da Canoa</h2><p><b>Atleta:</b> ${esc(p.atleta_nome)}</p><p><b>Documento:</b> ${esc(p.documento)}</p><p><b>Equipe:</b> ${esc(p.equipe)}</p><p><b>Tipo de punição:</b> ${esc(p.tipo_punicao)}</p><p><b>Período:</b> ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><h3>Descrição</h3><p>${esc(p.descricao)}</p><br><p>____________________________________</p><p>Comissão/Responsável</p><script>print()<\/script>
+<style>
+.categoria-wrap-v29{margin:10px 0}.categoria-admin-v29{border:1px solid rgba(20,255,170,.22);background:rgba(10,25,22,.75)}.categoria-wrap-v29 select{background:#0b1210;color:#fff;border-color:rgba(20,255,170,.25)}.premium-app .categoria-wrap-v29 small{display:block;margin-top:6px}.tag.green{background:rgba(20,255,170,.13);color:#21f0aa}.category-tabs-v29{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.category-chip-v29{border:1px solid rgba(20,255,170,.25);background:rgba(255,255,255,.04);color:#d9fff2;border-radius:999px;padding:8px 12px;font-weight:800}.category-chip-v29.active{background:linear-gradient(135deg,#11d98b,#0aa7c8);color:#fff}
+</style>
+<script>
+/* V29 - CATEGORIAS/SERIES POR CAMPEONATO */
+(function(){
+  if(window.__capaoCategoriasV29)return;
+  window.__capaoCategoriasV29=true;
+
+  function safeJson(v, fallback){
+    try{
+      if(Array.isArray(v))return v;
+      if(!v)return fallback;
+      if(typeof v==='string')return JSON.parse(v);
+      return v;
+    }catch(e){return fallback;}
+  }
+  function unique(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  window.categoriasDoCampeonato=function(c){
+    if(!c || !(c.categorias_ativas===true || c.categorias_ativas==='true')) return [];
+    const tipo=String(c.categorias_tipo||'personalizado');
+    let lista=safeJson(c.categorias_lista,[]);
+    lista=unique(lista);
+    if(lista.length)return lista;
+    if(tipo==='series')return ['Série Ouro','Série Prata','Série Bronze'];
+    if(tipo==='genero')return ['Masculino','Feminino'];
+    if(tipo==='series_genero')return ['Série Ouro - Masculino','Série Prata - Masculino','Série Bronze - Masculino','Feminino'];
+    return [];
+  }
+  function campeonatoPorSelect(id){return (championships||[]).find(c=>c.id===$(id)?.value) || null;}
+  function categoriaAtivaCampo(champId, campoId){const c=(championships||[]).find(x=>x.id===champId);const cats=categoriasDoCampeonato(c);return cats.length?($(campoId)?.value||cats[0]||''):'';}
+  function categoriaDoTime(nome,champId){const alvo=normalizarNomeTime(nome);const t=(teams||[]).find(t=>(!champId||t.campeonato_id===champId)&&normalizarNomeTime(t.nome)===alvo);return t?.categoria_nome||'';}
+  function categoriaJogo(g){return g?.categoria_nome || categoriaDoTime(g?.time_a,g?.campeonato_id) || categoriaDoTime(g?.time_b,g?.campeonato_id) || ''}
+  function makeCatOptions(c, allLabel){
+    const cats=categoriasDoCampeonato(c);
+    if(!cats.length)return '<option value="">Sem categoria</option>';
+    let html=allLabel?`<option value="">${esc(allLabel)}</option>`:'';
+    return html+cats.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  }
+  function updateCatSelect(champSelectId, catSelectId, allLabel){
+    const sel=$(catSelectId); if(!sel)return;
+    const c=campeonatoPorSelect(champSelectId);
+    const prev=sel.value;
+    sel.innerHTML=makeCatOptions(c, allLabel);
+    if([...sel.options].some(o=>o.value===prev))sel.value=prev;
+    const wrap=sel.closest('.categoria-wrap-v29');
+    if(wrap)wrap.style.display=categoriasDoCampeonato(c).length?'block':'none';
+  }
+  function installAfterSelect(champSelectId, catSelectId, label, allLabel){
+    const champ=$(champSelectId); if(!champ || $(catSelectId))return;
+    const parent=champ.closest('div') || champ.parentElement;
+    const div=document.createElement('div');
+    div.className='categoria-wrap-v29';
+    div.innerHTML=`<label>${label}</label><select id="${catSelectId}"></select><small class="muted">Separação por categoria/série definida pelo administrador.</small>`;
+    parent.insertAdjacentElement('afterend',div);
+    champ.addEventListener('change',()=>{updateCatSelect(champSelectId,catSelectId,allLabel);renderCategoriaDependentes();});
+    const cat=$(catSelectId); if(cat)cat.addEventListener('change',renderCategoriaDependentes);
+    updateCatSelect(champSelectId,catSelectId,allLabel);
+  }
+  function ensureCategoryControls(){
+    installAfterSelect('reqCampeonato','reqCategoria','Categoria/Série da equipe',null);
+    installAfterSelect('manualChamp','manualCategoria','Categoria/Série do clube',null);
+    installAfterSelect('tableChamp','tableCategoria','Categoria/Série da tabela','Todas as categorias');
+    installAfterSelect('scorerChamp','scorerCategoria','Categoria/Série da artilharia','Todas as categorias');
+    installAfterSelect('gamesChamp','gamesCategoria','Categoria/Série dos jogos','Todas as categorias');
+    installAfterSelect('adminGamesChamp','adminGamesCategoria','Categoria/Série dos jogos','Todas as categorias');
+    installAfterSelect('goalChamp','goalCategoria','Categoria/Série dos gols','Todas as categorias');
+    if($('manualGameBox') && !$('manualCategoriaJogo')){
+      const box=$('manualGameBox');
+      const div=document.createElement('div');
+      div.className='categoria-wrap-v29';
+      div.innerHTML=`<label>Categoria/Série do jogo</label><select id="manualCategoriaJogo"></select><small class="muted">Obrigatório quando o campeonato tiver séries/categorias.</small>`;
+      box.insertBefore(div,box.firstChild);
+      if($('manualCategoriaJogo'))$('manualCategoriaJogo').addEventListener('change',()=>{});
+    }
+    updateCatSelect('adminGamesChamp','manualCategoriaJogo',null);
+  }
+  function renderCategoriaDependentes(){
+    try{renderStandings();}catch(e){}
+    try{renderScorers();}catch(e){}
+    try{renderGamesPublic();}catch(e){}
+    try{renderGamesAdmin();}catch(e){}
+    try{renderAdminScorers();}catch(e){}
+  }
+
+  function installChampCategoryFields(){
+    const form=$('champForm'); if(!form || $('cCategoriasAtivas'))return;
+    const desc=$('cDesc'); const holder=document.createElement('div');
+    holder.className='card categoria-admin-v29';
+    holder.style.boxShadow='none';holder.style.margin='10px 0';
+    holder.innerHTML=`
+      <h3>Divisão por categorias/séries</h3>
+      <p class="muted">Use quando o mesmo campeonato tiver Série Ouro, Prata, Bronze, Masculino, Feminino ou outras divisões.</p>
+      <div class="row3">
+        <div><label>Este campeonato terá divisão?</label><select id="cCategoriasAtivas"><option value="false">Não</option><option value="true">Sim</option></select></div>
+        <div><label>Tipo de divisão</label><select id="cCategoriasTipo"><option value="series">Séries padrão</option><option value="genero">Masculino/Feminino</option><option value="series_genero">Séries + Feminino</option><option value="personalizado">Personalizado</option></select></div>
+        <div><label>Atualização automática futura?</label><select id="cCategoriasAuto"><option value="false">Não, manual</option><option value="true">Sim, sugerir acessos/rebaixamentos</option></select></div>
+      </div>
+      <label>Categorias personalizadas</label>
+      <input id="cCategoriasLista" placeholder="Ex.: Série Ouro, Série Prata, Série Bronze, Feminino">
+      <small class="muted">Separe por vírgula. Se deixar vazio, o sistema usa o padrão do tipo escolhido.</small>
+      <div class="msg"><b>Observação:</b> a atualização automática será apenas uma sugestão para o administrador aprovar, nunca uma mudança sem confirmação.</div>`;
+    if(desc)desc.closest('label')?desc.closest('label').after(holder):desc.insertAdjacentElement('afterend',holder);
+    else form.insertBefore(holder,form.querySelector('button[type="submit"]'));
+  }
+
+  function categoriasPayloadFromForm(){
+    const ativa=$('cCategoriasAtivas')?.value==='true';
+    const tipo=$('cCategoriasTipo')?.value||'personalizado';
+    let lista=unique(($('cCategoriasLista')?.value||'').split(','));
+    if(ativa && !lista.length){
+      if(tipo==='series')lista=['Série Ouro','Série Prata','Série Bronze'];
+      if(tipo==='genero')lista=['Masculino','Feminino'];
+      if(tipo==='series_genero')lista=['Série Ouro - Masculino','Série Prata - Masculino','Série Bronze - Masculino','Feminino'];
+    }
+    return {categorias_ativas:ativa,categorias_tipo:tipo,categorias_lista:lista,categorias_auto:$('cCategoriasAuto')?.value==='true'};
+  }
+
+  function reinstallChampSubmit(){
+    const old=$('champForm'); if(!old || old.dataset.v29==='1')return;
+    const form=old.cloneNode(true); old.parentNode.replaceChild(form,old); form.dataset.v29='1';
+    installChampCategoryFields();
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      let payload={nome:$('cNome').value,modalidade:$('cModalidade').value,tipo:$('cTipo').value,status:$('cStatus').value,inicio:$('cInicio').value,fim:$('cFim').value,inscricao_inicio:$('cInsInicio').value||null,inscricao_fim:$('cInsFim').value||null,inscricoes_abertas:$('cStatus').value==='inscricoes_abertas',descricao:$('cDesc').value,...categoriasPayloadFromForm()};
+      let {error}=await db.from('campeonatos').insert(payload);
+      if(error)return alert('Erro ao criar campeonato. Rode o SQL v29 no Supabase. '+error.message);
+      e.target.reset();await loadAll();alert('Campeonato criado.');
+    });
+  }
+
+  function requiredCategory(champSelectId, catSelectId){
+    const c=campeonatoPorSelect(champSelectId); const cats=categoriasDoCampeonato(c);
+    if(!cats.length)return '';
+    const val=$(catSelectId)?.value||'';
+    if(!val)throw new Error('Selecione a categoria/série.');
+    return val;
+  }
+
+  function reinstallTeamSubmits(){
+    const tf=$('teamRequestForm');
+    if(tf && tf.dataset.v29!=='1'){
+      const form=tf.cloneNode(true); tf.parentNode.replaceChild(form,tf); form.dataset.v29='1';
+      form.addEventListener('submit',async e=>{e.preventDefault();try{let c=championships.find(x=>x.id===$('reqCampeonato').value),st=registrationStatus(c);if(!st.can)throw new Error(st.msg);let categoria=requiredCategory('reqCampeonato','reqCategoria');let logo=await fileToData($('reqLogo').files[0]);let atletas=await collectPlayers();let payload={campeonato_id:c.id,categoria_nome:categoria,nome_time:$('reqTime').value,responsavel_nome:$('reqResp').value,responsavel_cpf:$('reqCpf').value,responsavel_whatsapp:$('reqWhats').value,responsavel_email:$('reqEmail').value,endereco:$('reqEnd').value,cep:$('reqCep').value,logo_data:logo,atletas,status:'pendente'};let {error}=await db.from('inscricoes_clubes').insert(payload);if(error)throw error;alert('Inscrição enviada para análise do administrador.');resetTeamForm();await loadAll()}catch(err){alert(err.message)}});
+    }
+    const mf=$('manualTeamForm');
+    if(mf && mf.dataset.v29!=='1'){
+      const form=mf.cloneNode(true); mf.parentNode.replaceChild(form,mf); form.dataset.v29='1';
+      form.addEventListener('submit',async e=>{e.preventDefault();try{let categoria=requiredCategory('manualChamp','manualCategoria');let atletas=await collectManualPlayers();let logo=await fileToData($('manualLogo').files[0]);let {data,error}=await db.from('equipes').insert({campeonato_id:$('manualChamp').value,categoria_nome:categoria,nome:$('manualTeam').value,responsavel:$('manualResp').value,whatsapp:$('manualWhats').value,logo_data:logo,status:'ativo',atletas}).select().single();if(error)throw error;for(const a of atletas){let {data:at,error:atErr}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(atErr)throw atErr;if(at)await db.from('inscricoes').insert({campeonato_id:$('manualChamp').value,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}resetManualTeamForm();await loadAll();alert('Clube e atletas adicionados manualmente.')}catch(err){alert(err.message)}});
+    }
+  }
+
+  window.approveRequest=async function(id){let r=requests.find(x=>x.id===id);if(!r)return;let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:r.categoria_nome||'',nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select().single();if(error)return alert('Erro ao aceitar inscrição. Rode o SQL v29 no Supabase. '+error.message);for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString()}).eq('id',id);await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');}
+
+  window.renderPending=function(){let pend=requests.filter(r=>r.status==='pendente');$('pendingBox').innerHTML=pend.length?pend.map(r=>`<div class="game"><strong>${esc(r.nome_time)}</strong><p class="muted">Responsável: ${esc(r.responsavel_nome)} • WhatsApp: ${esc(r.responsavel_whatsapp)}<br>Campeonato: ${esc((championships.find(c=>c.id===r.campeonato_id)||{}).nome)}${r.categoria_nome?` • Categoria: ${esc(r.categoria_nome)}`:''}</p><p>Atletas: ${(r.atletas||[]).length}</p><div class="two-actions"><button class="btn small green" onclick="approveRequest('${r.id}')">Aceitar</button><button class="btn small red" onclick="rejectRequest('${r.id}')">Recusar</button><button class="btn small ghost" onclick="viewRequest('${r.id}')">Ver detalhes</button></div></div>`).join(''):'<div class="empty">Nenhuma inscrição pendente.</div>'}
+
+  const oldFill=window.fillSelects;
+  window.fillSelects=function(){
+    if(typeof oldFill==='function')oldFill();
+    ensureCategoryControls();
+    [['reqCampeonato','reqCategoria',null],['manualChamp','manualCategoria',null],['tableChamp','tableCategoria','Todas as categorias'],['scorerChamp','scorerCategoria','Todas as categorias'],['gamesChamp','gamesCategoria','Todas as categorias'],['adminGamesChamp','adminGamesCategoria','Todas as categorias'],['adminGamesChamp','manualCategoriaJogo',null],['goalChamp','goalCategoria','Todas as categorias']].forEach(x=>updateCatSelect(x[0],x[1],x[2]));
+  }
+
+  const oldSelect=window.selectChampAndGo;
+  window.selectChampAndGo=function(id,tab){if(typeof oldSelect==='function')oldSelect(id,tab);setTimeout(()=>{fillSelects();renderCategoriaDependentes();},80)}
+
+  window.renderChamps=function(){let box=$('championshipCards');if(!championships.length){box.innerHTML='<div class="empty">Nenhum campeonato cadastrado ainda. O administrador deve criar os campeonatos no painel.</div>';return}box.innerHTML=championships.map(c=>{let st=registrationStatus(c);let cats=categoriasDoCampeonato(c);return `<div class="card"><span class="tag ${st.cls}">${st.label}</span><h3>${esc(c.nome)}</h3><p class="muted">${esc(c.modalidade)} • ${esc(c.tipo||'')}${cats.length?`<br><b>Categorias:</b> ${esc(cats.join(', '))}`:''}</p><p><b>Início:</b> ${onlyDate(c.inicio)}<br><b>Fim previsto:</b> ${onlyDate(c.fim)}</p><p class="muted">${esc(c.descricao||'')}</p><div class="two-actions"><button class="btn small" onclick="selectChampAndGo('${c.id}','tabelas')">Tabela</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','confrontos')">Jogos</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','artilheiros')">Artilheiros</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','regrasPublicas')">Regras</button><button class="btn small ${st.can?'green':'gray'}" ${st.can?'':'disabled'} onclick="selectChampAndGo('${c.id}','inscricao')">${st.can?'Inscrever equipe':'Inscrição indisponível'}</button></div></div>`}).join('')}
+
+  window.renderAdminChamps=function(){
+    const box=$('adminChampsList'); if(!box)return;
+    box.innerHTML=championships.length?championships.map(c=>{let cats=categoriasDoCampeonato(c);return `<div class="game"><strong>${esc(c.nome)}</strong><span class="tag">${esc(c.tipo)}</span> <span class="tag ${registrationStatus(c).cls}">${registrationStatus(c).label}</span>${cats.length?` <span class="tag green">${esc(cats.length)} categorias</span>`:''}<p class="muted">${esc(c.modalidade)} • ${onlyDate(c.inicio)} até ${onlyDate(c.fim)}${cats.length?`<br>Categorias: ${esc(cats.join(', '))}`:''}<br>Atualização de categorias: ${(c.categorias_auto===true||c.categorias_auto==='true')?'automática com aprovação':'manual'}</p><button class="btn small red" onclick="deleteChamp('${c.id}')">Excluir</button></div>`}).join(''):'<div class="empty">Nenhum campeonato.</div>'
+  }
+
+  window.renderTeams=function(){let html=teams.length?'<table class="table"><tr><th>Escudo</th><th>Time</th><th>Campeonato</th><th>Categoria</th><th>Responsável</th><th>Ações</th></tr>'+teams.map(t=>`<tr><td>${t.logo_data?`<img src="${t.logo_data}" class="preview">`:''}</td><td><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong>${esc(t.nome)}</strong><button class="btn small red" onclick="deleteTeam('${t.id}')">Excluir</button></div></td><td>${esc((championships.find(c=>c.id===t.campeonato_id)||{}).nome)}</td><td>${esc(t.categoria_nome||'-')}</td><td>${esc(t.responsavel)}<br><span class="muted">${esc(t.whatsapp)}</span></td><td><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver atletas</button></td></tr>`).join('')+'</table>':'<div class="empty">Nenhum clube aprovado.</div>';$('teamsBox').innerHTML=html}
+
+  window.addManualGame=async function(){let c=$('adminGamesChamp').value;if(!$('manualA').value||!$('manualB').value)return alert('Informe os dois times.');let categoria=categoriaAtivaCampo(c,'manualCategoriaJogo');let payload={campeonato_id:c,categoria_nome:categoria,rodada:Number($('gameRound').value||1),time_a:$('manualA').value,time_b:$('manualB').value,status:'Agendado',data_jogo:$('manualDataJogo')?.value||null,horario_jogo:$('manualHorarioJogo')?.value||null,local_jogo:$('manualLocalJogo')?.value||'',endereco_jogo:$('manualEnderecoJogo')?.value||'',link_maps:$('manualLinkMaps')?.value||''};let {error}=await db.from('jogos').insert(payload);if(error)return alert('Erro ao salvar jogo. Rode o SQL v29 no Supabase. '+error.message);['manualA','manualB','manualDataJogo','manualHorarioJogo','manualLocalJogo','manualEnderecoJogo','manualLinkMaps'].forEach(id=>{if($(id))$(id).value=''});await loadAll()}
+
+  window.drawGames=async function(){let c=$('adminGamesChamp').value,round=Number($('gameRound').value||1),categoria=categoriaAtivaCampo(c,'adminGamesCategoria');let arr=teams.filter(t=>t.campeonato_id===c&&(!categoria||(t.categoria_nome||'')===categoria)).map(t=>t.nome).sort(()=>Math.random()-.5);if(arr.length<2)return alert('É preciso ter pelo menos 2 clubes aprovados nesta categoria/campeonato.');let inserts=[];for(let i=0;i<arr.length;i+=2){if(arr[i+1])inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:arr[i+1],status:'Agendado'});else inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:'BYE',status:'Agendado',vencedor:arr[i]})}await db.from('jogos').insert(inserts);await loadAll();alert('Confrontos sorteados para '+(categoria||'o campeonato')+'.')}
+
+  window.editGame=async function(id){await db.from('jogos').update({time_a:$('ga'+id).value,time_b:$('gb'+id).value,data_jogo:$('gd'+id)?.value||null,horario_jogo:$('gh'+id)?.value||null,local_jogo:$('gl'+id)?.value||'',endereco_jogo:$('ge'+id)?.value||'',link_maps:$('gm'+id)?.value||'',categoria_nome:$('gc'+id)?.value||''}).eq('id',id);await loadAll()}
+
+  window.renderGamesAdmin=function(){let c=$('adminGamesChamp')?.value;let cat=$('adminGamesCategoria')?.value||'';let list=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));$('gamesAdminBox').innerHTML=list.length?list.map(g=>`<div class="game"><strong>Rodada ${g.rodada||1}: ${esc(g.time_a)} x ${esc(g.time_b)}</strong><p class="muted">${categoriaJogo(g)?`Categoria: ${esc(categoriaJogo(g))} • `:''}Status: ${esc(g.status)} ${g.gols_a!=null?`• Placar: ${g.gols_a} x ${g.gols_b}`:''}</p><div class="row"><div><label>Categoria/Série</label><select id="gc${g.id}">${makeCatOptions((championships||[]).find(c=>c.id===g.campeonato_id),'Sem categoria')}</select></div><div><label>Rodada</label><input value="${esc(g.rodada||1)}" disabled></div></div><div class="row"><div><label>Time A</label><input id="ga${g.id}" placeholder="Time A" value="${esc(g.time_a)}"></div><div><label>Time B</label><input id="gb${g.id}" placeholder="Time B" value="${esc(g.time_b)}"></div></div><div class="row3"><div><label>Data</label><input id="gd${g.id}" type="date" value="${esc(g.data_jogo||'')}"></div><div><label>Horário</label><input id="gh${g.id}" type="time" value="${esc((g.horario_jogo||'').slice(0,5))}"></div><div><label>Local</label><input id="gl${g.id}" placeholder="Local do jogo" value="${esc(g.local_jogo||'')}"></div></div><label>Endereço completo</label><input id="ge${g.id}" placeholder="Rua, número, bairro, Capão da Canoa - RS" value="${esc(g.endereco_jogo||'')}"><label>Link do Google Maps (opcional)</label><input id="gm${g.id}" placeholder="Link do Google Maps" value="${esc(g.link_maps||'')}"><div class="two-actions"><button class="btn small" onclick="editGame('${g.id}')">Salvar alterações</button>${mapsUrl(g)?`<a class="btn small ghost" href="${esc(mapsUrl(g))}" target="_blank">Testar mapa</a>`:''}</div></div>`).join(''):'<div class="empty">Nenhum confronto nesta categoria.</div>';setTimeout(()=>{list.forEach(g=>{if($('gc'+g.id))$('gc'+g.id).value=categoriaJogo(g)||''})},0)}
+
+  const oldRenderGamesPublic=window.renderGamesPublic;
+  window.renderGamesPublic=function(){let c=$('gamesChamp')?.value;let cat=$('gamesCategoria')?.value||'';let list=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));const box=$('gamesPublicBox');if(!box)return;if(!list.length){box.innerHTML='<div class="empty">Nenhum jogo cadastrado nesta categoria.</div>';return;}box.innerHTML=`<div class="match-grid-v23">${list.map(g=>{let placar=(g.gols_a!=null&&g.gols_b!=null)?`${g.gols_a} x ${g.gols_b}`:'x';return `<button type="button" class="match-card-v23" onclick="abrirDetalhesJogo('${g.id}')"><div class="match-card-v23-top"><span class="round-pill">Rodada ${g.rodada||1}</span>${categoriaJogo(g)?`<span class="champ-pill">${esc(categoriaJogo(g))}</span>`:`<span class="champ-pill">${nomeCampeonatoJogo(g)}</span>`}</div><div class="match-card-v23-main"><div class="match-side-v23">${logoTimeHtmlV23(g.time_a,g.campeonato_id)}<span class="match-name-v23">${esc(g.time_a)}</span></div><div class="match-x-v23">${esc(placar)}</div><div class="match-side-v23 right"><span class="match-name-v23">${esc(g.time_b)}</span>${logoTimeHtmlV23(g.time_b,g.campeonato_id)}</div></div><div class="match-card-v23-info"><span>🕒 ${esc(resumoDataHoraJogo(g))}</span><span>📍 ${esc(g.local_jogo||'Local a definir')}</span></div><div class="match-click-v23">Clique para ver endereço, mapa e rota</div></button>`}).join('')}</div><div id="matchModalV23" class="match-modal-v23" onclick="fecharDetalhesJogoFora(event)"><div id="matchModalCardV23" class="match-modal-card-v23"></div></div>`}
+
+  const oldOpen=window.abrirDetalhesJogo;
+  window.abrirDetalhesJogo=function(id){if(typeof oldOpen==='function')oldOpen(id);setTimeout(()=>{const g=(games||[]).find(x=>x.id===id);const head=document.querySelector('#matchModalCardV23 .muted');if(head&&g&&categoriaJogo(g))head.innerHTML=head.innerHTML+' • '+esc(categoriaJogo(g));},0)}
+
+  function calcStandingsCat(champId,cat){let map={};games.filter(g=>g.campeonato_id===champId&&(!cat||categoriaJogo(g)===cat)&&g.gols_a!=null&&g.gols_b!=null).forEach(g=>{[g.time_a,g.time_b].forEach(t=>{if(!map[t])map[t]={time:t,p:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0}});let A=map[g.time_a],B=map[g.time_b];A.j++;B.j++;A.gp+=g.gols_a;A.gc+=g.gols_b;B.gp+=g.gols_b;B.gc+=g.gols_a;if(g.gols_a>g.gols_b){A.v++;A.p+=3;B.d++}else if(g.gols_a<g.gols_b){B.v++;B.p+=3;A.d++}else{A.e++;B.e++;A.p++;B.p++}A.sg=A.gp-A.gc;B.sg=B.gp-B.gc});return Object.values(map).sort((a,b)=>b.p-a.p||b.v-a.v||b.sg-a.sg||b.gp-a.gp)}
+  window.calcStandings=function(champId){return calcStandingsCat(champId,'')}
+  window.renderStandings=function(){let c=$('tableChamp')?.value,cat=$('tableCategoria')?.value||'',arr=calcStandingsCat(c,cat);$('standingsBox').innerHTML=arr.length?`${cat?`<div class="msg ok"><b>Categoria:</b> ${esc(cat)}</div>`:''}<table class="table"><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr>`+arr.map(x=>`<tr><td>${esc(x.time)}</td><td>${x.p}</td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.sg}</td></tr>`).join('')+'</table>':'<div class="empty">Sem resultados lançados para montar a tabela nesta categoria.</div>'}
+
+  function aggregateGoalsCat(champId,cat){let m={};goals.filter(g=>(!champId||g.campeonato_id===champId)&&(!cat||(g.categoria_nome||'')===cat)).forEach(g=>{let k=g.atleta_nome+'|'+g.equipe;if(!m[k])m[k]={nome:g.atleta_nome,equipe:g.equipe,gols:0,categoria:g.categoria_nome||''};m[k].gols+=Number(g.quantidade||1)});return Object.values(m).sort((a,b)=>b.gols-a.gols)}
+  window.aggregateGoals=function(champId){return aggregateGoalsCat(champId,'')}
+  window.renderScorers=function(){let arr=aggregateGoalsCat($('scorerChamp')?.value,$('scorerCategoria')?.value||'');$('scorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${esc(x.nome)}</td><td>${esc(x.equipe)}</td><td>${esc(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum gol cadastrado nesta categoria.</div>'}
+  window.renderAdminScorers=function(){let champ=$('goalChamp')?.value,cat=$('goalCategoria')?.value||'',arr=aggregateGoalsCat(champ,cat);$('adminScorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th><th>Ações</th></tr>'+arr.map(x=>`<tr><td>${esc(x.nome)}</td><td>${esc(x.equipe)}</td><td>${esc(x.categoria||'-')}</td><td><input id="${scorerInputId(x.nome,x.equipe)}" type="number" min="0" value="${x.gols}" style="max-width:110px"></td><td><button class="btn small" onclick="setScorerGoals('${String(x.nome).replace(/'/g,"\\'")}','${String(x.equipe).replace(/'/g,"\\'")}')">Salvar gols</button><button class="btn small red" onclick="deleteScorer('${String(x.nome).replace(/'/g,"\\'")}','${String(x.equipe).replace(/'/g,"\\'")}')">Excluir</button></td></tr>`).join('')+'</table>':'<div class="empty">Nenhum artilheiro nesta categoria.</div>'}
+
+  function reinstallGoalSubmit(){const gf=$('goalForm');if(!gf||gf.dataset.v29==='1')return;const form=gf.cloneNode(true);gf.parentNode.replaceChild(form,gf);form.dataset.v29='1';form.addEventListener('submit',async e=>{e.preventDefault();let categoria=categoriaAtivaCampo($('goalChamp').value,'goalCategoria');let {error}=await db.from('gols').insert({campeonato_id:$('goalChamp').value,categoria_nome:categoria,atleta_nome:$('goalPlayer').value,equipe:$('goalTeam').value,quantidade:Number($('goalQtd').value||1)});if(error)return alert('Erro ao salvar gol. Rode o SQL v29 no Supabase. '+error.message);e.target.reset();await loadAll()})}
+  window.deleteScorer=async function(nome,equipe){let champ=$('goalChamp').value,cat=$('goalCategoria')?.value||'';if(!confirm(`Excluir ${nome} da artilharia deste campeonato/categoria?`))return;let q=db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(cat)q=q.eq('categoria_nome',cat);await q;await loadAll()}
+  window.setScorerGoals=async function(nome,equipe){let champ=$('goalChamp').value,cat=$('goalCategoria')?.value||'',qtd=Number($(scorerInputId(nome,equipe)).value||0);let q=db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(cat)q=q.eq('categoria_nome',cat);await q;if(qtd>0)await db.from('gols').insert({campeonato_id:champ,categoria_nome:cat,atleta_nome:nome,equipe:equipe,quantidade:qtd});await loadAll()}
+
+  window.sugerirAtualizacaoCategorias=async function(){
+    const c=campeonatoPorSelect('adminRulesChamp') || (championships||[])[0];
+    if(!c)return alert('Nenhum campeonato selecionado.');
+    const cats=categoriasDoCampeonato(c); if(!cats.length)return alert('Este campeonato não possui categorias/séries ativas.');
+    let msg='Sugestão de atualização de categorias para '+c.nome+'\n\n';
+    msg+='Esta versão deixa a troca automática como sugestão para aprovação do administrador.\n';
+    msg+='Use a classificação final de cada categoria para definir acessos/rebaixamentos e depois ajuste manualmente no cadastro dos clubes.\n\n';
+    cats.forEach(cat=>{let arr=calcStandingsCat(c.id,cat);msg+=cat+': '+(arr.length?arr.map((x,i)=>(i+1)+'. '+x.time).join(', '):'sem classificação')+'\n';});
+    alert(msg);
+  }
+
+  function initV29(){
+    installChampCategoryFields();reinstallChampSubmit();reinstallTeamSubmits();reinstallGoalSubmit();ensureCategoryControls();
+    if($('regrasAdmin') && !$('btnSugerirCategorias')){
+      const div=document.createElement('div');div.className='msg';div.innerHTML='<b>Categorias/Séries:</b> ao final do campeonato, o sistema pode gerar uma sugestão de acesso/rebaixamento para aprovação do administrador. <button id="btnSugerirCategorias" class="btn small ghost" type="button" onclick="sugerirAtualizacaoCategorias()">Sugerir atualização de categorias</button>';
+      $('regrasAdmin').appendChild(div);
+    }
+    fillSelects();renderCategoriaDependentes();
+  }
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(initV29,800));
+  window.addEventListener('load',()=>setTimeout(initV29,1200));
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){if(typeof oldRenderAll==='function')oldRenderAll();setTimeout(initV29,50)}
+})();
+
+</script>
+</body>`);w.document.close()}
 function renderPunishments(){let arr=punishments;$('punBox').innerHTML=arr.length?arr.map(p=>`<div class="game"><strong>${esc(p.atleta_nome)}</strong><p>${esc(p.equipe||'')} • ${esc(p.tipo_punicao)}<br>Suspenso de ${onlyDate(p.data_inicio)} até ${onlyDate(p.data_fim)}</p><button class="btn small ghost" onclick='generatePunishmentPdf(${JSON.stringify(p)})'>Gerar PDF</button></div>`).join(''):'<div class="empty">Nenhuma punição cadastrada.</div>'}
 function renderPunPublic(){let now=new Date();let arr=punishments.filter(p=>p.visivel_publico!==false && new Date(p.data_fim+'T23:59:59')>=now);$('punPublicBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Motivo</th><th>Suspenso até</th></tr>'+arr.map(p=>`<tr><td>${esc(p.atleta_nome)}</td><td>${esc(p.equipe||'-')}</td><td>${esc(p.tipo_punicao)}</td><td>${onlyDate(p.data_fim)}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhuma punição vigente cadastrada.</div>'}
 async function saveConfig(){
@@ -822,6 +1051,235 @@ async function saveConfig(){
   await loadConfig();
 }
 window.addEventListener('load',()=>{const params=new URLSearchParams(location.search);pendingDenunciaParam=params.get('denuncia');if(pendingDenunciaParam){goPublic('admin');$('loginMsg').innerHTML=`<div class="msg">Entre no painel para ver a denúncia ${esc(pendingDenunciaParam)}.</div>`}addPlayerRow();addManualPlayerRow();loadAll()});
+</script>
+
+<style>
+.categoria-wrap-v29{margin:10px 0}.categoria-admin-v29{border:1px solid rgba(20,255,170,.22);background:rgba(10,25,22,.75)}.categoria-wrap-v29 select{background:#0b1210;color:#fff;border-color:rgba(20,255,170,.25)}.premium-app .categoria-wrap-v29 small{display:block;margin-top:6px}.tag.green{background:rgba(20,255,170,.13);color:#21f0aa}.category-tabs-v29{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.category-chip-v29{border:1px solid rgba(20,255,170,.25);background:rgba(255,255,255,.04);color:#d9fff2;border-radius:999px;padding:8px 12px;font-weight:800}.category-chip-v29.active{background:linear-gradient(135deg,#11d98b,#0aa7c8);color:#fff}
+</style>
+<script>
+/* V29 - CATEGORIAS/SERIES POR CAMPEONATO */
+(function(){
+  if(window.__capaoCategoriasV29)return;
+  window.__capaoCategoriasV29=true;
+
+  function safeJson(v, fallback){
+    try{
+      if(Array.isArray(v))return v;
+      if(!v)return fallback;
+      if(typeof v==='string')return JSON.parse(v);
+      return v;
+    }catch(e){return fallback;}
+  }
+  function unique(arr){return [...new Set((arr||[]).map(x=>String(x||'').trim()).filter(Boolean))];}
+  window.categoriasDoCampeonato=function(c){
+    if(!c || !(c.categorias_ativas===true || c.categorias_ativas==='true')) return [];
+    const tipo=String(c.categorias_tipo||'personalizado');
+    let lista=safeJson(c.categorias_lista,[]);
+    lista=unique(lista);
+    if(lista.length)return lista;
+    if(tipo==='series')return ['Série Ouro','Série Prata','Série Bronze'];
+    if(tipo==='genero')return ['Masculino','Feminino'];
+    if(tipo==='series_genero')return ['Série Ouro - Masculino','Série Prata - Masculino','Série Bronze - Masculino','Feminino'];
+    return [];
+  }
+  function campeonatoPorSelect(id){return (championships||[]).find(c=>c.id===$(id)?.value) || null;}
+  function categoriaAtivaCampo(champId, campoId){const c=(championships||[]).find(x=>x.id===champId);const cats=categoriasDoCampeonato(c);return cats.length?($(campoId)?.value||cats[0]||''):'';}
+  function categoriaDoTime(nome,champId){const alvo=normalizarNomeTime(nome);const t=(teams||[]).find(t=>(!champId||t.campeonato_id===champId)&&normalizarNomeTime(t.nome)===alvo);return t?.categoria_nome||'';}
+  function categoriaJogo(g){return g?.categoria_nome || categoriaDoTime(g?.time_a,g?.campeonato_id) || categoriaDoTime(g?.time_b,g?.campeonato_id) || ''}
+  function makeCatOptions(c, allLabel){
+    const cats=categoriasDoCampeonato(c);
+    if(!cats.length)return '<option value="">Sem categoria</option>';
+    let html=allLabel?`<option value="">${esc(allLabel)}</option>`:'';
+    return html+cats.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  }
+  function updateCatSelect(champSelectId, catSelectId, allLabel){
+    const sel=$(catSelectId); if(!sel)return;
+    const c=campeonatoPorSelect(champSelectId);
+    const prev=sel.value;
+    sel.innerHTML=makeCatOptions(c, allLabel);
+    if([...sel.options].some(o=>o.value===prev))sel.value=prev;
+    const wrap=sel.closest('.categoria-wrap-v29');
+    if(wrap)wrap.style.display=categoriasDoCampeonato(c).length?'block':'none';
+  }
+  function installAfterSelect(champSelectId, catSelectId, label, allLabel){
+    const champ=$(champSelectId); if(!champ || $(catSelectId))return;
+    const parent=champ.closest('div') || champ.parentElement;
+    const div=document.createElement('div');
+    div.className='categoria-wrap-v29';
+    div.innerHTML=`<label>${label}</label><select id="${catSelectId}"></select><small class="muted">Separação por categoria/série definida pelo administrador.</small>`;
+    parent.insertAdjacentElement('afterend',div);
+    champ.addEventListener('change',()=>{updateCatSelect(champSelectId,catSelectId,allLabel);renderCategoriaDependentes();});
+    const cat=$(catSelectId); if(cat)cat.addEventListener('change',renderCategoriaDependentes);
+    updateCatSelect(champSelectId,catSelectId,allLabel);
+  }
+  function ensureCategoryControls(){
+    installAfterSelect('reqCampeonato','reqCategoria','Categoria/Série da equipe',null);
+    installAfterSelect('manualChamp','manualCategoria','Categoria/Série do clube',null);
+    installAfterSelect('tableChamp','tableCategoria','Categoria/Série da tabela','Todas as categorias');
+    installAfterSelect('scorerChamp','scorerCategoria','Categoria/Série da artilharia','Todas as categorias');
+    installAfterSelect('gamesChamp','gamesCategoria','Categoria/Série dos jogos','Todas as categorias');
+    installAfterSelect('adminGamesChamp','adminGamesCategoria','Categoria/Série dos jogos','Todas as categorias');
+    installAfterSelect('goalChamp','goalCategoria','Categoria/Série dos gols','Todas as categorias');
+    if($('manualGameBox') && !$('manualCategoriaJogo')){
+      const box=$('manualGameBox');
+      const div=document.createElement('div');
+      div.className='categoria-wrap-v29';
+      div.innerHTML=`<label>Categoria/Série do jogo</label><select id="manualCategoriaJogo"></select><small class="muted">Obrigatório quando o campeonato tiver séries/categorias.</small>`;
+      box.insertBefore(div,box.firstChild);
+      if($('manualCategoriaJogo'))$('manualCategoriaJogo').addEventListener('change',()=>{});
+    }
+    updateCatSelect('adminGamesChamp','manualCategoriaJogo',null);
+  }
+  function renderCategoriaDependentes(){
+    try{renderStandings();}catch(e){}
+    try{renderScorers();}catch(e){}
+    try{renderGamesPublic();}catch(e){}
+    try{renderGamesAdmin();}catch(e){}
+    try{renderAdminScorers();}catch(e){}
+  }
+
+  function installChampCategoryFields(){
+    const form=$('champForm'); if(!form || $('cCategoriasAtivas'))return;
+    const desc=$('cDesc'); const holder=document.createElement('div');
+    holder.className='card categoria-admin-v29';
+    holder.style.boxShadow='none';holder.style.margin='10px 0';
+    holder.innerHTML=`
+      <h3>Divisão por categorias/séries</h3>
+      <p class="muted">Use quando o mesmo campeonato tiver Série Ouro, Prata, Bronze, Masculino, Feminino ou outras divisões.</p>
+      <div class="row3">
+        <div><label>Este campeonato terá divisão?</label><select id="cCategoriasAtivas"><option value="false">Não</option><option value="true">Sim</option></select></div>
+        <div><label>Tipo de divisão</label><select id="cCategoriasTipo"><option value="series">Séries padrão</option><option value="genero">Masculino/Feminino</option><option value="series_genero">Séries + Feminino</option><option value="personalizado">Personalizado</option></select></div>
+        <div><label>Atualização automática futura?</label><select id="cCategoriasAuto"><option value="false">Não, manual</option><option value="true">Sim, sugerir acessos/rebaixamentos</option></select></div>
+      </div>
+      <label>Categorias personalizadas</label>
+      <input id="cCategoriasLista" placeholder="Ex.: Série Ouro, Série Prata, Série Bronze, Feminino">
+      <small class="muted">Separe por vírgula. Se deixar vazio, o sistema usa o padrão do tipo escolhido.</small>
+      <div class="msg"><b>Observação:</b> a atualização automática será apenas uma sugestão para o administrador aprovar, nunca uma mudança sem confirmação.</div>`;
+    if(desc)desc.closest('label')?desc.closest('label').after(holder):desc.insertAdjacentElement('afterend',holder);
+    else form.insertBefore(holder,form.querySelector('button[type="submit"]'));
+  }
+
+  function categoriasPayloadFromForm(){
+    const ativa=$('cCategoriasAtivas')?.value==='true';
+    const tipo=$('cCategoriasTipo')?.value||'personalizado';
+    let lista=unique(($('cCategoriasLista')?.value||'').split(','));
+    if(ativa && !lista.length){
+      if(tipo==='series')lista=['Série Ouro','Série Prata','Série Bronze'];
+      if(tipo==='genero')lista=['Masculino','Feminino'];
+      if(tipo==='series_genero')lista=['Série Ouro - Masculino','Série Prata - Masculino','Série Bronze - Masculino','Feminino'];
+    }
+    return {categorias_ativas:ativa,categorias_tipo:tipo,categorias_lista:lista,categorias_auto:$('cCategoriasAuto')?.value==='true'};
+  }
+
+  function reinstallChampSubmit(){
+    const old=$('champForm'); if(!old || old.dataset.v29==='1')return;
+    const form=old.cloneNode(true); old.parentNode.replaceChild(form,old); form.dataset.v29='1';
+    installChampCategoryFields();
+    form.addEventListener('submit',async e=>{
+      e.preventDefault();
+      let payload={nome:$('cNome').value,modalidade:$('cModalidade').value,tipo:$('cTipo').value,status:$('cStatus').value,inicio:$('cInicio').value,fim:$('cFim').value,inscricao_inicio:$('cInsInicio').value||null,inscricao_fim:$('cInsFim').value||null,inscricoes_abertas:$('cStatus').value==='inscricoes_abertas',descricao:$('cDesc').value,...categoriasPayloadFromForm()};
+      let {error}=await db.from('campeonatos').insert(payload);
+      if(error)return alert('Erro ao criar campeonato. Rode o SQL v29 no Supabase. '+error.message);
+      e.target.reset();await loadAll();alert('Campeonato criado.');
+    });
+  }
+
+  function requiredCategory(champSelectId, catSelectId){
+    const c=campeonatoPorSelect(champSelectId); const cats=categoriasDoCampeonato(c);
+    if(!cats.length)return '';
+    const val=$(catSelectId)?.value||'';
+    if(!val)throw new Error('Selecione a categoria/série.');
+    return val;
+  }
+
+  function reinstallTeamSubmits(){
+    const tf=$('teamRequestForm');
+    if(tf && tf.dataset.v29!=='1'){
+      const form=tf.cloneNode(true); tf.parentNode.replaceChild(form,tf); form.dataset.v29='1';
+      form.addEventListener('submit',async e=>{e.preventDefault();try{let c=championships.find(x=>x.id===$('reqCampeonato').value),st=registrationStatus(c);if(!st.can)throw new Error(st.msg);let categoria=requiredCategory('reqCampeonato','reqCategoria');let logo=await fileToData($('reqLogo').files[0]);let atletas=await collectPlayers();let payload={campeonato_id:c.id,categoria_nome:categoria,nome_time:$('reqTime').value,responsavel_nome:$('reqResp').value,responsavel_cpf:$('reqCpf').value,responsavel_whatsapp:$('reqWhats').value,responsavel_email:$('reqEmail').value,endereco:$('reqEnd').value,cep:$('reqCep').value,logo_data:logo,atletas,status:'pendente'};let {error}=await db.from('inscricoes_clubes').insert(payload);if(error)throw error;alert('Inscrição enviada para análise do administrador.');resetTeamForm();await loadAll()}catch(err){alert(err.message)}});
+    }
+    const mf=$('manualTeamForm');
+    if(mf && mf.dataset.v29!=='1'){
+      const form=mf.cloneNode(true); mf.parentNode.replaceChild(form,mf); form.dataset.v29='1';
+      form.addEventListener('submit',async e=>{e.preventDefault();try{let categoria=requiredCategory('manualChamp','manualCategoria');let atletas=await collectManualPlayers();let logo=await fileToData($('manualLogo').files[0]);let {data,error}=await db.from('equipes').insert({campeonato_id:$('manualChamp').value,categoria_nome:categoria,nome:$('manualTeam').value,responsavel:$('manualResp').value,whatsapp:$('manualWhats').value,logo_data:logo,status:'ativo',atletas}).select().single();if(error)throw error;for(const a of atletas){let {data:at,error:atErr}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(atErr)throw atErr;if(at)await db.from('inscricoes').insert({campeonato_id:$('manualChamp').value,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}resetManualTeamForm();await loadAll();alert('Clube e atletas adicionados manualmente.')}catch(err){alert(err.message)}});
+    }
+  }
+
+  window.approveRequest=async function(id){let r=requests.find(x=>x.id===id);if(!r)return;let {data,error}=await db.from('equipes').insert({campeonato_id:r.campeonato_id,categoria_nome:r.categoria_nome||'',nome:r.nome_time,responsavel:r.responsavel_nome,whatsapp:r.responsavel_whatsapp,email:r.responsavel_email,endereco:r.endereco,cep:r.cep,logo_data:r.logo_data,status:'ativo',atletas:r.atletas||[]}).select().single();if(error)return alert('Erro ao aceitar inscrição. Rode o SQL v29 no Supabase. '+error.message);for(const a of (r.atletas||[])){let {data:at}=await db.from('atletas').upsert({nome:a.nome,documento:a.documento},{onConflict:'documento'}).select().single();if(at)await db.from('inscricoes').insert({campeonato_id:r.campeonato_id,equipe_id:data.id,atleta_id:at.id,situacao:a.observacao?'restrição':'liberado',observacao:a.observacao||''})}await db.from('inscricoes_clubes').update({status:'aceita',updated_at:new Date().toISOString()}).eq('id',id);await loadAll();alert('Inscrição aceita e clube adicionado ao campeonato.');}
+
+  window.renderPending=function(){let pend=requests.filter(r=>r.status==='pendente');$('pendingBox').innerHTML=pend.length?pend.map(r=>`<div class="game"><strong>${esc(r.nome_time)}</strong><p class="muted">Responsável: ${esc(r.responsavel_nome)} • WhatsApp: ${esc(r.responsavel_whatsapp)}<br>Campeonato: ${esc((championships.find(c=>c.id===r.campeonato_id)||{}).nome)}${r.categoria_nome?` • Categoria: ${esc(r.categoria_nome)}`:''}</p><p>Atletas: ${(r.atletas||[]).length}</p><div class="two-actions"><button class="btn small green" onclick="approveRequest('${r.id}')">Aceitar</button><button class="btn small red" onclick="rejectRequest('${r.id}')">Recusar</button><button class="btn small ghost" onclick="viewRequest('${r.id}')">Ver detalhes</button></div></div>`).join(''):'<div class="empty">Nenhuma inscrição pendente.</div>'}
+
+  const oldFill=window.fillSelects;
+  window.fillSelects=function(){
+    if(typeof oldFill==='function')oldFill();
+    ensureCategoryControls();
+    [['reqCampeonato','reqCategoria',null],['manualChamp','manualCategoria',null],['tableChamp','tableCategoria','Todas as categorias'],['scorerChamp','scorerCategoria','Todas as categorias'],['gamesChamp','gamesCategoria','Todas as categorias'],['adminGamesChamp','adminGamesCategoria','Todas as categorias'],['adminGamesChamp','manualCategoriaJogo',null],['goalChamp','goalCategoria','Todas as categorias']].forEach(x=>updateCatSelect(x[0],x[1],x[2]));
+  }
+
+  const oldSelect=window.selectChampAndGo;
+  window.selectChampAndGo=function(id,tab){if(typeof oldSelect==='function')oldSelect(id,tab);setTimeout(()=>{fillSelects();renderCategoriaDependentes();},80)}
+
+  window.renderChamps=function(){let box=$('championshipCards');if(!championships.length){box.innerHTML='<div class="empty">Nenhum campeonato cadastrado ainda. O administrador deve criar os campeonatos no painel.</div>';return}box.innerHTML=championships.map(c=>{let st=registrationStatus(c);let cats=categoriasDoCampeonato(c);return `<div class="card"><span class="tag ${st.cls}">${st.label}</span><h3>${esc(c.nome)}</h3><p class="muted">${esc(c.modalidade)} • ${esc(c.tipo||'')}${cats.length?`<br><b>Categorias:</b> ${esc(cats.join(', '))}`:''}</p><p><b>Início:</b> ${onlyDate(c.inicio)}<br><b>Fim previsto:</b> ${onlyDate(c.fim)}</p><p class="muted">${esc(c.descricao||'')}</p><div class="two-actions"><button class="btn small" onclick="selectChampAndGo('${c.id}','tabelas')">Tabela</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','confrontos')">Jogos</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','artilheiros')">Artilheiros</button><button class="btn small ghost" onclick="selectChampAndGo('${c.id}','regrasPublicas')">Regras</button><button class="btn small ${st.can?'green':'gray'}" ${st.can?'':'disabled'} onclick="selectChampAndGo('${c.id}','inscricao')">${st.can?'Inscrever equipe':'Inscrição indisponível'}</button></div></div>`}).join('')}
+
+  window.renderAdminChamps=function(){
+    const box=$('adminChampsList'); if(!box)return;
+    box.innerHTML=championships.length?championships.map(c=>{let cats=categoriasDoCampeonato(c);return `<div class="game"><strong>${esc(c.nome)}</strong><span class="tag">${esc(c.tipo)}</span> <span class="tag ${registrationStatus(c).cls}">${registrationStatus(c).label}</span>${cats.length?` <span class="tag green">${esc(cats.length)} categorias</span>`:''}<p class="muted">${esc(c.modalidade)} • ${onlyDate(c.inicio)} até ${onlyDate(c.fim)}${cats.length?`<br>Categorias: ${esc(cats.join(', '))}`:''}<br>Atualização de categorias: ${(c.categorias_auto===true||c.categorias_auto==='true')?'automática com aprovação':'manual'}</p><button class="btn small red" onclick="deleteChamp('${c.id}')">Excluir</button></div>`}).join(''):'<div class="empty">Nenhum campeonato.</div>'
+  }
+
+  window.renderTeams=function(){let html=teams.length?'<table class="table"><tr><th>Escudo</th><th>Time</th><th>Campeonato</th><th>Categoria</th><th>Responsável</th><th>Ações</th></tr>'+teams.map(t=>`<tr><td>${t.logo_data?`<img src="${t.logo_data}" class="preview">`:''}</td><td><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><strong>${esc(t.nome)}</strong><button class="btn small red" onclick="deleteTeam('${t.id}')">Excluir</button></div></td><td>${esc((championships.find(c=>c.id===t.campeonato_id)||{}).nome)}</td><td>${esc(t.categoria_nome||'-')}</td><td>${esc(t.responsavel)}<br><span class="muted">${esc(t.whatsapp)}</span></td><td><button class="btn small ghost" onclick="viewTeamPlayers('${t.id}')">Ver atletas</button></td></tr>`).join('')+'</table>':'<div class="empty">Nenhum clube aprovado.</div>';$('teamsBox').innerHTML=html}
+
+  window.addManualGame=async function(){let c=$('adminGamesChamp').value;if(!$('manualA').value||!$('manualB').value)return alert('Informe os dois times.');let categoria=categoriaAtivaCampo(c,'manualCategoriaJogo');let payload={campeonato_id:c,categoria_nome:categoria,rodada:Number($('gameRound').value||1),time_a:$('manualA').value,time_b:$('manualB').value,status:'Agendado',data_jogo:$('manualDataJogo')?.value||null,horario_jogo:$('manualHorarioJogo')?.value||null,local_jogo:$('manualLocalJogo')?.value||'',endereco_jogo:$('manualEnderecoJogo')?.value||'',link_maps:$('manualLinkMaps')?.value||''};let {error}=await db.from('jogos').insert(payload);if(error)return alert('Erro ao salvar jogo. Rode o SQL v29 no Supabase. '+error.message);['manualA','manualB','manualDataJogo','manualHorarioJogo','manualLocalJogo','manualEnderecoJogo','manualLinkMaps'].forEach(id=>{if($(id))$(id).value=''});await loadAll()}
+
+  window.drawGames=async function(){let c=$('adminGamesChamp').value,round=Number($('gameRound').value||1),categoria=categoriaAtivaCampo(c,'adminGamesCategoria');let arr=teams.filter(t=>t.campeonato_id===c&&(!categoria||(t.categoria_nome||'')===categoria)).map(t=>t.nome).sort(()=>Math.random()-.5);if(arr.length<2)return alert('É preciso ter pelo menos 2 clubes aprovados nesta categoria/campeonato.');let inserts=[];for(let i=0;i<arr.length;i+=2){if(arr[i+1])inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:arr[i+1],status:'Agendado'});else inserts.push({campeonato_id:c,categoria_nome:categoria,rodada:round,time_a:arr[i],time_b:'BYE',status:'Agendado',vencedor:arr[i]})}await db.from('jogos').insert(inserts);await loadAll();alert('Confrontos sorteados para '+(categoria||'o campeonato')+'.')}
+
+  window.editGame=async function(id){await db.from('jogos').update({time_a:$('ga'+id).value,time_b:$('gb'+id).value,data_jogo:$('gd'+id)?.value||null,horario_jogo:$('gh'+id)?.value||null,local_jogo:$('gl'+id)?.value||'',endereco_jogo:$('ge'+id)?.value||'',link_maps:$('gm'+id)?.value||'',categoria_nome:$('gc'+id)?.value||''}).eq('id',id);await loadAll()}
+
+  window.renderGamesAdmin=function(){let c=$('adminGamesChamp')?.value;let cat=$('adminGamesCategoria')?.value||'';let list=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));$('gamesAdminBox').innerHTML=list.length?list.map(g=>`<div class="game"><strong>Rodada ${g.rodada||1}: ${esc(g.time_a)} x ${esc(g.time_b)}</strong><p class="muted">${categoriaJogo(g)?`Categoria: ${esc(categoriaJogo(g))} • `:''}Status: ${esc(g.status)} ${g.gols_a!=null?`• Placar: ${g.gols_a} x ${g.gols_b}`:''}</p><div class="row"><div><label>Categoria/Série</label><select id="gc${g.id}">${makeCatOptions((championships||[]).find(c=>c.id===g.campeonato_id),'Sem categoria')}</select></div><div><label>Rodada</label><input value="${esc(g.rodada||1)}" disabled></div></div><div class="row"><div><label>Time A</label><input id="ga${g.id}" placeholder="Time A" value="${esc(g.time_a)}"></div><div><label>Time B</label><input id="gb${g.id}" placeholder="Time B" value="${esc(g.time_b)}"></div></div><div class="row3"><div><label>Data</label><input id="gd${g.id}" type="date" value="${esc(g.data_jogo||'')}"></div><div><label>Horário</label><input id="gh${g.id}" type="time" value="${esc((g.horario_jogo||'').slice(0,5))}"></div><div><label>Local</label><input id="gl${g.id}" placeholder="Local do jogo" value="${esc(g.local_jogo||'')}"></div></div><label>Endereço completo</label><input id="ge${g.id}" placeholder="Rua, número, bairro, Capão da Canoa - RS" value="${esc(g.endereco_jogo||'')}"><label>Link do Google Maps (opcional)</label><input id="gm${g.id}" placeholder="Link do Google Maps" value="${esc(g.link_maps||'')}"><div class="two-actions"><button class="btn small" onclick="editGame('${g.id}')">Salvar alterações</button>${mapsUrl(g)?`<a class="btn small ghost" href="${esc(mapsUrl(g))}" target="_blank">Testar mapa</a>`:''}</div></div>`).join(''):'<div class="empty">Nenhum confronto nesta categoria.</div>';setTimeout(()=>{list.forEach(g=>{if($('gc'+g.id))$('gc'+g.id).value=categoriaJogo(g)||''})},0)}
+
+  const oldRenderGamesPublic=window.renderGamesPublic;
+  window.renderGamesPublic=function(){let c=$('gamesChamp')?.value;let cat=$('gamesCategoria')?.value||'';let list=games.filter(g=>(!c||g.campeonato_id===c)&&(!cat||categoriaJogo(g)===cat));const box=$('gamesPublicBox');if(!box)return;if(!list.length){box.innerHTML='<div class="empty">Nenhum jogo cadastrado nesta categoria.</div>';return;}box.innerHTML=`<div class="match-grid-v23">${list.map(g=>{let placar=(g.gols_a!=null&&g.gols_b!=null)?`${g.gols_a} x ${g.gols_b}`:'x';return `<button type="button" class="match-card-v23" onclick="abrirDetalhesJogo('${g.id}')"><div class="match-card-v23-top"><span class="round-pill">Rodada ${g.rodada||1}</span>${categoriaJogo(g)?`<span class="champ-pill">${esc(categoriaJogo(g))}</span>`:`<span class="champ-pill">${nomeCampeonatoJogo(g)}</span>`}</div><div class="match-card-v23-main"><div class="match-side-v23">${logoTimeHtmlV23(g.time_a,g.campeonato_id)}<span class="match-name-v23">${esc(g.time_a)}</span></div><div class="match-x-v23">${esc(placar)}</div><div class="match-side-v23 right"><span class="match-name-v23">${esc(g.time_b)}</span>${logoTimeHtmlV23(g.time_b,g.campeonato_id)}</div></div><div class="match-card-v23-info"><span>🕒 ${esc(resumoDataHoraJogo(g))}</span><span>📍 ${esc(g.local_jogo||'Local a definir')}</span></div><div class="match-click-v23">Clique para ver endereço, mapa e rota</div></button>`}).join('')}</div><div id="matchModalV23" class="match-modal-v23" onclick="fecharDetalhesJogoFora(event)"><div id="matchModalCardV23" class="match-modal-card-v23"></div></div>`}
+
+  const oldOpen=window.abrirDetalhesJogo;
+  window.abrirDetalhesJogo=function(id){if(typeof oldOpen==='function')oldOpen(id);setTimeout(()=>{const g=(games||[]).find(x=>x.id===id);const head=document.querySelector('#matchModalCardV23 .muted');if(head&&g&&categoriaJogo(g))head.innerHTML=head.innerHTML+' • '+esc(categoriaJogo(g));},0)}
+
+  function calcStandingsCat(champId,cat){let map={};games.filter(g=>g.campeonato_id===champId&&(!cat||categoriaJogo(g)===cat)&&g.gols_a!=null&&g.gols_b!=null).forEach(g=>{[g.time_a,g.time_b].forEach(t=>{if(!map[t])map[t]={time:t,p:0,j:0,v:0,e:0,d:0,gp:0,gc:0,sg:0}});let A=map[g.time_a],B=map[g.time_b];A.j++;B.j++;A.gp+=g.gols_a;A.gc+=g.gols_b;B.gp+=g.gols_b;B.gc+=g.gols_a;if(g.gols_a>g.gols_b){A.v++;A.p+=3;B.d++}else if(g.gols_a<g.gols_b){B.v++;B.p+=3;A.d++}else{A.e++;B.e++;A.p++;B.p++}A.sg=A.gp-A.gc;B.sg=B.gp-B.gc});return Object.values(map).sort((a,b)=>b.p-a.p||b.v-a.v||b.sg-a.sg||b.gp-a.gp)}
+  window.calcStandings=function(champId){return calcStandingsCat(champId,'')}
+  window.renderStandings=function(){let c=$('tableChamp')?.value,cat=$('tableCategoria')?.value||'',arr=calcStandingsCat(c,cat);$('standingsBox').innerHTML=arr.length?`${cat?`<div class="msg ok"><b>Categoria:</b> ${esc(cat)}</div>`:''}<table class="table"><tr><th>Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>SG</th></tr>`+arr.map(x=>`<tr><td>${esc(x.time)}</td><td>${x.p}</td><td>${x.j}</td><td>${x.v}</td><td>${x.e}</td><td>${x.d}</td><td>${x.gp}</td><td>${x.gc}</td><td>${x.sg}</td></tr>`).join('')+'</table>':'<div class="empty">Sem resultados lançados para montar a tabela nesta categoria.</div>'}
+
+  function aggregateGoalsCat(champId,cat){let m={};goals.filter(g=>(!champId||g.campeonato_id===champId)&&(!cat||(g.categoria_nome||'')===cat)).forEach(g=>{let k=g.atleta_nome+'|'+g.equipe;if(!m[k])m[k]={nome:g.atleta_nome,equipe:g.equipe,gols:0,categoria:g.categoria_nome||''};m[k].gols+=Number(g.quantidade||1)});return Object.values(m).sort((a,b)=>b.gols-a.gols)}
+  window.aggregateGoals=function(champId){return aggregateGoalsCat(champId,'')}
+  window.renderScorers=function(){let arr=aggregateGoalsCat($('scorerChamp')?.value,$('scorerCategoria')?.value||'');$('scorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th></tr>'+arr.map(x=>`<tr><td>${esc(x.nome)}</td><td>${esc(x.equipe)}</td><td>${esc(x.categoria||'-')}</td><td>${x.gols}</td></tr>`).join('')+'</table>':'<div class="empty">Nenhum gol cadastrado nesta categoria.</div>'}
+  window.renderAdminScorers=function(){let champ=$('goalChamp')?.value,cat=$('goalCategoria')?.value||'',arr=aggregateGoalsCat(champ,cat);$('adminScorersBox').innerHTML=arr.length?'<table class="table"><tr><th>Atleta</th><th>Equipe</th><th>Categoria</th><th>Gols</th><th>Ações</th></tr>'+arr.map(x=>`<tr><td>${esc(x.nome)}</td><td>${esc(x.equipe)}</td><td>${esc(x.categoria||'-')}</td><td><input id="${scorerInputId(x.nome,x.equipe)}" type="number" min="0" value="${x.gols}" style="max-width:110px"></td><td><button class="btn small" onclick="setScorerGoals('${String(x.nome).replace(/'/g,"\\'")}','${String(x.equipe).replace(/'/g,"\\'")}')">Salvar gols</button><button class="btn small red" onclick="deleteScorer('${String(x.nome).replace(/'/g,"\\'")}','${String(x.equipe).replace(/'/g,"\\'")}')">Excluir</button></td></tr>`).join('')+'</table>':'<div class="empty">Nenhum artilheiro nesta categoria.</div>'}
+
+  function reinstallGoalSubmit(){const gf=$('goalForm');if(!gf||gf.dataset.v29==='1')return;const form=gf.cloneNode(true);gf.parentNode.replaceChild(form,gf);form.dataset.v29='1';form.addEventListener('submit',async e=>{e.preventDefault();let categoria=categoriaAtivaCampo($('goalChamp').value,'goalCategoria');let {error}=await db.from('gols').insert({campeonato_id:$('goalChamp').value,categoria_nome:categoria,atleta_nome:$('goalPlayer').value,equipe:$('goalTeam').value,quantidade:Number($('goalQtd').value||1)});if(error)return alert('Erro ao salvar gol. Rode o SQL v29 no Supabase. '+error.message);e.target.reset();await loadAll()})}
+  window.deleteScorer=async function(nome,equipe){let champ=$('goalChamp').value,cat=$('goalCategoria')?.value||'';if(!confirm(`Excluir ${nome} da artilharia deste campeonato/categoria?`))return;let q=db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(cat)q=q.eq('categoria_nome',cat);await q;await loadAll()}
+  window.setScorerGoals=async function(nome,equipe){let champ=$('goalChamp').value,cat=$('goalCategoria')?.value||'',qtd=Number($(scorerInputId(nome,equipe)).value||0);let q=db.from('gols').delete().eq('campeonato_id',champ).eq('atleta_nome',nome).eq('equipe',equipe);if(cat)q=q.eq('categoria_nome',cat);await q;if(qtd>0)await db.from('gols').insert({campeonato_id:champ,categoria_nome:cat,atleta_nome:nome,equipe:equipe,quantidade:qtd});await loadAll()}
+
+  window.sugerirAtualizacaoCategorias=async function(){
+    const c=campeonatoPorSelect('adminRulesChamp') || (championships||[])[0];
+    if(!c)return alert('Nenhum campeonato selecionado.');
+    const cats=categoriasDoCampeonato(c); if(!cats.length)return alert('Este campeonato não possui categorias/séries ativas.');
+    let msg='Sugestão de atualização de categorias para '+c.nome+'\n\n';
+    msg+='Esta versão deixa a troca automática como sugestão para aprovação do administrador.\n';
+    msg+='Use a classificação final de cada categoria para definir acessos/rebaixamentos e depois ajuste manualmente no cadastro dos clubes.\n\n';
+    cats.forEach(cat=>{let arr=calcStandingsCat(c.id,cat);msg+=cat+': '+(arr.length?arr.map((x,i)=>(i+1)+'. '+x.time).join(', '):'sem classificação')+'\n';});
+    alert(msg);
+  }
+
+  function initV29(){
+    installChampCategoryFields();reinstallChampSubmit();reinstallTeamSubmits();reinstallGoalSubmit();ensureCategoryControls();
+    if($('regrasAdmin') && !$('btnSugerirCategorias')){
+      const div=document.createElement('div');div.className='msg';div.innerHTML='<b>Categorias/Séries:</b> ao final do campeonato, o sistema pode gerar uma sugestão de acesso/rebaixamento para aprovação do administrador. <button id="btnSugerirCategorias" class="btn small ghost" type="button" onclick="sugerirAtualizacaoCategorias()">Sugerir atualização de categorias</button>';
+      $('regrasAdmin').appendChild(div);
+    }
+    fillSelects();renderCategoriaDependentes();
+  }
+  document.addEventListener('DOMContentLoaded',()=>setTimeout(initV29,800));
+  window.addEventListener('load',()=>setTimeout(initV29,1200));
+  const oldRenderAll=window.renderAll;
+  window.renderAll=function(){if(typeof oldRenderAll==='function')oldRenderAll();setTimeout(initV29,50)}
+})();
+
 </script>
 </body>
 </html>
